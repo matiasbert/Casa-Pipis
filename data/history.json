@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "savedAt": "2026-06-01T17:45:19.854Z",
+  "savedAt": "2026-06-01T17:57:40.785Z",
   "months": {
     "2026-05": {
       "key": "2026-05",
@@ -142,7 +142,7 @@
           "id": "ep3uofodmpvhy9nn",
           "name": "Edesur",
           "currency": "ARS",
-          "amount": 0,
+          "amount": 20190,
           "splitOverride": null,
           "notes": "",
           "installments": null,
@@ -152,7 +152,7 @@
           "id": "7glp9otkmpvhy9nn",
           "name": "Metrogas",
           "currency": "ARS",
-          "amount": 0,
+          "amount": 6000,
           "splitOverride": null,
           "notes": "",
           "installments": null,
