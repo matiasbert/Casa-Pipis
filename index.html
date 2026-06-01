@@ -297,7 +297,7 @@ body.dark .sync-status.busy { color:#fbbf24; }
 
 /* IMAGE SNAPSHOT */
 #imageSnapshot {
-  position:fixed; left:-9999px; top:0; width:680px; background:#f8f6f2;
+  position:fixed; left:-9999px; top:0; width:820px; background:#f8f6f2;
   padding:24px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   font-size:14px; color:#2c3440;
 }
@@ -306,7 +306,8 @@ body.dark .sync-status.busy { color:#fbbf24; }
 .snap-sub { font-size:13px; color:#6b7280; margin-top:2px; }
 .snap-table { width:100%; border-collapse:collapse; margin-bottom:16px; font-size:13px; }
 .snap-table th { background:#e2ddd6; padding:7px 10px; text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:#6b7280; }
-.snap-table td { padding:7px 10px; border-bottom:1px solid #e2ddd6; vertical-align:middle; }
+.snap-table td { padding:7px 10px; border-bottom:1px solid #e2ddd6; vertical-align:middle; word-break:break-word; }
+.snap-table td:first-child { max-width:220px; }
 .snap-table tr:nth-child(even) td { background:#faf9f7; }
 .snap-totals { display:flex; gap:12px; margin-bottom:14px; }
 .snap-block { flex:1; background:#ffffff; border:1px solid #e2ddd6; border-radius:8px; padding:12px; }
@@ -480,7 +481,6 @@ body.dark .sync-status.busy { color:#fbbf24; }
 </main>
 
 <script>
-// ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const STORAGE_KEY      = 'casapi_months';
 const GH_TOKEN_KEY     = 'casapi_github_token';
 const GH_LAST_SYNC_KEY = 'casapi_last_sync';
@@ -498,12 +498,10 @@ const RECURRING_TEMPLATES = [
 ];
 const MONTH_NAMES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
 let allMonths = {};
 let currentKey = '';
 let editingItemId = null;
 
-// ─── UTILS ────────────────────────────────────────────────────────────────────
 function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
@@ -532,14 +530,12 @@ function showNotif(msg) {
   setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-// ─── STORAGE ──────────────────────────────────────────────────────────────────
 function saveAll() { localStorage.setItem(STORAGE_KEY, JSON.stringify(allMonths)); }
 function loadAll() {
   try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) allMonths = JSON.parse(raw); }
   catch(e) { allMonths = {}; }
 }
 
-// ─── MONTH RECORD HELPERS ─────────────────────────────────────────────────────
 function newItemFromTemplate(tpl) {
   return { id: uid(), name: tpl.name, currency: tpl.currency, amount: 0, splitOverride: null, notes: '', installments: null, isRecurring: true };
 }
@@ -552,11 +548,9 @@ function applyCarryOver(newMonth) {
   if (!prevKeys.length) return;
   const prev = allMonths[prevKeys[prevKeys.length - 1]];
   if (!prev) return;
-  // Copy Alquiler amount only
   const prevAlq = prev.items.find(i => i.name === 'Alquiler');
   const newAlq  = newMonth.items.find(i => i.name === 'Alquiler');
   if (prevAlq && newAlq) newAlq.amount = prevAlq.amount;
-  // Carry over installment items
   for (const item of prev.items) {
     if (item.installments && item.installments.current < item.installments.total) {
       newMonth.items.push({
@@ -582,7 +576,6 @@ function getSortedKeys() { return Object.keys(allMonths).sort(); }
 function getMonth() { return allMonths[currentKey]; }
 function isReadonly() { const m = getMonth(); return currentKey !== todayKey() || !!(m && m.locked); }
 
-// ─── SPLIT CALC ───────────────────────────────────────────────────────────────
 function calcShares(item, month) {
   const matiPct = item.splitOverride ? item.splitOverride.mati : month.matiSplit;
   const pinaPct = item.splitOverride ? item.splitOverride.pina : month.pinaSplit;
@@ -600,7 +593,6 @@ function calcTotals(month) {
   return { totalARS, matiARS, pinaARS, totalUSD, matiUSD, pinaUSD };
 }
 
-// ─── RENDER ───────────────────────────────────────────────────────────────────
 function renderAll() {
   const month = getMonth();
   if (!month) return;
@@ -809,7 +801,6 @@ function renderPrintHeader(month) {
   }
 }
 
-// ─── ACTIONS ──────────────────────────────────────────────────────────────────
 function startEdit(id) {
   editingItemId = id;
   renderAll();
@@ -903,7 +894,6 @@ function toggleLockMonth() {
   showNotif(month.locked ? '🔒 Mes cerrado' : '🔓 Mes reabierto');
 }
 
-// ─── HEADER INPUTS ────────────────────────────────────────────────────────────
 document.getElementById('matiSplitInput').addEventListener('change', function() {
   const month = getMonth();
   if (!month || isReadonly()) return;
@@ -923,7 +913,6 @@ document.getElementById('pinaSplitInput').addEventListener('change', function() 
 document.getElementById('prevMonthBtn').addEventListener('click', () => navigateMonth(-1));
 document.getElementById('nextMonthBtn').addEventListener('click', () => navigateMonth(1));
 
-// ─── DARK MODE ────────────────────────────────────────────────────────────────
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle('dark');
   localStorage.setItem(DARK_MODE_KEY, isDark ? '1' : '0');
@@ -936,7 +925,6 @@ function initDarkMode() {
   }
 }
 
-// ─── MODAL ────────────────────────────────────────────────────────────────────
 function openModal() {
   const list = document.getElementById('monthList');
   list.innerHTML = '';
@@ -967,7 +955,6 @@ function deleteMonth(key) {
   closeModal(); renderAll(); showNotif('Mes borrado');
 }
 
-// ─── EXPORT ───────────────────────────────────────────────────────────────────
 function buildTextSummary() {
   const month = getMonth();
   if (!month) return '';
@@ -1099,7 +1086,6 @@ async function shareWhatsApp() {
   }
 }
 
-// ─── HISTORIAL EXPORT / IMPORT ────────────────────────────────────────────────
 function exportHistory() {
   const keys = getSortedKeys();
   if (!keys.length) { showNotif('⚠ No hay datos para exportar'); return; }
@@ -1147,7 +1133,6 @@ function importHistory(event) {
   reader.readAsText(file);
 }
 
-// ─── GITHUB SYNC ──────────────────────────────────────────────────────────────
 function loadGhToken() { return localStorage.getItem(GH_TOKEN_KEY) || ''; }
 
 function saveGhToken() {
@@ -1258,14 +1243,12 @@ function _applyImportedMonths(imported, githubWins) {
   showNotif(`✓ ${importedKeys.length} ${importedKeys.length===1?'mes importado':'meses importados'}`);
 }
 
-// ─── ESCAPE HELPERS ───────────────────────────────────────────────────────────
 function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function escAttr(str) { return String(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function escText(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
 (async function init() {
   loadAll();
   currentKey = ensureCurrentMonth();
