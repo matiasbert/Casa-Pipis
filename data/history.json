@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "savedAt": "2026-05-05T12:51:20.717Z",
+  "savedAt": "2026-06-01T17:45:19.854Z",
   "months": {
     "2026-05": {
       "key": "2026-05",
@@ -97,6 +97,77 @@
           "notes": "",
           "installments": {
             "current": 1,
+            "total": 12
+          }
+        }
+      ]
+    },
+    "2026-06": {
+      "key": "2026-06",
+      "matiSplit": 75,
+      "pinaSplit": 25,
+      "locked": false,
+      "items": [
+        {
+          "id": "qwgorn0gmpvhy9nn",
+          "name": "Alquiler",
+          "currency": "ARS",
+          "amount": 585499,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "5ka0l62gmpvhy9nn",
+          "name": "Expensas",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "z1cegd8gmpvhy9nn",
+          "name": "Telecentro",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "ep3uofodmpvhy9nn",
+          "name": "Edesur",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "7glp9otkmpvhy9nn",
+          "name": "Metrogas",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "t1zox3mzmpvhy9nn",
+          "name": "Colchon",
+          "currency": "ARS",
+          "amount": 341666,
+          "splitOverride": null,
+          "isRecurring": false,
+          "notes": "",
+          "installments": {
+            "current": 2,
             "total": 12
           }
         }
