@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CEDEAR Screener — BYMA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0c0f;--sf:#111418;--s2:#1a1f27;--bd:#252c38;
+  --tx:#e8ecf0;--mt:#6b7a8d;--ac:#00d4aa;--a2:#0095ff;
+  --gr:#00d4aa;--yl:#ffc300;--rd:#ff4d6d;
+}
+body{background:var(--bg);color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:13px;min-height:100vh}
+
+/* Header */
+.hdr{padding:28px 36px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.htitle{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.5px}
+.htitle span{color:var(--ac)}
+.hsub{color:var(--mt);font-size:11px;margin-top:3px}
+.hts{color:var(--mt);font-size:11px;margin-left:auto}
+
+/* Controls */
+.ctrl{padding:16px 36px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--bd);background:var(--sf)}
+.ctrl input,.ctrl select{background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:7px 12px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border .15s}
+.ctrl input:focus,.ctrl select:focus{border-color:var(--ac)}
+.ctrl input{width:190px}
+.ctrl select{cursor:pointer}
+.ctrl label{color:var(--mt);font-size:11px;display:flex;flex-direction:column;gap:3px}
+.cnt{margin-left:auto;color:var(--mt);font-size:11px}.cnt span{color:var(--ac);font-weight:600}
+
+/* Legend */
+.leg{padding:12px 36px 0;display:flex;gap:18px;flex-wrap:wrap;font-size:10px;color:var(--mt)}
+.li{display:flex;align-items:center;gap:5px}
+.ld{width:8px;height:8px;border-radius:50%}
+.lw{margin-left:16px}
+
+/* Table */
+.tw{padding:18px 36px 60px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:1060px}
+thead tr{border-bottom:2px solid var(--bd)}
+th{font-family:'Syne',sans-serif;font-size:10px;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.8px;padding:9px 12px;text-align:left;cursor:pointer;user-select:none;white-space:nowrap}
+th:hover{color:var(--tx)}
+th .si{margin-left:3px;opacity:.4}
+th.sa .si::after{content:'▲';opacity:1}
+th.sd .si::after{content:'▼';opacity:1}
+th:not(.sa):not(.sd) .si::after{content:'⇅'}
+tbody tr{border-bottom:1px solid var(--bd);transition:background .12s}
+tbody tr:hover{background:var(--s2)}
+td{padding:12px 12px;vertical-align:middle;white-space:nowrap}
+.rk{color:var(--mt);font-size:11px;width:32px;text-align:center}
+
+/* Score pill */
+.sp{display:inline-flex;align-items:center;justify-content:center;width:44px;height:24px;border-radius:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px}
+.sgr{background:rgba(0,212,170,.14);color:var(--gr)}
+.syl{background:rgba(255,195,0,.14);color:var(--yl)}
+.srd{background:rgba(255,77,109,.14);color:var(--rd)}
+.sna{background:var(--s2);color:var(--mt);font-size:10px}
+
+/* Ticker cell */
+.tc .sym{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--ac)}
+.tc .cn{color:var(--mt);font-size:10px;margin-top:2px;max-width:155px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Sector badge */
+.sb{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;background:var(--s2);color:var(--mt);border:1px solid var(--bd);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Upside */
+.up{color:var(--gr)}.dn{color:var(--rd)}.nu{color:var(--mt)}
+
+/* EPS arrows */
+.eu{color:var(--gr);font-size:15px}.ed{color:var(--rd);font-size:15px}.ef{color:var(--mt);font-size:15px}
+
+/* 52w bar */
+.bw{position:relative;width:85px;height:5px;background:var(--s2);border-radius:3px}
+.bf{height:100%;border-radius:3px}
+.bl{position:absolute;top:-2px;right:-32px;font-size:10px;color:var(--mt)}
+
+/* Misc */
+.na{color:var(--mt)}
+.pr{font-weight:500}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="htitle">CEDEAR <span>Screener</span></div>
+    <div class="hsub">BYMA · Acciones · Scoring ponderado 5 criterios</div>
+  </div>
+  <div class="hts">Datos: 2026-06-01 22:30 ART · FMP</div>
+</div>
+
+<div class="ctrl">
+  <label>Buscar<input type="text" id="si" placeholder="Ticker o nombre…"/></label>
+  <label>Sector<select id="sf"><option value="">Todos</option><option value="Communication Services">Communication Services</option>
+<option value="Consumer Cyclical">Consumer Cyclical</option>
+<option value="Consumer Defensive">Consumer Defensive</option>
+<option value="Energy">Energy</option>
+<option value="Financial Services">Financial Services</option>
+<option value="Healthcare">Healthcare</option>
+<option value="Industrials">Industrials</option>
+<option value="Technology">Technology</option>
+<option value="Utilities">Utilities</option></select></label>
+  <label>Score mínimo<select id="scf">
+    <option value="0">Sin filtro</option>
+    <option value="70">≥ 70 Verde</option>
+    <option value="50">≥ 50 Amarillo+</option>
+    <option value="30">≥ 30</option>
+  </select></label>
+  <div class="cnt">Mostrando <span id="rc">0</span> de 77</div>
+</div>
+
+<div class="leg">
+  <div class="li"><div class="ld" style="background:var(--gr)"></div>Score ≥ 70</div>
+  <div class="li"><div class="ld" style="background:var(--yl)"></div>Score 50–69</div>
+  <div class="li"><div class="ld" style="background:var(--rd)"></div>Score &lt; 50</div>
+  <div class="li lw">PEG 30% · Upside analistas 25% · Fwd P/E vs sector 20% · Revisión EPS 15% · Pos. 52w 10%</div>
+</div>
+
+<div class="tw">
+<table id="mt">
+  <thead><tr>
+    <th data-k="rank">#<span class="si"></span></th>
+    <th data-k="score">Score<span class="si"></span></th>
+    <th data-k="ticker">Ticker<span class="si"></span></th>
+    <th data-k="sector">Sector<span class="si"></span></th>
+    <th data-k="price">Precio<span class="si"></span></th>
+    <th data-k="uv">Upside<span class="si"></span></th>
+    <th data-k="peg">PEG<span class="si"></span></th>
+    <th data-k="fpe">P/E<span class="si"></span></th>
+    <th data-k="smfpe">Med. Sector<span class="si"></span></th>
+    <th data-k="eps">Rev. EPS<span class="si"></span></th>
+    <th data-k="p52">Pos. 52w<span class="si"></span></th>
+  </tr></thead>
+  <tbody id="tb"></tbody>
+</table>
+</div>
+
+<script>
+const D=[{"rank": 1, "score": 92, "sc": "sgr", "ticker": "PATH", "name": "UiPath Inc.", "sector": "Technology", "price": "$13.10", "upside": "+37.4%", "uv": 37.4, "peg": "—", "fpe": "—", "fwd": "—", "smfpe": "27.0x", "eps": "↑", "p52": 36.7}, {"rank": 2, "score": 92, "sc": "sgr", "ticker": "SMCI", "name": "Super Micro Computer", "sector": "Technology", "price": "$46.88", "upside": "+32.3%", "uv": 32.3, "peg": "0.43", "fpe": "18.0x", "fwd": "18.0x", "smfpe": "27.0x", "eps": "↑", "p52": 63.9}, {"rank": 3, "score": 90, "sc": "sgr", "ticker": "BABA", "name": "Alibaba Group", "sector": "Consumer Cyclical", "price": "$125.39", "upside": "+50.9%", "uv": 50.9, "peg": "1.00", "fpe": "10.0x", "fwd": "10.0x", "smfpe": "22.0x", "eps": "↑", "p52": 24.4}, {"rank": 4, "score": 85, "sc": "sgr", "ticker": "VST", "name": "Vistra Corp.", "sector": "Utilities", "price": "$154.76", "upside": "+32.5%", "uv": 32.5, "peg": "0.90", "fpe": "18.0x", "fwd": "18.0x", "smfpe": "20.0x", "eps": "↑", "p52": 25.4}, {"rank": 5, "score": 85, "sc": "sgr", "ticker": "DIS", "name": "The Walt Disney Company", "sector": "Communication Services", "price": "$102.85", "upside": "+34.5%", "uv": 34.5, "peg": "0.88", "fpe": "22.0x", "fwd": "22.0x", "smfpe": "24.0x", "eps": "↑", "p52": 32.8}, {"rank": 6, "score": 84, "sc": "sgr", "ticker": "PDD", "name": "PDD Holdings", "sector": "Consumer Cyclical", "price": "$87.24", "upside": "+37.6%", "uv": 37.6, "peg": "0.80", "fpe": "12.0x", "fwd": "12.0x", "smfpe": "22.0x", "eps": "↑", "p52": 9.8}, {"rank": 7, "score": 81, "sc": "sgr", "ticker": "META", "name": "Meta Platforms Inc.", "sector": "Communication Services", "price": "$600.47", "upside": "+37.3%", "uv": 37.3, "peg": "1.20", "fpe": "24.0x", "fwd": "24.0x", "smfpe": "24.0x", "eps": "↑", "p52": 29.1}, {"rank": 8, "score": 80, "sc": "sgr", "ticker": "SE", "name": "Sea Limited", "sector": "Consumer Cyclical", "price": "$95.25", "upside": "+36.5%", "uv": 36.5, "peg": "0.55", "fpe": "22.0x", "fwd": "22.0x", "smfpe": "22.0x", "eps": "↑", "p52": 14.9}, {"rank": 9, "score": 80, "sc": "sgr", "ticker": "UBER", "name": "Uber Technologies Inc.", "sector": "Technology", "price": "$73.77", "upside": "+38.9%", "uv": 38.9, "peg": "0.65", "fpe": "26.0x", "fwd": "26.0x", "smfpe": "27.0x", "eps": "↑", "p52": 15.8}, {"rank": 10, "score": 77, "sc": "sgr", "ticker": "NVDA", "name": "NVIDIA Corporation", "sector": "Technology", "price": "$224.36", "upside": "+41.2%", "uv": 41.2, "peg": "0.51", "fpe": "28.0x", "fwd": "28.0x", "smfpe": "27.0x", "eps": "↑", "p52": 88.0}, {"rank": 11, "score": 76, "sc": "sgr", "ticker": "GE", "name": "GE Aerospace", "sector": "Industrials", "price": "$222.00", "upside": "+71.2%", "uv": 71.2, "peg": "1.36", "fpe": "30.0x", "fwd": "30.0x", "smfpe": "21.0x", "eps": "↑", "p52": 59.5}, {"rank": 12, "score": 75, "sc": "sgr", "ticker": "ABBV", "name": "AbbVie Inc.", "sector": "Healthcare", "price": "$212.99", "upside": "+20.9%", "uv": 20.9, "peg": "1.33", "fpe": "16.0x", "fwd": "16.0x", "smfpe": "16.5x", "eps": "↑", "p52": 49.6}, {"rank": 13, "score": 74, "sc": "sgr", "ticker": "ORCL", "name": "Oracle Corporation", "sector": "Technology", "price": "$248.07", "upside": "+18.9%", "uv": 18.9, "peg": "1.22", "fpe": "22.0x", "fwd": "22.0x", "smfpe": "27.0x", "eps": "↑", "p52": 53.8}, {"rank": 14, "score": 74, "sc": "sgr", "ticker": "SAP", "name": "SAP SE", "sector": "Technology", "price": "$196.11", "upside": "+22.4%", "uv": 22.4, "peg": "1.40", "fpe": "28.0x", "fwd": "28.0x", "smfpe": "27.0x", "eps": "↑", "p52": 24.3}, {"rank": 15, "score": 74, "sc": "sgr", "ticker": "BAC", "name": "Bank of America Corp.", "sector": "Financial Services", "price": "$51.51", "upside": "+18.7%", "uv": 18.7, "peg": "1.20", "fpe": "12.0x", "fwd": "12.0x", "smfpe": "16.0x", "eps": "↑", "p52": 57.4}, {"rank": 16, "score": 74, "sc": "sgr", "ticker": "CEG", "name": "Constellation Energy", "sector": "Utilities", "price": "$265.70", "upside": "+24.2%", "uv": 24.2, "peg": "1.00", "fpe": "22.0x", "fwd": "22.0x", "smfpe": "20.0x", "eps": "↑", "p52": 13.2}, {"rank": 17, "score": 72, "sc": "sgr", "ticker": "SOFI", "name": "SoFi Technologies Inc.", "sector": "Financial Services", "price": "$18.58", "upside": "+15.2%", "uv": 15.2, "peg": "0.44", "fpe": "22.1x", "fwd": "22.1x", "smfpe": "16.0x", "eps": "↑", "p52": 28.0}, {"rank": 18, "score": 71, "sc": "sgr", "ticker": "JPM", "name": "JPMorgan Chase & Co.", "sector": "Financial Services", "price": "$296.58", "upside": "+14.2%", "uv": 14.2, "peg": "1.40", "fpe": "14.0x", "fwd": "14.0x", "smfpe": "16.0x", "eps": "↑", "p52": 47.1}, {"rank": 19, "score": 71, "sc": "sgr", "ticker": "COIN", "name": "Coinbase Global Inc.", "sector": "Financial Services", "price": "$182.61", "upside": "+30.5%", "uv": 30.5, "peg": "0.73", "fpe": "22.0x", "fwd": "22.0x", "smfpe": "16.0x", "eps": "↑", "p52": 14.2}, {"rank": 20, "score": 70, "sc": "sgr", "ticker": "PYPL", "name": "PayPal Holdings Inc.", "sector": "Financial Services", "price": "$45.19", "upside": "+13.2%", "uv": 13.2, "peg": "0.94", "fpe": "14.0x", "fwd": "14.0x", "smfpe": "16.0x", "eps": "↑", "p52": 16.4}, {"rank": 21, "score": 70, "sc": "sgr", "ticker": "BA", "name": "The Boeing Company", "sector": "Industrials", "price": "$224.30", "upside": "+24.4%", "uv": 24.4, "peg": "0.62", "fpe": "28.0x", "fwd": "28.0x", "smfpe": "21.0x", "eps": "↑", "p52": 61.3}, {"rank": 22, "score": 70, "sc": "sgr", "ticker": "MELI", "name": "MercadoLibre Inc.", "sector": "Consumer Cyclical", "price": "$1,730.98", "upside": "+21.3%", "uv": 21.3, "peg": "1.00", "fpe": "35.0x", "fwd": "35.0x", "smfpe": "22.0x", "eps": "↑", "p52": 20.5}, {"rank": 23, "score": 70, "sc": "sgr", "ticker": "SPOT", "name": "Spotify Technology", "sector": "Communication Services", "price": "$507.76", "upside": "+22.1%", "uv": 22.1, "peg": "0.91", "fpe": "50.0x", "fwd": "50.0x", "smfpe": "24.0x", "eps": "↑", "p52": 27.0}, {"rank": 24, "score": 70, "sc": "sgr", "ticker": "COHR", "name": "Coherent Corp.", "sector": "Technology", "price": "$362.90", "upside": "+18.5%", "uv": 18.5, "peg": "0.67", "fpe": "28.0x", "fwd": "28.0x", "smfpe": "27.0x", "eps": "↑", "p52": 85.2}, {"rank": 25, "score": 69, "sc": "syl", "ticker": "CRM", "name": "Salesforce Inc.", "sector": "Technology", "price": "$209.60", "upside": "+26.4%", "uv": 26.4, "peg": "1.66", "fpe": "25.0x", "fwd": "25.0x", "smfpe": "27.0x", "eps": "↑", "p52": 40.7}, {"rank": 26, "score": 69, "sc": "syl", "ticker": "TSEM", "name": "Tower Semiconductor", "sector": "Technology", "price": "$252.53", "upside": "+14.8%", "uv": 14.8, "peg": "1.11", "fpe": "20.0x", "fwd": "20.0x", "smfpe": "27.0x", "eps": "↑", "p52": 81.0}, {"rank": 27, "score": 68, "sc": "syl", "ticker": "MU", "name": "Micron Technology", "sector": "Technology", "price": "$1,035.50", "upside": "-11.2%", "uv": -11.2, "peg": "0.47", "fpe": "18.0x", "fwd": "18.0x", "smfpe": "27.0x", "eps": "↑", "p52": 98.8}, {"rank": 28, "score": 68, "sc": "syl", "ticker": "ABNB", "name": "Airbnb Inc.", "sector": "Consumer Cyclical", "price": "$137.87", "upside": "+19.7%", "uv": 19.7, "peg": "1.22", "fpe": "22.0x", "fwd": "22.0x", "smfpe": "22.0x", "eps": "↑", "p52": 74.3}, {"rank": 29, "score": 68, "sc": "syl", "ticker": "BKNG", "name": "Booking Holdings Inc.", "sector": "Consumer Cyclical", "price": "$5,180.00", "upside": "+13.9%", "uv": 13.9, "peg": "1.47", "fpe": "22.0x", "fwd": "22.0x", "smfpe": "22.0x", "eps": "↑", "p52": 66.5}, {"rank": 30, "score": 67, "sc": "syl", "ticker": "NFLX", "name": "Netflix Inc.", "sector": "Communication Services", "price": "$85.85", "upside": "+33.0%", "uv": 33.0, "peg": "1.46", "fpe": "32.0x", "fwd": "32.0x", "smfpe": "24.0x", "eps": "↑", "p52": 18.3}, {"rank": 31, "score": 66, "sc": "syl", "ticker": "AVGO", "name": "Broadcom Inc.", "sector": "Technology", "price": "$459.97", "upside": "+19.6%", "uv": 19.6, "peg": "1.08", "fpe": "27.0x", "fwd": "27.0x", "smfpe": "27.0x", "eps": "↑", "p52": 97.4}, {"rank": 32, "score": 66, "sc": "syl", "ticker": "TSM", "name": "Taiwan Semiconductor", "sector": "Technology", "price": "$435.63", "upside": "-1.9%", "uv": -1.9, "peg": "1.00", "fpe": "22.0x", "fwd": "22.0x", "smfpe": "27.0x", "eps": "↑", "p52": 94.6}, {"rank": 33, "score": 66, "sc": "syl", "ticker": "ADBE", "name": "Adobe Inc.", "sector": "Technology", "price": "$274.03", "upside": "+24.5%", "uv": 24.5, "peg": "2.19", "fpe": "22.0x", "fwd": "22.0x", "smfpe": "27.0x", "eps": "↑", "p52": 25.3}, {"rank": 34, "score": 66, "sc": "syl", "ticker": "SHOP", "name": "Shopify Inc.", "sector": "Technology", "price": "$94.00", "upside": "+25.5%", "uv": 25.5, "peg": "1.36", "fpe": "48.0x", "fwd": "48.0x", "smfpe": "27.0x", "eps": "↑", "p52": 51.4}, {"rank": 35, "score": 66, "sc": "syl", "ticker": "RGTI", "name": "Rigetti Computing Inc.", "sector": "Technology", "price": "$25.63", "upside": "+9.2%", "uv": 9.2, "peg": "—", "fpe": "—", "fwd": "—", "smfpe": "27.0x", "eps": "↑", "p52": 32.0}, {"rank": 36, "score": 66, "sc": "syl", "ticker": "TEAM", "name": "Atlassian Corporation", "sector": "Technology", "price": "$115.95", "upside": "+33.7%", "uv": 33.7, "peg": "1.53", "fpe": "38.0x", "fwd": "38.0x", "smfpe": "27.0x", "eps": "↑", "p52": 36.0}, {"rank": 37, "score": 66, "sc": "syl", "ticker": "DELL", "name": "Dell Technologies", "sector": "Technology", "price": "$466.02", "upside": "+7.3%", "uv": 7.3, "peg": "1.50", "fpe": "18.0x", "fwd": "18.0x", "smfpe": "27.0x", "eps": "↑", "p52": 99.0}, {"rank": 38, "score": 65, "sc": "syl", "ticker": "PFE", "name": "Pfizer Inc.", "sector": "Healthcare", "price": "$25.64", "upside": "+5.3%", "uv": 5.3, "peg": "1.97", "fpe": "10.0x", "fwd": "10.0x", "smfpe": "16.5x", "eps": "↑", "p52": 45.3}, {"rank": 39, "score": 64, "sc": "syl", "ticker": "INTC", "name": "Intel Corporation", "sector": "Technology", "price": "$109.33", "upside": "-20.0%", "uv": -20.0, "peg": "0.73", "fpe": "22.0x", "fwd": "22.0x", "smfpe": "27.0x", "eps": "↑", "p52": 79.4}, {"rank": 40, "score": 64, "sc": "syl", "ticker": "MS", "name": "Morgan Stanley", "sector": "Financial Services", "price": "$211.03", "upside": "+11.4%", "uv": 11.4, "peg": "1.07", "fpe": "16.0x", "fwd": "16.0x", "smfpe": "16.0x", "eps": "↑", "p52": 98.8}, {"rank": 41, "score": 64, "sc": "syl", "ticker": "AMAT", "name": "Applied Materials Inc.", "sector": "Technology", "price": "$458.17", "upside": "+11.3%", "uv": 11.3, "peg": "1.33", "fpe": "24.0x", "fwd": "24.0x", "smfpe": "27.0x", "eps": "↑", "p52": 98.2}, {"rank": 42, "score": 63, "sc": "syl", "ticker": "ASML", "name": "ASML Holding N.V.", "sector": "Technology", "price": "$1,628.57", "upside": "+10.5%", "uv": 10.5, "peg": "1.12", "fpe": "28.0x", "fwd": "28.0x", "smfpe": "27.0x", "eps": "↑", "p52": 97.4}, {"rank": 43, "score": 63, "sc": "syl", "ticker": "WMT", "name": "Walmart Inc.", "sector": "Consumer Defensive", "price": "$114.60", "upside": "+21.7%", "uv": 21.7, "peg": "2.94", "fpe": "37.9x", "fwd": "37.9x", "smfpe": "43.0x", "eps": "↑", "p52": 50.7}, {"rank": 44, "score": 62, "sc": "syl", "ticker": "MSFT", "name": "Microsoft Corporation", "sector": "Technology", "price": "$460.52", "upside": "+19.9%", "uv": 19.9, "peg": "1.93", "fpe": "29.0x", "fwd": "29.0x", "smfpe": "27.0x", "eps": "↑", "p52": 52.3}, {"rank": 45, "score": 62, "sc": "syl", "ticker": "GOOGL", "name": "Alphabet Inc.", "sector": "Communication Services", "price": "$376.37", "upside": "+9.3%", "uv": 9.3, "peg": "1.22", "fpe": "22.0x", "fwd": "22.0x", "smfpe": "24.0x", "eps": "↑", "p52": 86.9}, {"rank": 46, "score": 62, "sc": "syl", "ticker": "SNOW", "name": "Snowflake Inc.", "sector": "Technology", "price": "$280.16", "upside": "+10.7%", "uv": 10.7, "peg": "—", "fpe": "—", "fwd": "—", "smfpe": "27.0x", "eps": "↑", "p52": 97.1}, {"rank": 47, "score": 62, "sc": "syl", "ticker": "NKE", "name": "Nike Inc.", "sector": "Consumer Cyclical", "price": "$45.93", "upside": "+49.6%", "uv": 49.6, "peg": "2.19", "fpe": "22.0x", "fwd": "22.0x", "smfpe": "22.0x", "eps": "↑", "p52": 11.8}, {"rank": 48, "score": 60, "sc": "syl", "ticker": "NOW", "name": "ServiceNow Inc.", "sector": "Technology", "price": "$135.86", "upside": "+25.1%", "uv": 25.1, "peg": "1.68", "fpe": "42.1x", "fwd": "42.1x", "smfpe": "27.0x", "eps": "↑", "p52": 41.9}, {"rank": 49, "score": 58, "sc": "syl", "ticker": "LLY", "name": "Eli Lilly and Company", "sector": "Healthcare", "price": "$1,081.96", "upside": "+9.1%", "uv": 9.1, "peg": "0.88", "fpe": "35.0x", "fwd": "35.0x", "smfpe": "16.5x", "eps": "↑", "p52": 87.2}, {"rank": 50, "score": 57, "sc": "syl", "ticker": "MRVL", "name": "Marvell Technology", "sector": "Technology", "price": "$219.43", "upside": "+18.5%", "uv": 18.5, "peg": "1.09", "fpe": "38.0x", "fwd": "38.0x", "smfpe": "27.0x", "eps": "↑", "p52": 96.6}, {"rank": 51, "score": 57, "sc": "syl", "ticker": "NEE", "name": "NextEra Energy Inc.", "sector": "Utilities", "price": "$83.66", "upside": "+14.8%", "uv": 14.8, "peg": "2.54", "fpe": "20.0x", "fwd": "20.0x", "smfpe": "20.0x", "eps": "↑", "p52": 52.2}, {"rank": 52, "score": 57, "sc": "syl", "ticker": "DE", "name": "Deere & Company", "sector": "Industrials", "price": "$542.43", "upside": "+10.6%", "uv": 10.6, "peg": "2.25", "fpe": "18.0x", "fwd": "18.0x", "smfpe": "21.0x", "eps": "↑", "p52": 45.4}, {"rank": 53, "score": 56, "sc": "syl", "ticker": "QCOM", "name": "QUALCOMM Inc.", "sector": "Technology", "price": "$228.99", "upside": "-6.1%", "uv": -6.1, "peg": "1.75", "fpe": "14.0x", "fwd": "14.0x", "smfpe": "27.0x", "eps": "↑", "p52": 77.6}, {"rank": 54, "score": 56, "sc": "syl", "ticker": "PLTR", "name": "Palantir Technologies", "sector": "Technology", "price": "$160.65", "upside": "+16.8%", "uv": 16.8, "peg": "1.71", "fpe": "65.0x", "fwd": "65.0x", "smfpe": "27.0x", "eps": "↑", "p52": 47.1}, {"rank": 55, "score": 56, "sc": "syl", "ticker": "GS", "name": "Goldman Sachs Group", "sector": "Financial Services", "price": "$1,048.58", "upside": "-6.5%", "uv": -6.5, "peg": "1.25", "fpe": "15.0x", "fwd": "15.0x", "smfpe": "16.0x", "eps": "↑", "p52": 99.4}, {"rank": 56, "score": 56, "sc": "syl", "ticker": "SBUX", "name": "Starbucks Corporation", "sector": "Consumer Cyclical", "price": "$96.51", "upside": "+12.4%", "uv": 12.4, "peg": "2.10", "fpe": "25.0x", "fwd": "25.0x", "smfpe": "22.0x", "eps": "↑", "p52": 60.0}, {"rank": 57, "score": 55, "sc": "syl", "ticker": "ARM", "name": "Arm Holdings PLC", "sector": "Technology", "price": "$408.85", "upside": "+12.5%", "uv": 12.5, "peg": "1.49", "fpe": "52.0x", "fwd": "52.0x", "smfpe": "27.0x", "eps": "↑", "p52": 96.0}, {"rank": 58, "score": 54, "sc": "syl", "ticker": "XOM", "name": "Exxon Mobil Corporation", "sector": "Energy", "price": "$149.46", "upside": "+13.8%", "uv": 13.8, "peg": "2.58", "fpe": "13.0x", "fwd": "13.0x", "smfpe": "13.0x", "eps": "↑", "p52": 63.9}, {"rank": 59, "score": 54, "sc": "syl", "ticker": "HON", "name": "Honeywell International", "sector": "Industrials", "price": "$236.54", "upside": "+12.0%", "uv": 12.0, "peg": "2.09", "fpe": "21.0x", "fwd": "21.0x", "smfpe": "21.0x", "eps": "↑", "p52": 81.0}, {"rank": 60, "score": 54, "sc": "syl", "ticker": "BRK-B", "name": "Berkshire Hathaway Inc.", "sector": "Financial Services", "price": "$470.27", "upside": "+10.6%", "uv": 10.6, "peg": "2.00", "fpe": "16.0x", "fwd": "16.0x", "smfpe": "16.0x", "eps": "↑", "p52": 24.5}, {"rank": 61, "score": 53, "sc": "syl", "ticker": "AMD", "name": "Advanced Micro Devices", "sector": "Technology", "price": "$510.13", "upside": "-11.9%", "uv": -11.9, "peg": "0.83", "fpe": "35.0x", "fwd": "35.0x", "smfpe": "27.0x", "eps": "↑", "p52": 95.9}, {"rank": 62, "score": 51, "sc": "syl", "ticker": "AMZN", "name": "Amazon.com Inc.", "sector": "Consumer Cyclical", "price": "$261.26", "upside": "+17.6%", "uv": 17.6, "peg": "1.55", "fpe": "34.0x", "fwd": "34.0x", "smfpe": "22.0x", "eps": "↑", "p52": 79.0}, {"rank": 63, "score": 51, "sc": "syl", "ticker": "IBM", "name": "IBM Corporation", "sector": "Technology", "price": "$320.42", "upside": "+6.1%", "uv": 6.1, "peg": "2.09", "fpe": "21.0x", "fwd": "21.0x", "smfpe": "27.0x", "eps": "↑", "p52": 93.5}, {"rank": 64, "score": 51, "sc": "syl", "ticker": "KLAC", "name": "KLA Corporation", "sector": "Technology", "price": "$1,940.04", "upside": "+8.2%", "uv": 8.2, "peg": "1.50", "fpe": "27.0x", "fwd": "27.0x", "smfpe": "27.0x", "eps": "↑", "p52": 90.8}, {"rank": 65, "score": 50, "sc": "syl", "ticker": "CVX", "name": "Chevron Corporation", "sector": "Energy", "price": "$185.84", "upside": "+7.7%", "uv": 7.7, "peg": "2.41", "fpe": "12.0x", "fwd": "12.0x", "smfpe": "13.0x", "eps": "↑", "p52": 63.1}, {"rank": 66, "score": 50, "sc": "syl", "ticker": "COST", "name": "Costco Wholesale Corp.", "sector": "Consumer Defensive", "price": "$946.11", "upside": "+16.3%", "uv": 16.3, "peg": "3.43", "fpe": "48.0x", "fwd": "48.0x", "smfpe": "43.0x", "eps": "↑", "p52": 40.4}, {"rank": 67, "score": 49, "sc": "srd", "ticker": "SLB", "name": "SLB N.V.", "sector": "Energy", "price": "$54.75", "upside": "+13.2%", "uv": 13.2, "peg": "2.38", "fpe": "14.0x", "fwd": "14.0x", "smfpe": "13.0x", "eps": "↑", "p52": 85.0}, {"rank": 68, "score": 49, "sc": "srd", "ticker": "MCD", "name": "McDonald's Corporation", "sector": "Consumer Cyclical", "price": "$276.11", "upside": "+15.9%", "uv": 15.9, "peg": "2.76", "fpe": "22.0x", "fwd": "22.0x", "smfpe": "22.0x", "eps": "↑", "p52": 5.9}, {"rank": 69, "score": 49, "sc": "srd", "ticker": "DDOG", "name": "Datadog Inc.", "sector": "Technology", "price": "$277.49", "upside": "+11.7%", "uv": 11.7, "peg": "1.81", "fpe": "58.1x", "fwd": "58.1x", "smfpe": "27.0x", "eps": "↑", "p52": 99.3}, {"rank": 70, "score": 48, "sc": "srd", "ticker": "V", "name": "Visa Inc.", "sector": "Financial Services", "price": "$322.77", "upside": "+12.6%", "uv": 12.6, "peg": "2.08", "fpe": "27.0x", "fwd": "27.0x", "smfpe": "16.0x", "eps": "↑", "p52": 35.4}, {"rank": 71, "score": 48, "sc": "srd", "ticker": "CAT", "name": "Caterpillar Inc.", "sector": "Industrials", "price": "$865.36", "upside": "+6.3%", "uv": 6.3, "peg": "2.25", "fpe": "18.0x", "fwd": "18.0x", "smfpe": "21.0x", "eps": "↑", "p52": 88.9}, {"rank": 72, "score": 46, "sc": "srd", "ticker": "MRNA", "name": "Moderna Inc.", "sector": "Healthcare", "price": "$46.06", "upside": "-12.5%", "uv": -12.5, "peg": "—", "fpe": "—", "fwd": "—", "smfpe": "16.5x", "eps": "↑", "p52": 63.8}, {"rank": 73, "score": 45, "sc": "srd", "ticker": "AAPL", "name": "Apple Inc.", "sector": "Technology", "price": "$306.31", "upside": "+5.8%", "uv": 5.8, "peg": "2.81", "fpe": "28.0x", "fwd": "28.0x", "smfpe": "27.0x", "eps": "↑", "p52": 92.8}, {"rank": 74, "score": 45, "sc": "srd", "ticker": "JNJ", "name": "Johnson & Johnson", "sector": "Healthcare", "price": "$223.51", "upside": "+12.1%", "uv": 12.1, "peg": "3.39", "fpe": "17.0x", "fwd": "17.0x", "smfpe": "16.5x", "eps": "↑", "p52": 72.5}, {"rank": 75, "score": 43, "sc": "srd", "ticker": "MA", "name": "Mastercard Inc.", "sector": "Financial Services", "price": "$495.25", "upside": "+13.1%", "uv": 13.1, "peg": "2.30", "fpe": "30.0x", "fwd": "30.0x", "smfpe": "16.0x", "eps": "↑", "p52": 12.2}, {"rank": 76, "score": 42, "sc": "srd", "ticker": "CSCO", "name": "Cisco Systems Inc.", "sector": "Technology", "price": "$121.33", "upside": "+0.8%", "uv": 0.8, "peg": "3.03", "fpe": "21.0x", "fwd": "21.0x", "smfpe": "27.0x", "eps": "↑", "p52": 99.0}, {"rank": 77, "score": 38, "sc": "srd", "ticker": "TSLA", "name": "Tesla Inc.", "sector": "Consumer Cyclical", "price": "$415.88", "upside": "+8.3%", "uv": 8.3, "peg": "4.00", "fpe": "80.0x", "fwd": "80.0x", "smfpe": "22.0x", "eps": "↑", "p52": 63.2}];
+let sc='rank',sd=1;
+
+function uc(v){
+  if(v===null||v===undefined)return'na';
+  return v>5?'up':v<-5?'dn':'nu';
+}
+function b52(v){
+  if(v===null||v===undefined)return'<span class="na">—</span>';
+  let p=Math.min(Math.max(v,0),100);
+  let c='#00d4aa';
+  if(p>90||p<5)c='#ff4d6d';else if(p>75)c='#ffc300';
+  return`<div class="bw"><div class="bf" style="width:${p.toFixed(1)}%;background:${c}"></div><span class="bl">${p.toFixed(0)}%</span></div>`;
+}
+function ea(l){
+  const m={'↑':'eu','↓':'ed','→':'ef'};
+  return`<span class="${m[l]||'na'}">${l}</span>`;
+}
+function row(r){
+  const sv=r.score!==null?r.score:'—';
+  return`<tr>
+<td class="rk">${r.rank}</td>
+<td><span class="sp ${r.sc}">${sv}</span></td>
+<td class="tc"><div class="sym">${r.ticker}</div><div class="cn" title="${r.name}">${r.name}</div></td>
+<td><span class="sb" title="${r.sector}">${r.sector}</span></td>
+<td class="pr">${r.price}</td>
+<td class="${uc(r.uv)}">${r.upside}</td>
+<td>${r.peg}</td>
+<td>${r.fpe}</td>
+<td class="na">${r.smfpe}</td>
+<td style="text-align:center">${ea(r.eps)}</td>
+<td style="padding-right:44px">${b52(r.p52)}</td>
+</tr>`;
+}
+
+function filtered(){
+  const s=document.getElementById('si').value.toLowerCase();
+  const sec=document.getElementById('sf').value;
+  const ms=parseInt(document.getElementById('scf').value)||0;
+  return D.filter(r=>{
+    if(s&&!r.ticker.toLowerCase().includes(s)&&!r.name.toLowerCase().includes(s))return false;
+    if(sec&&r.sector!==sec)return false;
+    if(ms>0&&(r.score===null||r.score<ms))return false;
+    return true;
+  });
+}
+
+function render(){
+  let rows=filtered().slice().sort((a,b)=>{
+    let va=a[sc],vb=b[sc];
+    if(va===null||va===undefined)return 1;
+    if(vb===null||vb===undefined)return -1;
+    if(typeof va==='string')return va.localeCompare(vb)*sd;
+    return(va-vb)*sd;
+  });
+  document.getElementById('tb').innerHTML=rows.map(row).join('');
+  document.getElementById('rc').textContent=rows.length;
+}
+
+document.querySelectorAll('th[data-k]').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const k=th.dataset.k;
+    if(sc===k)sd*=-1;else{sc=k;sd=k==='rank'?1:-1;}
+    document.querySelectorAll('th').forEach(t=>t.classList.remove('sa','sd'));
+    th.classList.add(sd===1?'sa':'sd');
+    render();
+  });
+});
+['si','sf','scf'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('input',render);
+  el.addEventListener('change',render);
+});
+render();
+document.querySelector('th[data-k="rank"]').classList.add('sa');
+</script>
+</body></html>
