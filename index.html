@@ -354,7 +354,7 @@ body.dark .sync-status.busy { color:#fbbf24; }
   <div class="header-top">
     <div>
       <div class="app-title">🏠 Casa Pipi's</div>
-      <div class="app-subtitle">Gastos de casita · v1.4</div>
+      <div class="app-subtitle">Gastos de casita · v1.5</div>
     </div>
     <button class="btn btn-sm" id="darkModeBtn" onclick="toggleDarkMode()" title="Cambiar tema">🌙</button>
   </div>
@@ -411,6 +411,25 @@ body.dark .sync-status.busy { color:#fbbf24; }
     </div>
   </div>
 
+  <div class="table-wrap">
+    <div class="table-header">
+      <span class="table-title">Gastos Pina</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Concepto</th><th>Moneda</th><th>Monto</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="pinaExpenseTbody"></tbody>
+      </table>
+    </div>
+    <div class="add-row-btn-wrap" id="addPinaRowBtnWrap">
+      <button class="btn btn-sm btn-primary" onclick="addNewPinaItem()">+ Agregar gasto</button>
+    </div>
+  </div>
+
   <div class="totals-card" id="totalsCard">
     <div class="totals-title">Resumen del mes</div>
     <div class="totals-grid">
@@ -430,6 +449,7 @@ body.dark .sync-status.busy { color:#fbbf24; }
     <div class="pina-owes">
       <div class="pina-owes-label" id="pinaOwesLabel">Gastos Pina</div>
       <div class="pina-owes-amount" id="pinaOwes">—</div>
+      <div id="pinaPersonalDetail" style="font-size:12px;color:var(--text-muted);margin-top:4px"></div>
     </div>
   </div>
 
@@ -496,11 +516,18 @@ const RECURRING_TEMPLATES = [
   { name: 'Edesur',     currency: 'ARS' },
   { name: 'Metrogas',   currency: 'ARS' },
 ];
+const PINA_RECURRING_TEMPLATES = [
+  { name: 'Visa',       currency: 'ARS' },
+  { name: 'Visa',       currency: 'USD' },
+  { name: 'Mastercard', currency: 'ARS' },
+  { name: 'Mastercard', currency: 'USD' },
+];
 const MONTH_NAMES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 let allMonths = {};
 let currentKey = '';
 let editingItemId = null;
+let editingPinaItemId = null;
 
 function todayKey() {
   const d = new Date();
@@ -539,8 +566,11 @@ function loadAll() {
 function newItemFromTemplate(tpl) {
   return { id: uid(), name: tpl.name, currency: tpl.currency, amount: 0, splitOverride: null, notes: '', installments: null, isRecurring: true };
 }
+function newPinaItemFromTemplate(tpl) {
+  return { id: uid(), name: tpl.name, currency: tpl.currency, amount: 0, notes: '', installments: null };
+}
 function createMonthRecord(key) {
-  return { key, matiSplit: 75, pinaSplit: 25, locked: false, items: RECURRING_TEMPLATES.map(newItemFromTemplate) };
+  return { key, matiSplit: 75, pinaSplit: 25, locked: false, items: RECURRING_TEMPLATES.map(newItemFromTemplate), pinaItems: PINA_RECURRING_TEMPLATES.map(newPinaItemFromTemplate) };
 }
 
 function applyCarryOver(newMonth) {
@@ -554,6 +584,15 @@ function applyCarryOver(newMonth) {
   for (const item of prev.items) {
     if (item.installments && item.installments.current < item.installments.total) {
       newMonth.items.push({
+        ...item,
+        id: uid(),
+        installments: { current: item.installments.current + 1, total: item.installments.total }
+      });
+    }
+  }
+  for (const item of (prev.pinaItems || [])) {
+    if (item.installments && item.installments.current < item.installments.total) {
+      newMonth.pinaItems.push({
         ...item,
         id: uid(),
         installments: { current: item.installments.current + 1, total: item.installments.total }
@@ -584,13 +623,19 @@ function calcShares(item, month) {
 }
 function calcTotals(month) {
   let totalARS=0, matiARS=0, pinaARS=0, totalUSD=0, matiUSD=0, pinaUSD=0;
+  let pinaPersonalARS=0, pinaPersonalUSD=0;
   for (const item of month.items) {
     const amt = parseFloat(item.amount) || 0;
     const { mati, pina } = calcShares(item, month);
     if (item.currency === 'ARS') { totalARS+=amt; matiARS+=mati; pinaARS+=pina; }
     else                          { totalUSD+=amt; matiUSD+=mati; pinaUSD+=pina; }
   }
-  return { totalARS, matiARS, pinaARS, totalUSD, matiUSD, pinaUSD };
+  for (const item of (month.pinaItems || [])) {
+    const amt = parseFloat(item.amount) || 0;
+    if (item.currency === 'ARS') pinaPersonalARS += amt;
+    else                          pinaPersonalUSD += amt;
+  }
+  return { totalARS, matiARS, pinaARS, totalUSD, matiUSD, pinaUSD, pinaPersonalARS, pinaPersonalUSD };
 }
 
 function renderAll() {
@@ -628,8 +673,10 @@ function renderAll() {
   document.getElementById('matiSplitInput').disabled = readonly;
   document.getElementById('pinaSplitInput').disabled = readonly;
   document.getElementById('addRowBtnWrap').style.display = readonly ? 'none' : '';
+  document.getElementById('addPinaRowBtnWrap').style.display = readonly ? 'none' : '';
 
   renderTable(month, readonly);
+  renderPinaTable(month, readonly);
   renderTotals(month);
   renderPrintHeader(month);
 }
@@ -732,6 +779,140 @@ function buildEditRow(item, month) {
   return tr;
 }
 
+function renderPinaTable(month, readonly) {
+  const tbody = document.getElementById('pinaExpenseTbody');
+  tbody.innerHTML = '';
+  const items = month.pinaItems || [];
+  if (!items.length) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="5"><div class="empty-state">Sin gastos propios.<br><p>Hacé clic en "+ Agregar gasto" para empezar.</p></div></td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+  for (const item of items) {
+    if (editingPinaItemId === item.id && !readonly) tbody.appendChild(buildPinaEditRow(item));
+    else tbody.appendChild(buildPinaViewRow(item, readonly));
+  }
+}
+
+function buildPinaViewRow(item, readonly) {
+  const installBadge = item.installments
+    ? `<span class="installment-badge">cuota ${item.installments.current}/${item.installments.total}</span>` : '';
+  const notesHtml = item.notes
+    ? `<div class="item-notes">${escHtml(item.notes)}</div>` : '';
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${escHtml(item.name)}${installBadge}${notesHtml}</td>
+    <td><span class="badge-${item.currency.toLowerCase()}">${item.currency}</span></td>
+    <td class="amount">${fmtAmount(parseFloat(item.amount)||0, item.currency)}</td>
+    <td><div class="actions-cell">${!readonly
+      ? `<button class="btn btn-sm" onclick="startPinaEdit('${item.id}')">✏️ Editar</button>
+         <button class="btn btn-sm btn-danger" onclick="deletePinaItem('${item.id}')">✕</button>`
+      : '—'}</div></td>`;
+  return tr;
+}
+
+function buildPinaEditRow(item) {
+  const instChecked = item.installments ? 'checked' : '';
+  const instCurrent = item.installments ? item.installments.current : 1;
+  const instTotal   = item.installments ? item.installments.total   : 12;
+  const instDisplay = item.installments ? 'inline-flex' : 'none';
+  const tr = document.createElement('tr');
+  tr.className = 'edit-row';
+  tr.innerHTML = `
+    <td><input type="text" id="pName" value="${escAttr(item.name)}" placeholder="Concepto"></td>
+    <td>
+      <select id="pCurrency">
+        <option value="ARS"${item.currency==='ARS'?' selected':''}>ARS</option>
+        <option value="USD"${item.currency==='USD'?' selected':''}>USD</option>
+      </select>
+    </td>
+    <td><input type="number" id="pAmount" value="${item.amount||\'\'}" placeholder="0" min="0" step="0.01"></td>
+    <td colspan="1">
+      <div class="install-row">
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
+          <input type="checkbox" id="pInstall" ${instChecked} onchange="togglePinaInstallUI()">
+          <span>Cuotas</span>
+        </label>
+        <span id="pinaInstallDetails" style="display:${instDisplay};align-items:center;gap:4px">
+          <span>Cuota</span>
+          <input type="number" id="pInstallCurrent" value="${instCurrent}" min="1" style="width:48px!important">
+          <span>de</span>
+          <input type="number" id="pInstallTotal" value="${instTotal}" min="1" style="width:48px!important">
+        </span>
+      </div>
+      <div style="margin-top:6px">
+        <textarea id="pNotes" placeholder="Notas (opcional)" rows="2">${escText(item.notes || '')}</textarea>
+      </div>
+      <div class="actions-cell" style="margin-top:6px">
+        <button class="btn btn-sm btn-primary" onclick="savePinaEdit('${item.id}')">✓ Guardar</button>
+        <button class="btn btn-sm" onclick="cancelPinaEdit()">✕</button>
+      </div>
+    </td>`;
+  return tr;
+}
+
+function togglePinaInstallUI() {
+  const chk = document.getElementById('pInstall');
+  const det = document.getElementById('pinaInstallDetails');
+  if (det) det.style.display = chk.checked ? 'inline-flex' : 'none';
+}
+
+function startPinaEdit(id) {
+  editingPinaItemId = id;
+  renderAll();
+  setTimeout(() => { const el = document.getElementById('pName'); if (el) el.focus(); }, 50);
+}
+function cancelPinaEdit() { editingPinaItemId = null; renderAll(); }
+
+function savePinaEdit(id) {
+  const month = getMonth();
+  if (!month) return;
+  const name     = (document.getElementById('pName')?.value || '').trim();
+  const currency = document.getElementById('pCurrency')?.value || 'ARS';
+  const amount   = parseFloat(document.getElementById('pAmount')?.value) || 0;
+  const notes    = (document.getElementById('pNotes')?.value || '').trim();
+  const instChk  = document.getElementById('pInstall');
+  const instCur  = parseInt(document.getElementById('pInstallCurrent')?.value) || 1;
+  const instTot  = parseInt(document.getElementById('pInstallTotal')?.value)   || instCur;
+  const installments = instChk?.checked
+    ? { current: Math.max(1, instCur), total: Math.max(instCur, instTot) }
+    : null;
+  const item = (month.pinaItems || []).find(i => i.id === id);
+  if (item) {
+    item.name = name || item.name;
+    item.currency = currency;
+    item.amount = amount;
+    item.notes = notes;
+    item.installments = installments;
+  }
+  editingPinaItemId = null;
+  saveAll();
+  renderAll();
+}
+
+function deletePinaItem(id) {
+  const month = getMonth();
+  if (!month) return;
+  month.pinaItems = (month.pinaItems || []).filter(i => i.id !== id);
+  if (editingPinaItemId === id) editingPinaItemId = null;
+  saveAll(); renderAll();
+}
+
+function addNewPinaItem() {
+  const month = getMonth();
+  if (!month) return;
+  if (!month.pinaItems) month.pinaItems = [];
+  const newItem = { id: uid(), name: '', currency: 'ARS', amount: 0, notes: '', installments: null };
+  month.pinaItems.push(newItem);
+  editingPinaItemId = newItem.id;
+  saveAll(); renderAll();
+  setTimeout(() => {
+    const lastRow = document.getElementById('pinaExpenseTbody').lastElementChild;
+    if (lastRow) lastRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
+}
+
 function toggleInstallUI() {
   const chk = document.getElementById('eInstall');
   const det = document.getElementById('installDetails');
@@ -775,10 +956,19 @@ function renderTotals(month) {
   document.getElementById('matiUSD').textContent  = fmtUSD(t.matiUSD);
   document.getElementById('pinaUSD').textContent  = fmtUSD(t.pinaUSD);
   document.getElementById('pinaOwesLabel').textContent = `Gastos Pina — ${keyToLabel(currentKey)}`;
+  const combinedARS = t.pinaARS + t.pinaPersonalARS;
+  const combinedUSD = t.pinaUSD + t.pinaPersonalUSD;
   const parts = [];
-  if (t.pinaARS > 0.001) parts.push(fmtARS(t.pinaARS));
-  if (t.pinaUSD > 0.001) parts.push(fmtUSD(t.pinaUSD));
+  if (combinedARS > 0.001) parts.push(fmtARS(combinedARS));
+  if (combinedUSD > 0.001) parts.push(fmtUSD(combinedUSD));
   document.getElementById('pinaOwes').textContent = parts.length ? parts.join(' + ') : '$0';
+  const detail = document.getElementById('pinaPersonalDetail');
+  if (detail) {
+    const personalParts = [];
+    if (t.pinaPersonalARS > 0.001) personalParts.push(fmtARS(t.pinaPersonalARS));
+    if (t.pinaPersonalUSD > 0.001) personalParts.push(fmtUSD(t.pinaPersonalUSD));
+    detail.textContent = personalParts.length ? `Propios Pina: ${personalParts.join(' + ')}` : '';
+  }
 }
 
 function renderPrintHeader(month) {
@@ -866,13 +1056,13 @@ function addNewItem() {
 function createNewMonth() {
   const key = todayKey();
   if (allMonths[key]) {
-    currentKey = key; editingItemId = null; renderAll();
+    currentKey = key; editingItemId = null; editingPinaItemId = null; renderAll();
     showNotif('Ya existe el mes actual'); return;
   }
   const newMonth = createMonthRecord(key);
   applyCarryOver(newMonth);
   allMonths[key] = newMonth;
-  currentKey = key; editingItemId = null;
+  currentKey = key; editingItemId = null; editingPinaItemId = null;
   saveAll(); renderAll();
   showNotif(`Nuevo mes creado: ${keyToLabel(key)}`);
 }
@@ -882,7 +1072,7 @@ function navigateMonth(delta) {
   const idx = keys.indexOf(currentKey);
   const newIdx = idx + delta;
   if (newIdx < 0 || newIdx >= keys.length) return;
-  editingItemId = null; currentKey = keys[newIdx]; renderAll();
+  editingItemId = null; editingPinaItemId = null; currentKey = keys[newIdx]; renderAll();
 }
 
 function toggleLockMonth() {
@@ -945,7 +1135,7 @@ function openModal() {
 }
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
-function goToMonth(key) { currentKey = key; editingItemId = null; closeModal(); renderAll(); }
+function goToMonth(key) { currentKey = key; editingItemId = null; editingPinaItemId = null; closeModal(); renderAll(); }
 function deleteMonth(key) {
   if (!confirm(`¿Borrar el registro de ${keyToLabel(key)}? Esta acción no se puede deshacer.`)) return;
   delete allMonths[key];
@@ -969,11 +1159,24 @@ function buildTextSummary() {
     lines.push(`• ${item.name}${cuota}: ${fmtAmount(amt, item.currency)} → Pina: ${fmtAmount(pina, item.currency)}${notes}`);
   }
   lines.push('', `TOTAL PESOS: ${fmtARS(t.totalARS)} | Pina: ${fmtARS(t.pinaARS)}`);
-  lines.push(`TOTAL USD: ${fmtUSD(t.totalUSD)} | Pina: ${fmtUSD(t.pinaUSD)}`, '');
-  const parts = [];
-  if (t.pinaARS > 0.001) parts.push(fmtARS(t.pinaARS));
-  if (t.pinaUSD > 0.001) parts.push(fmtUSD(t.pinaUSD));
-  lines.push(`Gastos Pina ${keyToLabel(month.key)}: ${parts.join(' + ') || '$0'}`);
+  lines.push(`TOTAL USD: ${fmtUSD(t.totalUSD)} | Pina: ${fmtUSD(t.pinaUSD)}`);
+  const pinaPersonalItems = (month.pinaItems || []).filter(i => parseFloat(i.amount) > 0);
+  if (pinaPersonalItems.length) {
+    lines.push('', 'GASTOS PROPIOS PINA:');
+    for (const item of pinaPersonalItems) {
+      const amt = parseFloat(item.amount) || 0;
+      const cuota = item.installments ? ` (cuota ${item.installments.current}/${item.installments.total})` : '';
+      const notes = item.notes ? ` — ${item.notes}` : '';
+      lines.push(`• ${item.name}${cuota}: ${fmtAmount(amt, item.currency)}${notes}`);
+    }
+  }
+  lines.push('');
+  const combinedARS = t.pinaARS + t.pinaPersonalARS;
+  const combinedUSD = t.pinaUSD + t.pinaPersonalUSD;
+  const combinedParts = [];
+  if (combinedARS > 0.001) combinedParts.push(fmtARS(combinedARS));
+  if (combinedUSD > 0.001) combinedParts.push(fmtUSD(combinedUSD));
+  lines.push(`Gastos Pina ${keyToLabel(month.key)}: ${combinedParts.join(' + ') || '$0'}`);
   return lines.join('\n');
 }
 
@@ -1014,9 +1217,26 @@ function buildImageSnapshot() {
       <td style="font-variant-numeric:tabular-nums;color:#0d9488;font-weight:600">${fmtAmount(pina, item.currency)}</td>
     </tr>`;
   }
+  let pinaRowsHtml = '';
+  for (const item of (month.pinaItems || [])) {
+    const amt = parseFloat(item.amount) || 0;
+    if (!amt) continue;
+    const cuota = item.installments ? ` <small style="background:#fef3c7;color:#92400e;border-radius:3px;padding:1px 4px;font-size:10px">c.${item.installments.current}/${item.installments.total}</small>` : '';
+    const notesHtml = item.notes ? `<div style="font-size:11px;color:#6b7280;font-style:italic;margin-top:1px">${escHtml(item.notes)}</div>` : '';
+    const badge = item.currency === 'USD'
+      ? 'background:#dcfce7;color:#166534;border-radius:3px;padding:1px 5px;font-size:11px;font-weight:700'
+      : 'background:#dbeafe;color:#1e40af;border-radius:3px;padding:1px 5px;font-size:11px;font-weight:700';
+    pinaRowsHtml += `<tr>
+      <td>${escHtml(item.name)}${cuota}${notesHtml}</td>
+      <td><span style="${badge}">${item.currency}</span></td>
+      <td style="font-weight:600;font-variant-numeric:tabular-nums" colspan="4">${fmtAmount(amt, item.currency)}</td>
+    </tr>`;
+  }
+  const combinedARS = t.pinaARS + t.pinaPersonalARS;
+  const combinedUSD = t.pinaUSD + t.pinaPersonalUSD;
   const pinaParts = [];
-  if (t.pinaARS > 0.001) pinaParts.push(fmtARS(t.pinaARS));
-  if (t.pinaUSD > 0.001) pinaParts.push(fmtUSD(t.pinaUSD));
+  if (combinedARS > 0.001) pinaParts.push(fmtARS(combinedARS));
+  if (combinedUSD > 0.001) pinaParts.push(fmtUSD(combinedUSD));
   snap.innerHTML = `
     <div class="snap-header">
       <div class="snap-title">🏠 Casa Pipi's</div>
@@ -1026,6 +1246,12 @@ function buildImageSnapshot() {
       <thead><tr><th>Concepto</th><th>Moneda</th><th>Monto</th><th>Split</th><th>Mati</th><th>Pina</th></tr></thead>
       <tbody>${rowsHtml || '<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:12px">Sin gastos cargados</td></tr>'}</tbody>
     </table>
+    ${pinaRowsHtml ? `
+    <div style="font-weight:700;font-size:13px;color:#374151;padding:10px 10px 4px">Gastos Pina</div>
+    <table class="snap-table">
+      <thead><tr><th>Concepto</th><th>Moneda</th><th colspan="4">Monto</th></tr></thead>
+      <tbody>${pinaRowsHtml}</tbody>
+    </table>` : ''}
     <div class="snap-totals">
       <div class="snap-block">
         <div class="snap-block-title">Pesos (ARS)</div>
@@ -1109,6 +1335,11 @@ function exportToCSV() {
       const { mati, pina, matiPct, pinaPct } = calcShares(item, month);
       const cuota = item.installments ? `${item.installments.current}/${item.installments.total}` : '';
       rows.push([keyToLabel(key), item.name, item.currency, amt, matiPct, pinaPct, Math.round(mati), Math.round(pina), item.notes || '', cuota]);
+    }
+    for (const item of (month.pinaItems || [])) {
+      const amt = parseFloat(item.amount) || 0;
+      const cuota = item.installments ? `${item.installments.current}/${item.installments.total}` : '';
+      rows.push([keyToLabel(key), `[Pina] ${item.name}`, item.currency, amt, 0, 100, 0, Math.round(amt), item.notes || '', cuota]);
     }
   }
   const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\r\n');
