@@ -6,7 +6,7 @@ Reads from data/screener_raw.json (produced by the fetch step) and generates ced
 import json
 import math
 import sys
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -700,7 +700,17 @@ if __name__ == "__main__":
     with open(data_file) as f:
         raw = json.load(f)
 
-    timestamp = raw.get("timestamp", datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"))
+    ART = timezone(timedelta(hours=-3))
+    ts_raw = raw.get("timestamp", "")
+    if ts_raw:
+        # parse stored UTC timestamp and convert to ART
+        try:
+            dt_utc = datetime.strptime(ts_raw, "%Y-%m-%d %H:%M UTC").replace(tzinfo=timezone.utc)
+            timestamp = dt_utc.astimezone(ART).strftime("%Y-%m-%d %H:%M ART")
+        except ValueError:
+            timestamp = ts_raw
+    else:
+        timestamp = datetime.now(ART).strftime("%Y-%m-%d %H:%M ART")
     rows  = build_rows(raw)
     scored = compute_scores(rows)
 

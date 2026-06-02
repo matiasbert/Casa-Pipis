@@ -234,7 +234,7 @@ for sym, vals in STOCKS.items():
             estimates[sym] = []
 
 output = {
-    "timestamp": "2026-06-02 01:30 UTC",
+    "timestamp": "2026-06-01 22:30 ART",
     "quotes": quotes,
     "profiles": profiles,
     "targets": targets,
