@@ -566,7 +566,7 @@ td{{padding:12px 12px;vertical-align:middle;white-space:nowrap}}
     <div class="htitle">CEDEAR <span>Screener</span></div>
     <div class="hsub">BYMA · Acciones · Scoring ponderado 5 criterios</div>
   </div>
-  <div class="hts">Datos: {timestamp} · FMP</div>
+  <div class="hts">Datos: {timestamp} · Yahoo Finance</div>
 </div>
 
 <div class="ctrl">
