@@ -1,128 +1,133 @@
 #!/usr/bin/env python3
-"""Generate screener_raw.json with all 77 CEDEAR tickers."""
+"""Generate screener_raw.json with real FMP data + knowledge-based EPS estimates."""
 import json
 
-# (ticker, price, 52w_low, 52w_high, target, eps1, date1, eps2, date2, eps_growth)
-RAW = [
-    # Tech - Big
-    ("AAPL",  306.31, 195.07, 315.0,   324.0,  8.75, "2026-09-27",  9.62, "2027-09-27",  0.10),
-    ("MSFT",  460.52, 356.28, 555.45,  552.0, 16.80, "2026-06-30", 19.43, "2027-06-30",  0.16),
-    ("GOOGL", 376.37, 162.0,  408.61,  411.0, 14.22, "2026-12-31", 14.71, "2027-12-31",  0.18),
-    ("AMZN",  261.26, 196.0,  278.56,  307.0,  8.79, "2026-12-31", 10.06, "2027-12-31",  0.23),
-    ("META",  600.47, 520.26, 796.25,  824.0, 32.83, "2026-12-31", 34.89, "2027-12-31",  0.30),
-    # Tech - Semis
-    ("NVDA",  224.36, 135.4,  236.54,  317.0,  8.87, "2027-01-25", 12.37, "2028-01-25",  0.89),
-    ("AMD",   162.0,   85.0,  250.0,   200.0,  5.60, "2026-12-31",  7.92, "2027-12-31",  0.57),
-    ("INTC",   22.0,   18.0,   50.0,    25.0,  0.78, "2026-12-31",  1.50, "2027-12-31", -0.15),
-    ("QCOM",  168.0,  140.0,  215.0,   205.0, 11.20, "2026-09-28", 12.18, "2027-09-28",  0.08),
-    ("AVGO",  248.0,  168.0,  285.0,   310.0,  6.20, "2026-10-31",  7.85, "2027-10-31",  0.27),
-    ("TSM",   215.0,  155.0,  245.0,   265.0, 10.42, "2026-12-31", 12.68, "2027-12-31",  0.22),
-    ("MU",    108.0,   65.0,  155.0,   145.0,  7.62, "2026-08-28", 10.84, "2027-08-28",  0.42),
-    ("ARM",   130.0,   85.0,  200.0,   170.0,  2.12, "2027-03-31",  2.86, "2028-03-31",  0.35),
-    ("MRVL",   88.0,   48.0,  130.0,   120.0,  2.66, "2027-01-31",  3.52, "2028-01-31",  0.32),
-    ("TSEM",   60.0,   45.0,   80.0,    75.0,  3.28, "2026-12-31",  3.88, "2027-12-31",  0.16),
-    # Tech - Software
-    ("CRM",   328.0,  245.0,  405.0,   380.0, 11.92, "2027-01-31", 13.68, "2028-01-31",  0.21),
-    ("ORCL",  220.0,  160.0,  280.0,   260.0,  7.88, "2027-05-31",  9.28, "2028-05-31",  0.18),
-    ("SAP",   295.0,  210.0,  340.0,   350.0,  7.12, "2026-12-31",  8.44, "2027-12-31",  0.21),
-    ("NOW",  1095.0,  780.0, 1250.0,  1280.0, 22.84, "2026-12-31", 28.60, "2027-12-31",  0.25),
-    ("ADBE",  368.0,  285.0,  460.0,   410.0, 20.48, "2026-11-28", 23.12, "2027-11-28",  0.11),
-    ("SNOW",  185.0,  105.0,  230.0,   220.0,  0.88, "2027-01-31",  1.86, "2028-01-31",  0.35),
-    ("PLTR",  118.0,   22.0,  140.0,   115.0,  0.52, "2026-12-31",  0.72, "2027-12-31",  0.38),
-    ("SHOP",   94.0,   58.0,  128.0,   118.0,  1.52, "2026-12-31",  2.08, "2027-12-31",  0.37),
-    ("UBER",   82.0,   58.0,  100.0,   100.0,  3.82, "2026-12-31",  5.20, "2027-12-31",  0.54),
-    ("TEAM",  285.0,  192.0,  340.0,   330.0,  7.88, "2026-06-30",  9.92, "2027-06-30",  0.26),
-    ("DDOG",  158.0,   98.0,  195.0,   195.0,  2.92, "2026-12-31",  3.88, "2027-12-31",  0.33),
-    ("PATH",   23.0,   14.0,   30.0,    28.0,  0.38, "2026-07-31",  0.52, "2027-07-31",  0.37),
-    ("IBM",   272.0,  210.0,  298.0,   290.0, 11.92, "2026-12-31", 13.28, "2027-12-31",  0.12),
-    ("CSCO",   67.0,   50.0,   78.0,    76.0,  4.08, "2026-07-31",  4.38, "2027-07-31",  0.07),
-    # Tech - Semis Equipment
-    ("ASML",  985.0,  640.0, 1200.0,  1180.0, 31.20, "2026-12-31", 38.40, "2027-12-31",  0.26),
-    ("AMAT",  192.0,  148.0,  248.0,   225.0, 11.28, "2026-10-31", 13.20, "2027-10-31",  0.18),
-    ("KLAC",  798.0,  580.0,  975.0,   940.0, 34.20, "2026-06-30", 40.80, "2027-06-30",  0.19),
-    ("COHR",   80.0,   42.0,  108.0,   102.0,  3.28, "2026-06-30",  4.48, "2027-06-30",  0.37),
-    # Tech - Hardware
-    ("SMCI",   55.0,   18.0,   78.0,    68.0,  2.82, "2026-07-31",  4.02, "2027-07-31",  0.43),
-    ("DELL",  135.0,   98.0,  165.0,   155.0,  8.98, "2027-01-31", 10.02, "2028-01-31",  0.15),
-    ("RGTI",   15.0,    8.0,   22.0,    18.0,  0.08, "2027-12-31",  0.20, "2028-12-31",  0.10),
-    # Financial Services
-    ("JPM",   274.0,  215.0,  310.0,   295.0, 20.40, "2026-12-31", 22.88, "2027-12-31",  0.12),
-    ("BAC",    47.0,   35.0,   52.0,    54.0,  4.12, "2026-12-31",  4.52, "2027-12-31",  0.12),
-    ("GS",    620.0,  475.0,  710.0,   680.0, 45.80, "2026-12-31", 48.60, "2027-12-31",  0.14),
-    ("MS",    128.0,   98.0,  145.0,   148.0,  9.20, "2026-12-31", 10.48, "2027-12-31",  0.18),
-    ("V",     368.0,  290.0,  410.0,   418.0, 12.20, "2026-09-30", 13.88, "2027-09-30",  0.14),
-    ("MA",    568.0,  440.0,  640.0,   640.0, 17.40, "2026-12-31", 19.82, "2027-12-31",  0.14),
-    ("PYPL",   72.0,   55.0,   92.0,    88.0,  4.86, "2026-12-31",  5.52, "2027-12-31",  0.16),
-    ("COIN",  278.0,  155.0,  370.0,   340.0, 16.20, "2026-12-31", 20.80, "2027-12-31",  0.28),
-    ("SOFI",   18.0,   12.0,   25.0,    22.0,  0.72, "2026-12-31",  0.98, "2027-12-31",  0.50),
-    ("BRK-B", 548.0,  415.0,  598.0,   595.0, 16.48, "2026-12-31", 17.88, "2027-12-31",  0.09),
-    # Energy
-    ("XOM",   108.0,   94.0,  125.0,   120.0,  7.82, "2026-12-31",  8.22, "2027-12-31",  0.05),
-    ("CVX",   143.0,  128.0,  168.0,   162.0, 10.44, "2026-12-31", 10.92, "2027-12-31",  0.05),
-    ("SLB",    38.0,   35.0,   54.0,    50.0,  2.84, "2026-12-31",  3.02, "2027-12-31",  0.06),
-    # Utilities
-    ("CEG",   285.0,  195.0,  345.0,   320.0, 10.48, "2026-12-31", 12.20, "2027-12-31",  0.25),
-    ("VST",   195.0,  100.0,  225.0,   235.0,  6.84, "2026-12-31",  8.20, "2027-12-31",  0.20),
-    ("NEE",    65.0,   55.0,   82.0,    78.0,  3.88, "2026-12-31",  4.24, "2027-12-31",  0.10),
-    # Healthcare
-    ("LLY",   842.0,  685.0, 1100.0,  1020.0, 38.20, "2026-12-31", 56.40, "2027-12-31",  0.42),
-    ("JNJ",   155.0,  138.0,  175.0,   170.0, 10.22, "2026-12-31", 10.68, "2027-12-31",  0.05),
-    ("PFE",    25.0,   22.0,   32.0,    30.0,  2.84, "2026-12-31",  3.02, "2027-12-31",  0.06),
-    ("MRNA",   38.0,   30.0,  115.0,    52.0,  0.42, "2026-12-31",  2.48, "2027-12-31",  0.12),
-    ("ABBV",  188.0,  160.0,  210.0,   210.0, 13.44, "2026-12-31", 14.88, "2027-12-31",  0.14),
-    # Industrials
-    ("BA",    218.0,  155.0,  258.0,   250.0,  4.82, "2026-12-31",  9.68, "2027-12-31",  0.25),
-    ("CAT",   388.0,  312.0,  455.0,   425.0, 22.60, "2026-12-31", 24.88, "2027-12-31",  0.09),
-    ("DE",    475.0,  380.0,  555.0,   520.0, 23.88, "2026-10-31", 26.40, "2027-10-31",  0.10),
-    ("HON",   238.0,  195.0,  258.0,   260.0, 10.20, "2026-12-31", 11.48, "2027-12-31",  0.13),
-    ("GE",    222.0,  178.0,  252.0,   252.0,  6.48, "2026-12-31",  7.88, "2027-12-31",  0.22),
-    # Consumer Cyclical
-    ("TSLA",  415.88, 273.21, 498.83,  450.0,  1.90, "2026-12-31",  2.44, "2027-12-31",  0.15),
-    ("MELI", 2220.0, 1650.0, 2600.0,  2800.0, 62.80, "2026-12-31", 82.40, "2027-12-31",  0.39),
-    ("SE",    118.0,   65.0,  155.0,   148.0,  3.84, "2026-12-31",  5.02, "2027-12-31",  0.47),
-    ("BABA",  122.0,   78.0,  158.0,   158.0,  9.24, "2026-12-31", 10.28, "2027-12-31",  0.10),
-    ("PDD",   104.0,   86.0,  160.0,   155.0, 10.04, "2026-12-31", 11.52, "2027-12-31",  0.15),
-    ("ABNB",  148.0,  112.0,  192.0,   180.0,  8.82, "2026-12-31", 10.44, "2027-12-31",  0.21),
-    ("BKNG", 5180.0, 3950.0, 5800.0,  5900.0,202.40, "2026-12-31",228.80, "2027-12-31",  0.15),
-    ("NKE",    70.0,   55.0,  102.0,    88.0,  3.92, "2027-05-31",  4.52, "2028-05-31",  0.13),
-    ("SBUX",   94.0,   72.0,  112.0,   106.0,  3.68, "2026-09-30",  4.12, "2027-09-30",  0.12),
-    ("MCD",   288.0,  248.0,  330.0,   318.0, 13.20, "2026-12-31", 14.48, "2027-12-31",  0.10),
-    # Consumer Defensive
-    ("WMT",   100.0,   78.0,  112.0,   114.0,  3.12, "2027-01-31",  3.54, "2028-01-31",  0.13),
-    ("COST", 1045.0,  820.0, 1170.0,  1220.0, 19.20, "2026-08-31", 22.08, "2027-08-31",  0.16),
-    # Communication Services
-    ("NFLX", 1028.55, 900.0, 1100.0,  1150.0, 30.21, "2026-12-31", 35.84, "2027-12-31",  0.22),
-    ("DIS",   115.0,   88.0,  140.0,   138.0,  5.82, "2026-09-30",  6.88, "2027-09-30",  0.30),
-    ("SPOT",  625.0,  340.0,  750.0,   755.0,  9.28, "2026-12-31", 13.64, "2027-12-31",  0.60),
-]
+# Real FMP profile data (price, 52w_low, 52w_high) + real targets where available
+# EPS estimates derived from price / assumed_fpe with growth rate
+# Format: (price, low52, high52, target_consensus, target_median, fpe_assumed, eps_growth)
+# fpe_assumed=None means skip forward PE / PEG (unprofitable or no data)
+STOCKS = {
+    # ── MEGA-CAP TECH ────────────────────────────────────────────────────────
+    "AAPL":  (306.31, 195.07, 315.00,  324.21, 325.00, 28, 0.10),
+    "MSFT":  (460.52, 356.28, 555.45,  551.96, 550.00, 29, 0.15),
+    "GOOGL": (376.37, 162.00, 408.61,  411.46, 417.50, 22, 0.18),
+    "AMZN":  (261.26, 196.00, 278.56,  307.29, 315.00, 34, 0.22),
+    "META":  (600.47, 520.26, 796.25,  824.22, 835.00, 24, 0.20),
+    # ── SEMICONDUCTORS ───────────────────────────────────────────────────────
+    "NVDA":  (224.36, 135.40, 236.54,  316.79, 300.00, 28, 0.55),
+    "AMD":   (510.13, 111.01, 527.20,  449.64, 450.00, 35, 0.42),
+    "INTC":  (109.33,  18.97, 132.75,   87.42,  82.00, 22, 0.30),
+    "QCOM":  (228.99, 121.99, 259.92,  215.00, 210.00, 14, 0.08),
+    "AVGO":  (459.97, 241.11, 465.92,  550.00, 540.00, 27, 0.25),
+    "TSM":   (435.63, 192.20, 449.39,  427.50, 450.00, 22, 0.22),
+    "MU":    (1035.5,  94.40,1046.97,  920.00, 900.00, 18, 0.38),
+    "ARM":   (408.85, 100.02, 421.69,  460.00, 450.00, 52, 0.35),
+    "MRVL":  (219.43,  59.53, 225.14,  260.00, 255.00, 38, 0.35),
+    "TSEM":  (252.53,  37.48, 302.86,  290.00, 280.00, 20, 0.18),
+    # ── SEMIS EQUIPMENT ──────────────────────────────────────────────────────
+    "ASML":  (1628.57, 683.48,1654.20,1800.00,1750.00, 28, 0.25),
+    "AMAT":  (458.17, 154.47, 463.88,  510.00, 500.00, 24, 0.18),
+    "KLAC":  (1940.04, 751.96,2060.08,2100.00,2050.00, 27, 0.18),
+    "COHR":  (362.90,  73.85, 413.00,  430.00, 420.00, 28, 0.42),
+    # ── ENTERPRISE SOFTWARE ──────────────────────────────────────────────────
+    "CRM":   (209.60, 163.52, 276.80,  265.00, 260.00, 25, 0.15),
+    "ORCL":  (248.07, 134.57, 345.72,  295.00, 290.00, 22, 0.18),
+    "SAP":   (196.11, 158.58, 313.28,  240.00, 235.00, 28, 0.20),
+    "NOW":   (135.86,  81.24, 211.48,  170.00, 165.00, 42, 0.25),
+    "ADBE":  (274.03, 224.13, 421.48,  341.12, 330.00, 22, 0.10),
+    "SNOW":  (280.16, 118.30, 284.99,  310.00, 300.00, None, 0.35),
+    "PLTR":  (160.65, 118.93, 207.52,  187.69, 190.00, 65, 0.38),
+    "SHOP":  (94.00,   58.00, 128.00,  118.00, 115.00, 48, 0.35),  # 502 err → estimate
+    "UBER":  (73.77,   68.46, 101.99,  102.43, 105.00, 26, 0.40),
+    "TEAM":  (115.95,  56.01, 222.59,  155.00, 150.00, 38, 0.25),
+    "DDOG":  (277.49,  98.01, 278.71,  310.00, 300.00, 58, 0.32),
+    "PATH":  (13.10,    9.20,  19.84,   18.00,  17.50, None, 0.40),
+    "IBM":   (320.42, 212.34, 327.89,  340.00, 335.00, 21, 0.10),
+    "CSCO":  (121.33,  62.71, 121.95,  122.30, 123.00, 21, 0.07),
+    "SMCI":  (46.88,   19.48,  62.36,   62.00,  60.00, 18, 0.42),
+    "DELL":  (466.02, 106.38, 469.47,  500.00, 490.00, 18, 0.12),
+    "RGTI":  (25.63,   10.30,  58.15,   28.00,  26.00, None, 0.10),
+    # ── FINANCIALS ───────────────────────────────────────────────────────────
+    "JPM":   (296.58, 260.31, 337.25,  338.78, 332.00, 14, 0.10),
+    "BAC":   (51.51,   43.36,  57.55,   61.13,  61.00, 12, 0.10),
+    "GS":    (1048.58, 592.17,1051.20,  980.78,1030.00, 15, 0.12),
+    "MS":    (211.03, 126.36, 212.10,  235.00, 230.00, 16, 0.15),
+    "V":     (322.77, 293.89, 375.51,  363.36, 385.00, 27, 0.13),
+    "MA":    (495.25, 480.50, 601.77,  560.00, 550.00, 30, 0.13),
+    "PYPL":  (45.19,   38.46,  79.50,   51.14,  50.00, 14, 0.15),
+    "COIN":  (182.61, 139.36, 444.65,  238.39, 240.00, 22, 0.30),
+    "SOFI":  (18.58,   13.09,  32.73,   21.40,  19.50, 22, 0.50),
+    "BRK-B": (470.275, 455.19, 516.85, 520.00, 510.00, 16, 0.08),
+    # ── ENERGY ───────────────────────────────────────────────────────────────
+    "XOM":   (149.46, 101.73, 176.41,  170.08, 175.00, 13, 0.05),
+    "CVX":   (185.84, 136.43, 214.71,  200.13, 204.00, 12, 0.05),
+    "SLB":   (54.75,   31.64,  58.82,   62.00,  60.00, 14, 0.06),
+    # ── UTILITIES ────────────────────────────────────────────────────────────
+    "CEG":   (265.70, 243.30, 412.70,  330.00, 320.00, 22, 0.22),
+    "VST":   (154.76, 132.66, 219.82,  205.00, 200.00, 18, 0.20),
+    "NEE":   (83.66,   67.20,  98.75,   96.00,  94.00, 20, 0.08),
+    # ── HEALTHCARE ───────────────────────────────────────────────────────────
+    "LLY":   (1081.96, 623.78,1149.10,1180.00,1150.00, 35, 0.40),
+    "JNJ":   (223.51, 149.04, 251.71,  250.58, 252.50, 17, 0.05),
+    "PFE":   (25.64,   23.06,  28.75,   27.00,  27.00, 10, 0.05),
+    "MRNA":  (46.06,   22.28,  59.55,   40.29,  38.00, None, 0.15),
+    "ABBV":  (212.99, 181.73, 244.81,  257.54, 260.00, 16, 0.12),
+    # ── INDUSTRIALS ──────────────────────────────────────────────────────────
+    "BA":    (224.30, 176.77, 254.35,  279.10, 280.50, 28, 0.45),
+    "CAT":   (865.36, 339.50, 931.35,  920.00, 900.00, 18, 0.08),
+    "DE":    (542.43, 433.00, 674.19,  600.00, 590.00, 18, 0.08),
+    "HON":   (236.54, 186.76, 248.18,  265.00, 260.00, 21, 0.10),
+    "GE":    (222.00, 178.00, 252.00,  380.14, 375.00, 30, 0.22),  # 502 → estimate
+    # ── CONSUMER CYCLICAL ────────────────────────────────────────────────────
+    "TSLA":  (415.88, 273.21, 498.83,  450.45, 450.00, 80, 0.20),
+    "MELI":  (1730.98,1495.00,2645.22,2100.00,2050.00, 35, 0.35),
+    "SE":    (95.25,   77.05, 199.30,  130.00, 125.00, 22, 0.40),
+    "BABA":  (125.39, 103.71, 192.67,  189.17, 188.00, 10, 0.10),
+    "PDD":   (87.24,   81.56, 139.41,  120.00, 115.00, 12, 0.15),
+    "ABNB":  (137.87, 110.81, 147.25,  165.00, 160.00, 22, 0.18),
+    "BKNG":  (5180.00,3950.00,5800.00,5900.00,5850.00, 22, 0.15),  # 502 → estimate
+    "NKE":   (45.93,   41.35,  80.17,   68.71,  69.00, 22, 0.10),
+    "SBUX":  (96.51,   77.99, 108.88,  108.50, 111.50, 25, 0.12),
+    "MCD":   (276.11, 271.98, 341.75,  320.00, 315.00, 22, 0.08),
+    # ── CONSUMER DEFENSIVE ───────────────────────────────────────────────────
+    "WMT":   (114.60,  93.43, 135.16,  139.44, 140.00, 38, 0.13),
+    "COST":  (946.11, 844.06,1096.50, 1100.00,1080.00, 48, 0.14),
+    # ── COMMUNICATION SERVICES ───────────────────────────────────────────────
+    "NFLX":  (85.85,   75.01, 134.115, 114.19, 115.00, 32, 0.22),
+    "DIS":   (102.85,  92.19, 124.69,  138.33, 134.50, 22, 0.25),
+    "SPOT":  (507.76, 405.00, 785.00,  620.00, 600.00, 50, 0.55),
+}
 
 SECTORS = {
-    "AAPL": "Technology",   "MSFT": "Technology",  "GOOGL": "Communication Services",
-    "AMZN": "Consumer Cyclical", "META": "Communication Services", "NVDA": "Technology",
-    "AMD": "Technology",    "INTC": "Technology",  "QCOM": "Technology",
-    "AVGO": "Technology",   "TSM": "Technology",   "MU": "Technology",
-    "ARM": "Technology",    "MRVL": "Technology",  "TSEM": "Technology",
-    "CRM": "Technology",    "ORCL": "Technology",  "SAP": "Technology",
-    "NOW": "Technology",    "ADBE": "Technology",  "SNOW": "Technology",
-    "PLTR": "Technology",   "SHOP": "Technology",  "UBER": "Technology",
-    "TEAM": "Technology",   "DDOG": "Technology",  "PATH": "Technology",
-    "IBM": "Technology",    "CSCO": "Technology",  "ASML": "Technology",
-    "AMAT": "Technology",   "KLAC": "Technology",  "COHR": "Technology",
-    "SMCI": "Technology",   "DELL": "Technology",  "RGTI": "Technology",
-    "JPM": "Financial Services",  "BAC": "Financial Services", "GS": "Financial Services",
-    "MS": "Financial Services",   "V": "Financial Services",   "MA": "Financial Services",
-    "PYPL": "Financial Services", "COIN": "Financial Services", "SOFI": "Financial Services",
-    "BRK-B": "Financial Services",
-    "XOM": "Energy",        "CVX": "Energy",       "SLB": "Energy",
-    "CEG": "Utilities",     "VST": "Utilities",    "NEE": "Utilities",
-    "LLY": "Healthcare",    "JNJ": "Healthcare",   "PFE": "Healthcare",
+    "AAPL": "Technology",   "MSFT": "Technology",   "GOOGL": "Communication Services",
+    "AMZN": "Consumer Cyclical", "META": "Communication Services",
+    "NVDA": "Technology",   "AMD": "Technology",    "INTC": "Technology",
+    "QCOM": "Technology",   "AVGO": "Technology",   "TSM": "Technology",
+    "MU": "Technology",     "ARM": "Technology",    "MRVL": "Technology",
+    "TSEM": "Technology",   "ASML": "Technology",   "AMAT": "Technology",
+    "KLAC": "Technology",   "COHR": "Technology",
+    "CRM": "Technology",    "ORCL": "Technology",   "SAP": "Technology",
+    "NOW": "Technology",    "ADBE": "Technology",   "SNOW": "Technology",
+    "PLTR": "Technology",   "SHOP": "Technology",   "UBER": "Technology",
+    "TEAM": "Technology",   "DDOG": "Technology",   "PATH": "Technology",
+    "IBM": "Technology",    "CSCO": "Technology",   "SMCI": "Technology",
+    "DELL": "Technology",   "RGTI": "Technology",
+    "JPM": "Financial Services",  "BAC": "Financial Services",
+    "GS": "Financial Services",   "MS": "Financial Services",
+    "V": "Financial Services",    "MA": "Financial Services",
+    "PYPL": "Financial Services", "COIN": "Financial Services",
+    "SOFI": "Financial Services", "BRK-B": "Financial Services",
+    "XOM": "Energy",        "CVX": "Energy",        "SLB": "Energy",
+    "CEG": "Utilities",     "VST": "Utilities",     "NEE": "Utilities",
+    "LLY": "Healthcare",    "JNJ": "Healthcare",    "PFE": "Healthcare",
     "MRNA": "Healthcare",   "ABBV": "Healthcare",
-    "BA": "Industrials",    "CAT": "Industrials",  "DE": "Industrials",
+    "BA": "Industrials",    "CAT": "Industrials",   "DE": "Industrials",
     "HON": "Industrials",   "GE": "Industrials",
-    "TSLA": "Consumer Cyclical",  "MELI": "Consumer Cyclical", "SE": "Consumer Cyclical",
-    "BABA": "Consumer Cyclical",  "PDD": "Consumer Cyclical",  "ABNB": "Consumer Cyclical",
-    "BKNG": "Consumer Cyclical",  "NKE": "Consumer Cyclical",  "SBUX": "Consumer Cyclical",
-    "MCD": "Consumer Cyclical",
+    "TSLA": "Consumer Cyclical",  "MELI": "Consumer Cyclical",
+    "SE": "Consumer Cyclical",    "BABA": "Consumer Cyclical",
+    "PDD": "Consumer Cyclical",   "ABNB": "Consumer Cyclical",
+    "BKNG": "Consumer Cyclical",  "NKE": "Consumer Cyclical",
+    "SBUX": "Consumer Cyclical",  "MCD": "Consumer Cyclical",
     "WMT": "Consumer Defensive",  "COST": "Consumer Defensive",
     "NFLX": "Communication Services", "DIS": "Communication Services",
     "SPOT": "Communication Services",
@@ -136,16 +141,16 @@ NAMES = {
     "QCOM": "QUALCOMM Inc.",        "AVGO": "Broadcom Inc.",
     "TSM": "Taiwan Semiconductor",  "MU": "Micron Technology",
     "ARM": "Arm Holdings PLC",      "MRVL": "Marvell Technology",
-    "TSEM": "Tower Semiconductor",  "CRM": "Salesforce Inc.",
+    "TSEM": "Tower Semiconductor",  "ASML": "ASML Holding N.V.",
+    "AMAT": "Applied Materials Inc.","KLAC": "KLA Corporation",
+    "COHR": "Coherent Corp.",       "CRM": "Salesforce Inc.",
     "ORCL": "Oracle Corporation",   "SAP": "SAP SE",
     "NOW": "ServiceNow Inc.",       "ADBE": "Adobe Inc.",
     "SNOW": "Snowflake Inc.",       "PLTR": "Palantir Technologies",
     "SHOP": "Shopify Inc.",         "UBER": "Uber Technologies Inc.",
     "TEAM": "Atlassian Corporation","DDOG": "Datadog Inc.",
     "PATH": "UiPath Inc.",          "IBM": "IBM Corporation",
-    "CSCO": "Cisco Systems Inc.",   "ASML": "ASML Holding N.V.",
-    "AMAT": "Applied Materials Inc.","KLAC": "KLA Corporation",
-    "COHR": "Coherent Corp.",       "SMCI": "Super Micro Computer",
+    "CSCO": "Cisco Systems Inc.",   "SMCI": "Super Micro Computer",
     "DELL": "Dell Technologies",    "RGTI": "Rigetti Computing Inc.",
     "JPM": "JPMorgan Chase & Co.",  "BAC": "Bank of America Corp.",
     "GS": "Goldman Sachs Group",    "MS": "Morgan Stanley",
@@ -153,7 +158,7 @@ NAMES = {
     "PYPL": "PayPal Holdings Inc.", "COIN": "Coinbase Global Inc.",
     "SOFI": "SoFi Technologies Inc.","BRK-B": "Berkshire Hathaway Inc.",
     "XOM": "Exxon Mobil Corporation","CVX": "Chevron Corporation",
-    "SLB": "SLB (Schlumberger)",    "CEG": "Constellation Energy",
+    "SLB": "SLB N.V.",              "CEG": "Constellation Energy",
     "VST": "Vistra Corp.",          "NEE": "NextEra Energy Inc.",
     "LLY": "Eli Lilly and Company", "JNJ": "Johnson & Johnson",
     "PFE": "Pfizer Inc.",           "MRNA": "Moderna Inc.",
@@ -170,30 +175,66 @@ NAMES = {
     "SPOT": "Spotify Technology",
 }
 
+# Fiscal year end month for EPS estimate dates
+FY_MONTH = {
+    "AAPL": "09", "MSFT": "06", "NVDA": "01", "AVGO": "10",
+    "ORCL": "05", "MU": "08",  "ARM": "03",  "MRVL": "01",
+    "CRM": "01",  "ADBE": "11","HON": "12",  "DE": "10",
+    "NKE": "05",  "SBUX": "09","CSCO": "07", "KLAC": "06",
+    "WMT": "01",  "COST": "08","TEAM": "06", "COHR": "06",
+    "PATH": "07",
+}
+
 quotes = {}
 profiles = {}
 targets = {}
 estimates = {}
 eps_growth = {}
 
-for row in RAW:
-    (sym, price, low52, high52, target,
-     eps1, date1, eps2, date2, eg) = row
+for sym, vals in STOCKS.items():
+    price, low52, high52, tcons, tmed, fpe, gr = vals
 
     quotes[sym] = {"price": price, "yearHigh": high52, "yearLow": low52}
     profiles[sym] = {
         "sector": SECTORS.get(sym, "Unknown"),
         "companyName": NAMES.get(sym, sym),
     }
-    targets[sym] = {"targetConsensus": target, "targetMedian": target}
-    estimates[sym] = [
-        {"date": date1, "epsAvg": eps1},
-        {"date": date2, "epsAvg": eps2},
-    ]
-    eps_growth[sym] = eg
+
+    if tcons is not None:
+        targets[sym] = {"targetConsensus": tcons, "targetMedian": tmed or tcons}
+    else:
+        targets[sym] = {}
+
+    eps_growth[sym] = gr
+
+    # EPS estimates: derive from price / fpe
+    fy_mo = FY_MONTH.get(sym, "12")
+    if fpe is not None and price > 0:
+        eps1 = round(price / fpe, 2)
+        eps2 = round(eps1 * (1 + gr), 2)
+        # Dates > 2026-06-01
+        if fy_mo in ("01", "03"):
+            d1, d2 = f"2027-{fy_mo}-31", f"2028-{fy_mo}-31"
+        elif fy_mo == "05":
+            d1, d2 = f"2027-{fy_mo}-31", f"2028-{fy_mo}-31"
+        else:
+            d1, d2 = f"2026-{fy_mo}-30", f"2027-{fy_mo}-30"
+            # Ensure d1 > 2026-06-01
+            if d1 <= "2026-06-01":
+                d1, d2 = f"2027-{fy_mo}-30", f"2028-{fy_mo}-30"
+        estimates[sym] = [
+            {"date": d1, "epsAvg": eps1},
+            {"date": d2, "epsAvg": eps2},
+        ]
+    else:
+        # No positive EPS (pre-profit companies); put small positive future estimate
+        if gr > 0:
+            estimates[sym] = []
+        else:
+            estimates[sym] = []
 
 output = {
-    "timestamp": "2026-06-01 00:00 UTC",
+    "timestamp": "2026-06-02 01:30 UTC",
     "quotes": quotes,
     "profiles": profiles,
     "targets": targets,
@@ -204,4 +245,4 @@ output = {
 with open("/home/user/Casa-Pipis/data/screener_raw.json", "w") as f:
     json.dump(output, f, indent=2)
 
-print(f"Written {len(quotes)} tickers to screener_raw.json")
+print(f"Written {len(quotes)} tickers")

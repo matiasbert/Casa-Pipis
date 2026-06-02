@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-01 00:00 UTC",
+  "timestamp": "2026-06-02 01:30 UTC",
   "quotes": {
     "AAPL": {
       "price": 306.31,
@@ -32,84 +32,104 @@
       "yearLow": 135.4
     },
     "AMD": {
-      "price": 162.0,
-      "yearHigh": 250.0,
-      "yearLow": 85.0
+      "price": 510.13,
+      "yearHigh": 527.2,
+      "yearLow": 111.01
     },
     "INTC": {
-      "price": 22.0,
-      "yearHigh": 50.0,
-      "yearLow": 18.0
+      "price": 109.33,
+      "yearHigh": 132.75,
+      "yearLow": 18.97
     },
     "QCOM": {
-      "price": 168.0,
-      "yearHigh": 215.0,
-      "yearLow": 140.0
+      "price": 228.99,
+      "yearHigh": 259.92,
+      "yearLow": 121.99
     },
     "AVGO": {
-      "price": 248.0,
-      "yearHigh": 285.0,
-      "yearLow": 168.0
+      "price": 459.97,
+      "yearHigh": 465.92,
+      "yearLow": 241.11
     },
     "TSM": {
-      "price": 215.0,
-      "yearHigh": 245.0,
-      "yearLow": 155.0
+      "price": 435.63,
+      "yearHigh": 449.39,
+      "yearLow": 192.2
     },
     "MU": {
-      "price": 108.0,
-      "yearHigh": 155.0,
-      "yearLow": 65.0
+      "price": 1035.5,
+      "yearHigh": 1046.97,
+      "yearLow": 94.4
     },
     "ARM": {
-      "price": 130.0,
-      "yearHigh": 200.0,
-      "yearLow": 85.0
+      "price": 408.85,
+      "yearHigh": 421.69,
+      "yearLow": 100.02
     },
     "MRVL": {
-      "price": 88.0,
-      "yearHigh": 130.0,
-      "yearLow": 48.0
+      "price": 219.43,
+      "yearHigh": 225.14,
+      "yearLow": 59.53
     },
     "TSEM": {
-      "price": 60.0,
-      "yearHigh": 80.0,
-      "yearLow": 45.0
+      "price": 252.53,
+      "yearHigh": 302.86,
+      "yearLow": 37.48
+    },
+    "ASML": {
+      "price": 1628.57,
+      "yearHigh": 1654.2,
+      "yearLow": 683.48
+    },
+    "AMAT": {
+      "price": 458.17,
+      "yearHigh": 463.88,
+      "yearLow": 154.47
+    },
+    "KLAC": {
+      "price": 1940.04,
+      "yearHigh": 2060.08,
+      "yearLow": 751.96
+    },
+    "COHR": {
+      "price": 362.9,
+      "yearHigh": 413.0,
+      "yearLow": 73.85
     },
     "CRM": {
-      "price": 328.0,
-      "yearHigh": 405.0,
-      "yearLow": 245.0
+      "price": 209.6,
+      "yearHigh": 276.8,
+      "yearLow": 163.52
     },
     "ORCL": {
-      "price": 220.0,
-      "yearHigh": 280.0,
-      "yearLow": 160.0
+      "price": 248.07,
+      "yearHigh": 345.72,
+      "yearLow": 134.57
     },
     "SAP": {
-      "price": 295.0,
-      "yearHigh": 340.0,
-      "yearLow": 210.0
+      "price": 196.11,
+      "yearHigh": 313.28,
+      "yearLow": 158.58
     },
     "NOW": {
-      "price": 1095.0,
-      "yearHigh": 1250.0,
-      "yearLow": 780.0
+      "price": 135.86,
+      "yearHigh": 211.48,
+      "yearLow": 81.24
     },
     "ADBE": {
-      "price": 368.0,
-      "yearHigh": 460.0,
-      "yearLow": 285.0
+      "price": 274.03,
+      "yearHigh": 421.48,
+      "yearLow": 224.13
     },
     "SNOW": {
-      "price": 185.0,
-      "yearHigh": 230.0,
-      "yearLow": 105.0
+      "price": 280.16,
+      "yearHigh": 284.99,
+      "yearLow": 118.3
     },
     "PLTR": {
-      "price": 118.0,
-      "yearHigh": 140.0,
-      "yearLow": 22.0
+      "price": 160.65,
+      "yearHigh": 207.52,
+      "yearLow": 118.93
     },
     "SHOP": {
       "price": 94.0,
@@ -117,194 +137,174 @@
       "yearLow": 58.0
     },
     "UBER": {
-      "price": 82.0,
-      "yearHigh": 100.0,
-      "yearLow": 58.0
+      "price": 73.77,
+      "yearHigh": 101.99,
+      "yearLow": 68.46
     },
     "TEAM": {
-      "price": 285.0,
-      "yearHigh": 340.0,
-      "yearLow": 192.0
+      "price": 115.95,
+      "yearHigh": 222.59,
+      "yearLow": 56.01
     },
     "DDOG": {
-      "price": 158.0,
-      "yearHigh": 195.0,
-      "yearLow": 98.0
+      "price": 277.49,
+      "yearHigh": 278.71,
+      "yearLow": 98.01
     },
     "PATH": {
-      "price": 23.0,
-      "yearHigh": 30.0,
-      "yearLow": 14.0
+      "price": 13.1,
+      "yearHigh": 19.84,
+      "yearLow": 9.2
     },
     "IBM": {
-      "price": 272.0,
-      "yearHigh": 298.0,
-      "yearLow": 210.0
+      "price": 320.42,
+      "yearHigh": 327.89,
+      "yearLow": 212.34
     },
     "CSCO": {
-      "price": 67.0,
-      "yearHigh": 78.0,
-      "yearLow": 50.0
-    },
-    "ASML": {
-      "price": 985.0,
-      "yearHigh": 1200.0,
-      "yearLow": 640.0
-    },
-    "AMAT": {
-      "price": 192.0,
-      "yearHigh": 248.0,
-      "yearLow": 148.0
-    },
-    "KLAC": {
-      "price": 798.0,
-      "yearHigh": 975.0,
-      "yearLow": 580.0
-    },
-    "COHR": {
-      "price": 80.0,
-      "yearHigh": 108.0,
-      "yearLow": 42.0
+      "price": 121.33,
+      "yearHigh": 121.95,
+      "yearLow": 62.71
     },
     "SMCI": {
-      "price": 55.0,
-      "yearHigh": 78.0,
-      "yearLow": 18.0
+      "price": 46.88,
+      "yearHigh": 62.36,
+      "yearLow": 19.48
     },
     "DELL": {
-      "price": 135.0,
-      "yearHigh": 165.0,
-      "yearLow": 98.0
+      "price": 466.02,
+      "yearHigh": 469.47,
+      "yearLow": 106.38
     },
     "RGTI": {
-      "price": 15.0,
-      "yearHigh": 22.0,
-      "yearLow": 8.0
+      "price": 25.63,
+      "yearHigh": 58.15,
+      "yearLow": 10.3
     },
     "JPM": {
-      "price": 274.0,
-      "yearHigh": 310.0,
-      "yearLow": 215.0
+      "price": 296.58,
+      "yearHigh": 337.25,
+      "yearLow": 260.31
     },
     "BAC": {
-      "price": 47.0,
-      "yearHigh": 52.0,
-      "yearLow": 35.0
+      "price": 51.51,
+      "yearHigh": 57.55,
+      "yearLow": 43.36
     },
     "GS": {
-      "price": 620.0,
-      "yearHigh": 710.0,
-      "yearLow": 475.0
+      "price": 1048.58,
+      "yearHigh": 1051.2,
+      "yearLow": 592.17
     },
     "MS": {
-      "price": 128.0,
-      "yearHigh": 145.0,
-      "yearLow": 98.0
+      "price": 211.03,
+      "yearHigh": 212.1,
+      "yearLow": 126.36
     },
     "V": {
-      "price": 368.0,
-      "yearHigh": 410.0,
-      "yearLow": 290.0
+      "price": 322.77,
+      "yearHigh": 375.51,
+      "yearLow": 293.89
     },
     "MA": {
-      "price": 568.0,
-      "yearHigh": 640.0,
-      "yearLow": 440.0
+      "price": 495.25,
+      "yearHigh": 601.77,
+      "yearLow": 480.5
     },
     "PYPL": {
-      "price": 72.0,
-      "yearHigh": 92.0,
-      "yearLow": 55.0
+      "price": 45.19,
+      "yearHigh": 79.5,
+      "yearLow": 38.46
     },
     "COIN": {
-      "price": 278.0,
-      "yearHigh": 370.0,
-      "yearLow": 155.0
+      "price": 182.61,
+      "yearHigh": 444.65,
+      "yearLow": 139.36
     },
     "SOFI": {
-      "price": 18.0,
-      "yearHigh": 25.0,
-      "yearLow": 12.0
+      "price": 18.58,
+      "yearHigh": 32.73,
+      "yearLow": 13.09
     },
     "BRK-B": {
-      "price": 548.0,
-      "yearHigh": 598.0,
-      "yearLow": 415.0
+      "price": 470.275,
+      "yearHigh": 516.85,
+      "yearLow": 455.19
     },
     "XOM": {
-      "price": 108.0,
-      "yearHigh": 125.0,
-      "yearLow": 94.0
+      "price": 149.46,
+      "yearHigh": 176.41,
+      "yearLow": 101.73
     },
     "CVX": {
-      "price": 143.0,
-      "yearHigh": 168.0,
-      "yearLow": 128.0
+      "price": 185.84,
+      "yearHigh": 214.71,
+      "yearLow": 136.43
     },
     "SLB": {
-      "price": 38.0,
-      "yearHigh": 54.0,
-      "yearLow": 35.0
+      "price": 54.75,
+      "yearHigh": 58.82,
+      "yearLow": 31.64
     },
     "CEG": {
-      "price": 285.0,
-      "yearHigh": 345.0,
-      "yearLow": 195.0
+      "price": 265.7,
+      "yearHigh": 412.7,
+      "yearLow": 243.3
     },
     "VST": {
-      "price": 195.0,
-      "yearHigh": 225.0,
-      "yearLow": 100.0
+      "price": 154.76,
+      "yearHigh": 219.82,
+      "yearLow": 132.66
     },
     "NEE": {
-      "price": 65.0,
-      "yearHigh": 82.0,
-      "yearLow": 55.0
+      "price": 83.66,
+      "yearHigh": 98.75,
+      "yearLow": 67.2
     },
     "LLY": {
-      "price": 842.0,
-      "yearHigh": 1100.0,
-      "yearLow": 685.0
+      "price": 1081.96,
+      "yearHigh": 1149.1,
+      "yearLow": 623.78
     },
     "JNJ": {
-      "price": 155.0,
-      "yearHigh": 175.0,
-      "yearLow": 138.0
+      "price": 223.51,
+      "yearHigh": 251.71,
+      "yearLow": 149.04
     },
     "PFE": {
-      "price": 25.0,
-      "yearHigh": 32.0,
-      "yearLow": 22.0
+      "price": 25.64,
+      "yearHigh": 28.75,
+      "yearLow": 23.06
     },
     "MRNA": {
-      "price": 38.0,
-      "yearHigh": 115.0,
-      "yearLow": 30.0
+      "price": 46.06,
+      "yearHigh": 59.55,
+      "yearLow": 22.28
     },
     "ABBV": {
-      "price": 188.0,
-      "yearHigh": 210.0,
-      "yearLow": 160.0
+      "price": 212.99,
+      "yearHigh": 244.81,
+      "yearLow": 181.73
     },
     "BA": {
-      "price": 218.0,
-      "yearHigh": 258.0,
-      "yearLow": 155.0
+      "price": 224.3,
+      "yearHigh": 254.35,
+      "yearLow": 176.77
     },
     "CAT": {
-      "price": 388.0,
-      "yearHigh": 455.0,
-      "yearLow": 312.0
+      "price": 865.36,
+      "yearHigh": 931.35,
+      "yearLow": 339.5
     },
     "DE": {
-      "price": 475.0,
-      "yearHigh": 555.0,
-      "yearLow": 380.0
+      "price": 542.43,
+      "yearHigh": 674.19,
+      "yearLow": 433.0
     },
     "HON": {
-      "price": 238.0,
-      "yearHigh": 258.0,
-      "yearLow": 195.0
+      "price": 236.54,
+      "yearHigh": 248.18,
+      "yearLow": 186.76
     },
     "GE": {
       "price": 222.0,
@@ -317,29 +317,29 @@
       "yearLow": 273.21
     },
     "MELI": {
-      "price": 2220.0,
-      "yearHigh": 2600.0,
-      "yearLow": 1650.0
+      "price": 1730.98,
+      "yearHigh": 2645.22,
+      "yearLow": 1495.0
     },
     "SE": {
-      "price": 118.0,
-      "yearHigh": 155.0,
-      "yearLow": 65.0
+      "price": 95.25,
+      "yearHigh": 199.3,
+      "yearLow": 77.05
     },
     "BABA": {
-      "price": 122.0,
-      "yearHigh": 158.0,
-      "yearLow": 78.0
+      "price": 125.39,
+      "yearHigh": 192.67,
+      "yearLow": 103.71
     },
     "PDD": {
-      "price": 104.0,
-      "yearHigh": 160.0,
-      "yearLow": 86.0
+      "price": 87.24,
+      "yearHigh": 139.41,
+      "yearLow": 81.56
     },
     "ABNB": {
-      "price": 148.0,
-      "yearHigh": 192.0,
-      "yearLow": 112.0
+      "price": 137.87,
+      "yearHigh": 147.25,
+      "yearLow": 110.81
     },
     "BKNG": {
       "price": 5180.0,
@@ -347,44 +347,44 @@
       "yearLow": 3950.0
     },
     "NKE": {
-      "price": 70.0,
-      "yearHigh": 102.0,
-      "yearLow": 55.0
+      "price": 45.93,
+      "yearHigh": 80.17,
+      "yearLow": 41.35
     },
     "SBUX": {
-      "price": 94.0,
-      "yearHigh": 112.0,
-      "yearLow": 72.0
+      "price": 96.51,
+      "yearHigh": 108.88,
+      "yearLow": 77.99
     },
     "MCD": {
-      "price": 288.0,
-      "yearHigh": 330.0,
-      "yearLow": 248.0
+      "price": 276.11,
+      "yearHigh": 341.75,
+      "yearLow": 271.98
     },
     "WMT": {
-      "price": 100.0,
-      "yearHigh": 112.0,
-      "yearLow": 78.0
+      "price": 114.6,
+      "yearHigh": 135.16,
+      "yearLow": 93.43
     },
     "COST": {
-      "price": 1045.0,
-      "yearHigh": 1170.0,
-      "yearLow": 820.0
+      "price": 946.11,
+      "yearHigh": 1096.5,
+      "yearLow": 844.06
     },
     "NFLX": {
-      "price": 1028.55,
-      "yearHigh": 1100.0,
-      "yearLow": 900.0
+      "price": 85.85,
+      "yearHigh": 134.115,
+      "yearLow": 75.01
     },
     "DIS": {
-      "price": 115.0,
-      "yearHigh": 140.0,
-      "yearLow": 88.0
+      "price": 102.85,
+      "yearHigh": 124.69,
+      "yearLow": 92.19
     },
     "SPOT": {
-      "price": 625.0,
-      "yearHigh": 750.0,
-      "yearLow": 340.0
+      "price": 507.76,
+      "yearHigh": 785.0,
+      "yearLow": 405.0
     }
   },
   "profiles": {
@@ -448,6 +448,22 @@
       "sector": "Technology",
       "companyName": "Tower Semiconductor"
     },
+    "ASML": {
+      "sector": "Technology",
+      "companyName": "ASML Holding N.V."
+    },
+    "AMAT": {
+      "sector": "Technology",
+      "companyName": "Applied Materials Inc."
+    },
+    "KLAC": {
+      "sector": "Technology",
+      "companyName": "KLA Corporation"
+    },
+    "COHR": {
+      "sector": "Technology",
+      "companyName": "Coherent Corp."
+    },
     "CRM": {
       "sector": "Technology",
       "companyName": "Salesforce Inc."
@@ -503,22 +519,6 @@
     "CSCO": {
       "sector": "Technology",
       "companyName": "Cisco Systems Inc."
-    },
-    "ASML": {
-      "sector": "Technology",
-      "companyName": "ASML Holding N.V."
-    },
-    "AMAT": {
-      "sector": "Technology",
-      "companyName": "Applied Materials Inc."
-    },
-    "KLAC": {
-      "sector": "Technology",
-      "companyName": "KLA Corporation"
-    },
-    "COHR": {
-      "sector": "Technology",
-      "companyName": "Coherent Corp."
     },
     "SMCI": {
       "sector": "Technology",
@@ -582,7 +582,7 @@
     },
     "SLB": {
       "sector": "Energy",
-      "companyName": "SLB (Schlumberger)"
+      "companyName": "SLB N.V."
     },
     "CEG": {
       "sector": "Utilities",
@@ -699,1163 +699,1127 @@
   },
   "targets": {
     "AAPL": {
-      "targetConsensus": 324.0,
-      "targetMedian": 324.0
+      "targetConsensus": 324.21,
+      "targetMedian": 325.0
     },
     "MSFT": {
-      "targetConsensus": 552.0,
-      "targetMedian": 552.0
+      "targetConsensus": 551.96,
+      "targetMedian": 550.0
     },
     "GOOGL": {
-      "targetConsensus": 411.0,
-      "targetMedian": 411.0
+      "targetConsensus": 411.46,
+      "targetMedian": 417.5
     },
     "AMZN": {
-      "targetConsensus": 307.0,
-      "targetMedian": 307.0
+      "targetConsensus": 307.29,
+      "targetMedian": 315.0
     },
     "META": {
-      "targetConsensus": 824.0,
-      "targetMedian": 824.0
+      "targetConsensus": 824.22,
+      "targetMedian": 835.0
     },
     "NVDA": {
-      "targetConsensus": 317.0,
-      "targetMedian": 317.0
+      "targetConsensus": 316.79,
+      "targetMedian": 300.0
     },
     "AMD": {
-      "targetConsensus": 200.0,
-      "targetMedian": 200.0
+      "targetConsensus": 449.64,
+      "targetMedian": 450.0
     },
     "INTC": {
-      "targetConsensus": 25.0,
-      "targetMedian": 25.0
+      "targetConsensus": 87.42,
+      "targetMedian": 82.0
     },
     "QCOM": {
-      "targetConsensus": 205.0,
-      "targetMedian": 205.0
+      "targetConsensus": 215.0,
+      "targetMedian": 210.0
     },
     "AVGO": {
-      "targetConsensus": 310.0,
-      "targetMedian": 310.0
+      "targetConsensus": 550.0,
+      "targetMedian": 540.0
     },
     "TSM": {
-      "targetConsensus": 265.0,
-      "targetMedian": 265.0
+      "targetConsensus": 427.5,
+      "targetMedian": 450.0
     },
     "MU": {
-      "targetConsensus": 145.0,
-      "targetMedian": 145.0
+      "targetConsensus": 920.0,
+      "targetMedian": 900.0
     },
     "ARM": {
-      "targetConsensus": 170.0,
-      "targetMedian": 170.0
+      "targetConsensus": 460.0,
+      "targetMedian": 450.0
     },
     "MRVL": {
-      "targetConsensus": 120.0,
-      "targetMedian": 120.0
+      "targetConsensus": 260.0,
+      "targetMedian": 255.0
     },
     "TSEM": {
-      "targetConsensus": 75.0,
-      "targetMedian": 75.0
+      "targetConsensus": 290.0,
+      "targetMedian": 280.0
+    },
+    "ASML": {
+      "targetConsensus": 1800.0,
+      "targetMedian": 1750.0
+    },
+    "AMAT": {
+      "targetConsensus": 510.0,
+      "targetMedian": 500.0
+    },
+    "KLAC": {
+      "targetConsensus": 2100.0,
+      "targetMedian": 2050.0
+    },
+    "COHR": {
+      "targetConsensus": 430.0,
+      "targetMedian": 420.0
     },
     "CRM": {
-      "targetConsensus": 380.0,
-      "targetMedian": 380.0
-    },
-    "ORCL": {
-      "targetConsensus": 260.0,
+      "targetConsensus": 265.0,
       "targetMedian": 260.0
     },
+    "ORCL": {
+      "targetConsensus": 295.0,
+      "targetMedian": 290.0
+    },
     "SAP": {
-      "targetConsensus": 350.0,
-      "targetMedian": 350.0
+      "targetConsensus": 240.0,
+      "targetMedian": 235.0
     },
     "NOW": {
-      "targetConsensus": 1280.0,
-      "targetMedian": 1280.0
+      "targetConsensus": 170.0,
+      "targetMedian": 165.0
     },
     "ADBE": {
-      "targetConsensus": 410.0,
-      "targetMedian": 410.0
+      "targetConsensus": 341.12,
+      "targetMedian": 330.0
     },
     "SNOW": {
-      "targetConsensus": 220.0,
-      "targetMedian": 220.0
+      "targetConsensus": 310.0,
+      "targetMedian": 300.0
     },
     "PLTR": {
-      "targetConsensus": 115.0,
-      "targetMedian": 115.0
+      "targetConsensus": 187.69,
+      "targetMedian": 190.0
     },
     "SHOP": {
       "targetConsensus": 118.0,
-      "targetMedian": 118.0
+      "targetMedian": 115.0
     },
     "UBER": {
-      "targetConsensus": 100.0,
-      "targetMedian": 100.0
+      "targetConsensus": 102.43,
+      "targetMedian": 105.0
     },
     "TEAM": {
-      "targetConsensus": 330.0,
-      "targetMedian": 330.0
+      "targetConsensus": 155.0,
+      "targetMedian": 150.0
     },
     "DDOG": {
-      "targetConsensus": 195.0,
-      "targetMedian": 195.0
+      "targetConsensus": 310.0,
+      "targetMedian": 300.0
     },
     "PATH": {
-      "targetConsensus": 28.0,
-      "targetMedian": 28.0
+      "targetConsensus": 18.0,
+      "targetMedian": 17.5
     },
     "IBM": {
-      "targetConsensus": 290.0,
-      "targetMedian": 290.0
+      "targetConsensus": 340.0,
+      "targetMedian": 335.0
     },
     "CSCO": {
-      "targetConsensus": 76.0,
-      "targetMedian": 76.0
-    },
-    "ASML": {
-      "targetConsensus": 1180.0,
-      "targetMedian": 1180.0
-    },
-    "AMAT": {
-      "targetConsensus": 225.0,
-      "targetMedian": 225.0
-    },
-    "KLAC": {
-      "targetConsensus": 940.0,
-      "targetMedian": 940.0
-    },
-    "COHR": {
-      "targetConsensus": 102.0,
-      "targetMedian": 102.0
+      "targetConsensus": 122.3,
+      "targetMedian": 123.0
     },
     "SMCI": {
-      "targetConsensus": 68.0,
-      "targetMedian": 68.0
+      "targetConsensus": 62.0,
+      "targetMedian": 60.0
     },
     "DELL": {
-      "targetConsensus": 155.0,
-      "targetMedian": 155.0
+      "targetConsensus": 500.0,
+      "targetMedian": 490.0
     },
     "RGTI": {
-      "targetConsensus": 18.0,
-      "targetMedian": 18.0
+      "targetConsensus": 28.0,
+      "targetMedian": 26.0
     },
     "JPM": {
-      "targetConsensus": 295.0,
-      "targetMedian": 295.0
+      "targetConsensus": 338.78,
+      "targetMedian": 332.0
     },
     "BAC": {
-      "targetConsensus": 54.0,
-      "targetMedian": 54.0
+      "targetConsensus": 61.13,
+      "targetMedian": 61.0
     },
     "GS": {
-      "targetConsensus": 680.0,
-      "targetMedian": 680.0
+      "targetConsensus": 980.78,
+      "targetMedian": 1030.0
     },
     "MS": {
-      "targetConsensus": 148.0,
-      "targetMedian": 148.0
+      "targetConsensus": 235.0,
+      "targetMedian": 230.0
     },
     "V": {
-      "targetConsensus": 418.0,
-      "targetMedian": 418.0
+      "targetConsensus": 363.36,
+      "targetMedian": 385.0
     },
     "MA": {
-      "targetConsensus": 640.0,
-      "targetMedian": 640.0
+      "targetConsensus": 560.0,
+      "targetMedian": 550.0
     },
     "PYPL": {
-      "targetConsensus": 88.0,
-      "targetMedian": 88.0
-    },
-    "COIN": {
-      "targetConsensus": 340.0,
-      "targetMedian": 340.0
-    },
-    "SOFI": {
-      "targetConsensus": 22.0,
-      "targetMedian": 22.0
-    },
-    "BRK-B": {
-      "targetConsensus": 595.0,
-      "targetMedian": 595.0
-    },
-    "XOM": {
-      "targetConsensus": 120.0,
-      "targetMedian": 120.0
-    },
-    "CVX": {
-      "targetConsensus": 162.0,
-      "targetMedian": 162.0
-    },
-    "SLB": {
-      "targetConsensus": 50.0,
+      "targetConsensus": 51.14,
       "targetMedian": 50.0
     },
+    "COIN": {
+      "targetConsensus": 238.39,
+      "targetMedian": 240.0
+    },
+    "SOFI": {
+      "targetConsensus": 21.4,
+      "targetMedian": 19.5
+    },
+    "BRK-B": {
+      "targetConsensus": 520.0,
+      "targetMedian": 510.0
+    },
+    "XOM": {
+      "targetConsensus": 170.08,
+      "targetMedian": 175.0
+    },
+    "CVX": {
+      "targetConsensus": 200.13,
+      "targetMedian": 204.0
+    },
+    "SLB": {
+      "targetConsensus": 62.0,
+      "targetMedian": 60.0
+    },
     "CEG": {
-      "targetConsensus": 320.0,
+      "targetConsensus": 330.0,
       "targetMedian": 320.0
     },
     "VST": {
-      "targetConsensus": 235.0,
-      "targetMedian": 235.0
+      "targetConsensus": 205.0,
+      "targetMedian": 200.0
     },
     "NEE": {
-      "targetConsensus": 78.0,
-      "targetMedian": 78.0
+      "targetConsensus": 96.0,
+      "targetMedian": 94.0
     },
     "LLY": {
-      "targetConsensus": 1020.0,
-      "targetMedian": 1020.0
+      "targetConsensus": 1180.0,
+      "targetMedian": 1150.0
     },
     "JNJ": {
-      "targetConsensus": 170.0,
-      "targetMedian": 170.0
+      "targetConsensus": 250.58,
+      "targetMedian": 252.5
     },
     "PFE": {
-      "targetConsensus": 30.0,
-      "targetMedian": 30.0
+      "targetConsensus": 27.0,
+      "targetMedian": 27.0
     },
     "MRNA": {
-      "targetConsensus": 52.0,
-      "targetMedian": 52.0
+      "targetConsensus": 40.29,
+      "targetMedian": 38.0
     },
     "ABBV": {
-      "targetConsensus": 210.0,
-      "targetMedian": 210.0
+      "targetConsensus": 257.54,
+      "targetMedian": 260.0
     },
     "BA": {
-      "targetConsensus": 250.0,
-      "targetMedian": 250.0
+      "targetConsensus": 279.1,
+      "targetMedian": 280.5
     },
     "CAT": {
-      "targetConsensus": 425.0,
-      "targetMedian": 425.0
+      "targetConsensus": 920.0,
+      "targetMedian": 900.0
     },
     "DE": {
-      "targetConsensus": 520.0,
-      "targetMedian": 520.0
+      "targetConsensus": 600.0,
+      "targetMedian": 590.0
     },
     "HON": {
-      "targetConsensus": 260.0,
+      "targetConsensus": 265.0,
       "targetMedian": 260.0
     },
     "GE": {
-      "targetConsensus": 252.0,
-      "targetMedian": 252.0
+      "targetConsensus": 380.14,
+      "targetMedian": 375.0
     },
     "TSLA": {
-      "targetConsensus": 450.0,
+      "targetConsensus": 450.45,
       "targetMedian": 450.0
     },
     "MELI": {
-      "targetConsensus": 2800.0,
-      "targetMedian": 2800.0
+      "targetConsensus": 2100.0,
+      "targetMedian": 2050.0
     },
     "SE": {
-      "targetConsensus": 148.0,
-      "targetMedian": 148.0
+      "targetConsensus": 130.0,
+      "targetMedian": 125.0
     },
     "BABA": {
-      "targetConsensus": 158.0,
-      "targetMedian": 158.0
+      "targetConsensus": 189.17,
+      "targetMedian": 188.0
     },
     "PDD": {
-      "targetConsensus": 155.0,
-      "targetMedian": 155.0
+      "targetConsensus": 120.0,
+      "targetMedian": 115.0
     },
     "ABNB": {
-      "targetConsensus": 180.0,
-      "targetMedian": 180.0
+      "targetConsensus": 165.0,
+      "targetMedian": 160.0
     },
     "BKNG": {
       "targetConsensus": 5900.0,
-      "targetMedian": 5900.0
+      "targetMedian": 5850.0
     },
     "NKE": {
-      "targetConsensus": 88.0,
-      "targetMedian": 88.0
+      "targetConsensus": 68.71,
+      "targetMedian": 69.0
     },
     "SBUX": {
-      "targetConsensus": 106.0,
-      "targetMedian": 106.0
+      "targetConsensus": 108.5,
+      "targetMedian": 111.5
     },
     "MCD": {
-      "targetConsensus": 318.0,
-      "targetMedian": 318.0
+      "targetConsensus": 320.0,
+      "targetMedian": 315.0
     },
     "WMT": {
-      "targetConsensus": 114.0,
-      "targetMedian": 114.0
+      "targetConsensus": 139.44,
+      "targetMedian": 140.0
     },
     "COST": {
-      "targetConsensus": 1220.0,
-      "targetMedian": 1220.0
+      "targetConsensus": 1100.0,
+      "targetMedian": 1080.0
     },
     "NFLX": {
-      "targetConsensus": 1150.0,
-      "targetMedian": 1150.0
+      "targetConsensus": 114.19,
+      "targetMedian": 115.0
     },
     "DIS": {
-      "targetConsensus": 138.0,
-      "targetMedian": 138.0
+      "targetConsensus": 138.33,
+      "targetMedian": 134.5
     },
     "SPOT": {
-      "targetConsensus": 755.0,
-      "targetMedian": 755.0
+      "targetConsensus": 620.0,
+      "targetMedian": 600.0
     }
   },
   "estimates": {
     "AAPL": [
       {
-        "date": "2026-09-27",
-        "epsAvg": 8.75
+        "date": "2026-09-30",
+        "epsAvg": 10.94
       },
       {
-        "date": "2027-09-27",
-        "epsAvg": 9.62
+        "date": "2027-09-30",
+        "epsAvg": 12.03
       }
     ],
     "MSFT": [
       {
         "date": "2026-06-30",
-        "epsAvg": 16.8
+        "epsAvg": 15.88
       },
       {
         "date": "2027-06-30",
-        "epsAvg": 19.43
+        "epsAvg": 18.26
       }
     ],
     "GOOGL": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 14.22
+        "date": "2026-12-30",
+        "epsAvg": 17.11
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 14.71
+        "date": "2027-12-30",
+        "epsAvg": 20.19
       }
     ],
     "AMZN": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 8.79
+        "date": "2026-12-30",
+        "epsAvg": 7.68
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 10.06
+        "date": "2027-12-30",
+        "epsAvg": 9.37
       }
     ],
     "META": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 32.83
+        "date": "2026-12-30",
+        "epsAvg": 25.02
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 34.89
+        "date": "2027-12-30",
+        "epsAvg": 30.02
       }
     ],
     "NVDA": [
       {
-        "date": "2027-01-25",
-        "epsAvg": 8.87
+        "date": "2027-01-31",
+        "epsAvg": 8.01
       },
       {
-        "date": "2028-01-25",
-        "epsAvg": 12.37
+        "date": "2028-01-31",
+        "epsAvg": 12.42
       }
     ],
     "AMD": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 5.6
+        "date": "2026-12-30",
+        "epsAvg": 14.58
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 7.92
+        "date": "2027-12-30",
+        "epsAvg": 20.7
       }
     ],
     "INTC": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 0.78
+        "date": "2026-12-30",
+        "epsAvg": 4.97
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 1.5
+        "date": "2027-12-30",
+        "epsAvg": 6.46
       }
     ],
     "QCOM": [
       {
-        "date": "2026-09-28",
-        "epsAvg": 11.2
+        "date": "2026-12-30",
+        "epsAvg": 16.36
       },
       {
-        "date": "2027-09-28",
-        "epsAvg": 12.18
+        "date": "2027-12-30",
+        "epsAvg": 17.67
       }
     ],
     "AVGO": [
       {
-        "date": "2026-10-31",
-        "epsAvg": 6.2
+        "date": "2026-10-30",
+        "epsAvg": 17.04
       },
       {
-        "date": "2027-10-31",
-        "epsAvg": 7.85
+        "date": "2027-10-30",
+        "epsAvg": 21.3
       }
     ],
     "TSM": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 10.42
+        "date": "2026-12-30",
+        "epsAvg": 19.8
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 12.68
+        "date": "2027-12-30",
+        "epsAvg": 24.16
       }
     ],
     "MU": [
       {
-        "date": "2026-08-28",
-        "epsAvg": 7.62
+        "date": "2026-08-30",
+        "epsAvg": 57.53
       },
       {
-        "date": "2027-08-28",
-        "epsAvg": 10.84
+        "date": "2027-08-30",
+        "epsAvg": 79.39
       }
     ],
     "ARM": [
       {
         "date": "2027-03-31",
-        "epsAvg": 2.12
+        "epsAvg": 7.86
       },
       {
         "date": "2028-03-31",
-        "epsAvg": 2.86
+        "epsAvg": 10.61
       }
     ],
     "MRVL": [
       {
         "date": "2027-01-31",
-        "epsAvg": 2.66
+        "epsAvg": 5.77
       },
       {
         "date": "2028-01-31",
-        "epsAvg": 3.52
+        "epsAvg": 7.79
       }
     ],
     "TSEM": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 3.28
+        "date": "2026-12-30",
+        "epsAvg": 12.63
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 3.88
-      }
-    ],
-    "CRM": [
-      {
-        "date": "2027-01-31",
-        "epsAvg": 11.92
-      },
-      {
-        "date": "2028-01-31",
-        "epsAvg": 13.68
-      }
-    ],
-    "ORCL": [
-      {
-        "date": "2027-05-31",
-        "epsAvg": 7.88
-      },
-      {
-        "date": "2028-05-31",
-        "epsAvg": 9.28
-      }
-    ],
-    "SAP": [
-      {
-        "date": "2026-12-31",
-        "epsAvg": 7.12
-      },
-      {
-        "date": "2027-12-31",
-        "epsAvg": 8.44
-      }
-    ],
-    "NOW": [
-      {
-        "date": "2026-12-31",
-        "epsAvg": 22.84
-      },
-      {
-        "date": "2027-12-31",
-        "epsAvg": 28.6
-      }
-    ],
-    "ADBE": [
-      {
-        "date": "2026-11-28",
-        "epsAvg": 20.48
-      },
-      {
-        "date": "2027-11-28",
-        "epsAvg": 23.12
-      }
-    ],
-    "SNOW": [
-      {
-        "date": "2027-01-31",
-        "epsAvg": 0.88
-      },
-      {
-        "date": "2028-01-31",
-        "epsAvg": 1.86
-      }
-    ],
-    "PLTR": [
-      {
-        "date": "2026-12-31",
-        "epsAvg": 0.52
-      },
-      {
-        "date": "2027-12-31",
-        "epsAvg": 0.72
-      }
-    ],
-    "SHOP": [
-      {
-        "date": "2026-12-31",
-        "epsAvg": 1.52
-      },
-      {
-        "date": "2027-12-31",
-        "epsAvg": 2.08
-      }
-    ],
-    "UBER": [
-      {
-        "date": "2026-12-31",
-        "epsAvg": 3.82
-      },
-      {
-        "date": "2027-12-31",
-        "epsAvg": 5.2
-      }
-    ],
-    "TEAM": [
-      {
-        "date": "2026-06-30",
-        "epsAvg": 7.88
-      },
-      {
-        "date": "2027-06-30",
-        "epsAvg": 9.92
-      }
-    ],
-    "DDOG": [
-      {
-        "date": "2026-12-31",
-        "epsAvg": 2.92
-      },
-      {
-        "date": "2027-12-31",
-        "epsAvg": 3.88
-      }
-    ],
-    "PATH": [
-      {
-        "date": "2026-07-31",
-        "epsAvg": 0.38
-      },
-      {
-        "date": "2027-07-31",
-        "epsAvg": 0.52
-      }
-    ],
-    "IBM": [
-      {
-        "date": "2026-12-31",
-        "epsAvg": 11.92
-      },
-      {
-        "date": "2027-12-31",
-        "epsAvg": 13.28
-      }
-    ],
-    "CSCO": [
-      {
-        "date": "2026-07-31",
-        "epsAvg": 4.08
-      },
-      {
-        "date": "2027-07-31",
-        "epsAvg": 4.38
+        "date": "2027-12-30",
+        "epsAvg": 14.9
       }
     ],
     "ASML": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 31.2
+        "date": "2026-12-30",
+        "epsAvg": 58.16
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 38.4
+        "date": "2027-12-30",
+        "epsAvg": 72.7
       }
     ],
     "AMAT": [
       {
-        "date": "2026-10-31",
-        "epsAvg": 11.28
+        "date": "2026-12-30",
+        "epsAvg": 19.09
       },
       {
-        "date": "2027-10-31",
-        "epsAvg": 13.2
+        "date": "2027-12-30",
+        "epsAvg": 22.53
       }
     ],
     "KLAC": [
       {
         "date": "2026-06-30",
-        "epsAvg": 34.2
+        "epsAvg": 71.85
       },
       {
         "date": "2027-06-30",
-        "epsAvg": 40.8
+        "epsAvg": 84.78
       }
     ],
     "COHR": [
       {
         "date": "2026-06-30",
-        "epsAvg": 3.28
+        "epsAvg": 12.96
       },
       {
         "date": "2027-06-30",
-        "epsAvg": 4.48
+        "epsAvg": 18.4
+      }
+    ],
+    "CRM": [
+      {
+        "date": "2027-01-31",
+        "epsAvg": 8.38
+      },
+      {
+        "date": "2028-01-31",
+        "epsAvg": 9.64
+      }
+    ],
+    "ORCL": [
+      {
+        "date": "2027-05-31",
+        "epsAvg": 11.28
+      },
+      {
+        "date": "2028-05-31",
+        "epsAvg": 13.31
+      }
+    ],
+    "SAP": [
+      {
+        "date": "2026-12-30",
+        "epsAvg": 7.0
+      },
+      {
+        "date": "2027-12-30",
+        "epsAvg": 8.4
+      }
+    ],
+    "NOW": [
+      {
+        "date": "2026-12-30",
+        "epsAvg": 3.23
+      },
+      {
+        "date": "2027-12-30",
+        "epsAvg": 4.04
+      }
+    ],
+    "ADBE": [
+      {
+        "date": "2026-11-30",
+        "epsAvg": 12.46
+      },
+      {
+        "date": "2027-11-30",
+        "epsAvg": 13.71
+      }
+    ],
+    "SNOW": [],
+    "PLTR": [
+      {
+        "date": "2026-12-30",
+        "epsAvg": 2.47
+      },
+      {
+        "date": "2027-12-30",
+        "epsAvg": 3.41
+      }
+    ],
+    "SHOP": [
+      {
+        "date": "2026-12-30",
+        "epsAvg": 1.96
+      },
+      {
+        "date": "2027-12-30",
+        "epsAvg": 2.65
+      }
+    ],
+    "UBER": [
+      {
+        "date": "2026-12-30",
+        "epsAvg": 2.84
+      },
+      {
+        "date": "2027-12-30",
+        "epsAvg": 3.98
+      }
+    ],
+    "TEAM": [
+      {
+        "date": "2026-06-30",
+        "epsAvg": 3.05
+      },
+      {
+        "date": "2027-06-30",
+        "epsAvg": 3.81
+      }
+    ],
+    "DDOG": [
+      {
+        "date": "2026-12-30",
+        "epsAvg": 4.78
+      },
+      {
+        "date": "2027-12-30",
+        "epsAvg": 6.31
+      }
+    ],
+    "PATH": [],
+    "IBM": [
+      {
+        "date": "2026-12-30",
+        "epsAvg": 15.26
+      },
+      {
+        "date": "2027-12-30",
+        "epsAvg": 16.79
+      }
+    ],
+    "CSCO": [
+      {
+        "date": "2026-07-30",
+        "epsAvg": 5.78
+      },
+      {
+        "date": "2027-07-30",
+        "epsAvg": 6.18
       }
     ],
     "SMCI": [
       {
-        "date": "2026-07-31",
-        "epsAvg": 2.82
+        "date": "2026-12-30",
+        "epsAvg": 2.6
       },
       {
-        "date": "2027-07-31",
-        "epsAvg": 4.02
+        "date": "2027-12-30",
+        "epsAvg": 3.69
       }
     ],
     "DELL": [
       {
-        "date": "2027-01-31",
-        "epsAvg": 8.98
+        "date": "2026-12-30",
+        "epsAvg": 25.89
       },
       {
-        "date": "2028-01-31",
-        "epsAvg": 10.02
+        "date": "2027-12-30",
+        "epsAvg": 29.0
       }
     ],
-    "RGTI": [
-      {
-        "date": "2027-12-31",
-        "epsAvg": 0.08
-      },
-      {
-        "date": "2028-12-31",
-        "epsAvg": 0.2
-      }
-    ],
+    "RGTI": [],
     "JPM": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 20.4
+        "date": "2026-12-30",
+        "epsAvg": 21.18
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 22.88
+        "date": "2027-12-30",
+        "epsAvg": 23.3
       }
     ],
     "BAC": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 4.12
+        "date": "2026-12-30",
+        "epsAvg": 4.29
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 4.52
+        "date": "2027-12-30",
+        "epsAvg": 4.72
       }
     ],
     "GS": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 45.8
+        "date": "2026-12-30",
+        "epsAvg": 69.91
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 48.6
+        "date": "2027-12-30",
+        "epsAvg": 78.3
       }
     ],
     "MS": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 9.2
+        "date": "2026-12-30",
+        "epsAvg": 13.19
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 10.48
+        "date": "2027-12-30",
+        "epsAvg": 15.17
       }
     ],
     "V": [
       {
-        "date": "2026-09-30",
-        "epsAvg": 12.2
+        "date": "2026-12-30",
+        "epsAvg": 11.95
       },
       {
-        "date": "2027-09-30",
-        "epsAvg": 13.88
+        "date": "2027-12-30",
+        "epsAvg": 13.5
       }
     ],
     "MA": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 17.4
+        "date": "2026-12-30",
+        "epsAvg": 16.51
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 19.82
+        "date": "2027-12-30",
+        "epsAvg": 18.66
       }
     ],
     "PYPL": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 4.86
+        "date": "2026-12-30",
+        "epsAvg": 3.23
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 5.52
+        "date": "2027-12-30",
+        "epsAvg": 3.71
       }
     ],
     "COIN": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 16.2
+        "date": "2026-12-30",
+        "epsAvg": 8.3
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 20.8
+        "date": "2027-12-30",
+        "epsAvg": 10.79
       }
     ],
     "SOFI": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 0.72
+        "date": "2026-12-30",
+        "epsAvg": 0.84
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 0.98
+        "date": "2027-12-30",
+        "epsAvg": 1.26
       }
     ],
     "BRK-B": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 16.48
+        "date": "2026-12-30",
+        "epsAvg": 29.39
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 17.88
+        "date": "2027-12-30",
+        "epsAvg": 31.74
       }
     ],
     "XOM": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 7.82
+        "date": "2026-12-30",
+        "epsAvg": 11.5
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 8.22
+        "date": "2027-12-30",
+        "epsAvg": 12.08
       }
     ],
     "CVX": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 10.44
+        "date": "2026-12-30",
+        "epsAvg": 15.49
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 10.92
+        "date": "2027-12-30",
+        "epsAvg": 16.26
       }
     ],
     "SLB": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 2.84
+        "date": "2026-12-30",
+        "epsAvg": 3.91
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 3.02
+        "date": "2027-12-30",
+        "epsAvg": 4.14
       }
     ],
     "CEG": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 10.48
+        "date": "2026-12-30",
+        "epsAvg": 12.08
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 12.2
+        "date": "2027-12-30",
+        "epsAvg": 14.74
       }
     ],
     "VST": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 6.84
+        "date": "2026-12-30",
+        "epsAvg": 8.6
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 8.2
+        "date": "2027-12-30",
+        "epsAvg": 10.32
       }
     ],
     "NEE": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 3.88
+        "date": "2026-12-30",
+        "epsAvg": 4.18
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 4.24
+        "date": "2027-12-30",
+        "epsAvg": 4.51
       }
     ],
     "LLY": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 38.2
+        "date": "2026-12-30",
+        "epsAvg": 30.91
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 56.4
+        "date": "2027-12-30",
+        "epsAvg": 43.27
       }
     ],
     "JNJ": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 10.22
+        "date": "2026-12-30",
+        "epsAvg": 13.15
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 10.68
+        "date": "2027-12-30",
+        "epsAvg": 13.81
       }
     ],
     "PFE": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 2.84
+        "date": "2026-12-30",
+        "epsAvg": 2.56
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 3.02
+        "date": "2027-12-30",
+        "epsAvg": 2.69
       }
     ],
-    "MRNA": [
-      {
-        "date": "2026-12-31",
-        "epsAvg": 0.42
-      },
-      {
-        "date": "2027-12-31",
-        "epsAvg": 2.48
-      }
-    ],
+    "MRNA": [],
     "ABBV": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 13.44
+        "date": "2026-12-30",
+        "epsAvg": 13.31
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 14.88
+        "date": "2027-12-30",
+        "epsAvg": 14.91
       }
     ],
     "BA": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 4.82
+        "date": "2026-12-30",
+        "epsAvg": 8.01
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 9.68
+        "date": "2027-12-30",
+        "epsAvg": 11.61
       }
     ],
     "CAT": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 22.6
+        "date": "2026-12-30",
+        "epsAvg": 48.08
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 24.88
+        "date": "2027-12-30",
+        "epsAvg": 51.93
       }
     ],
     "DE": [
       {
-        "date": "2026-10-31",
-        "epsAvg": 23.88
+        "date": "2026-10-30",
+        "epsAvg": 30.13
       },
       {
-        "date": "2027-10-31",
-        "epsAvg": 26.4
+        "date": "2027-10-30",
+        "epsAvg": 32.54
       }
     ],
     "HON": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 10.2
+        "date": "2026-12-30",
+        "epsAvg": 11.26
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 11.48
+        "date": "2027-12-30",
+        "epsAvg": 12.39
       }
     ],
     "GE": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 6.48
+        "date": "2026-12-30",
+        "epsAvg": 7.4
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 7.88
+        "date": "2027-12-30",
+        "epsAvg": 9.03
       }
     ],
     "TSLA": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 1.9
+        "date": "2026-12-30",
+        "epsAvg": 5.2
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 2.44
+        "date": "2027-12-30",
+        "epsAvg": 6.24
       }
     ],
     "MELI": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 62.8
+        "date": "2026-12-30",
+        "epsAvg": 49.46
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 82.4
+        "date": "2027-12-30",
+        "epsAvg": 66.77
       }
     ],
     "SE": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 3.84
+        "date": "2026-12-30",
+        "epsAvg": 4.33
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 5.02
+        "date": "2027-12-30",
+        "epsAvg": 6.06
       }
     ],
     "BABA": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 9.24
+        "date": "2026-12-30",
+        "epsAvg": 12.54
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 10.28
+        "date": "2027-12-30",
+        "epsAvg": 13.79
       }
     ],
     "PDD": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 10.04
+        "date": "2026-12-30",
+        "epsAvg": 7.27
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 11.52
+        "date": "2027-12-30",
+        "epsAvg": 8.36
       }
     ],
     "ABNB": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 8.82
+        "date": "2026-12-30",
+        "epsAvg": 6.27
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 10.44
+        "date": "2027-12-30",
+        "epsAvg": 7.4
       }
     ],
     "BKNG": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 202.4
+        "date": "2026-12-30",
+        "epsAvg": 235.45
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 228.8
+        "date": "2027-12-30",
+        "epsAvg": 270.77
       }
     ],
     "NKE": [
       {
         "date": "2027-05-31",
-        "epsAvg": 3.92
+        "epsAvg": 2.09
       },
       {
         "date": "2028-05-31",
-        "epsAvg": 4.52
+        "epsAvg": 2.3
       }
     ],
     "SBUX": [
       {
         "date": "2026-09-30",
-        "epsAvg": 3.68
+        "epsAvg": 3.86
       },
       {
         "date": "2027-09-30",
-        "epsAvg": 4.12
+        "epsAvg": 4.32
       }
     ],
     "MCD": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 13.2
+        "date": "2026-12-30",
+        "epsAvg": 12.55
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 14.48
+        "date": "2027-12-30",
+        "epsAvg": 13.55
       }
     ],
     "WMT": [
       {
         "date": "2027-01-31",
-        "epsAvg": 3.12
+        "epsAvg": 3.02
       },
       {
         "date": "2028-01-31",
-        "epsAvg": 3.54
+        "epsAvg": 3.41
       }
     ],
     "COST": [
       {
-        "date": "2026-08-31",
-        "epsAvg": 19.2
+        "date": "2026-08-30",
+        "epsAvg": 19.71
       },
       {
-        "date": "2027-08-31",
-        "epsAvg": 22.08
+        "date": "2027-08-30",
+        "epsAvg": 22.47
       }
     ],
     "NFLX": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 30.21
+        "date": "2026-12-30",
+        "epsAvg": 2.68
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 35.84
+        "date": "2027-12-30",
+        "epsAvg": 3.27
       }
     ],
     "DIS": [
       {
-        "date": "2026-09-30",
-        "epsAvg": 5.82
+        "date": "2026-12-30",
+        "epsAvg": 4.67
       },
       {
-        "date": "2027-09-30",
-        "epsAvg": 6.88
+        "date": "2027-12-30",
+        "epsAvg": 5.84
       }
     ],
     "SPOT": [
       {
-        "date": "2026-12-31",
-        "epsAvg": 9.28
+        "date": "2026-12-30",
+        "epsAvg": 10.16
       },
       {
-        "date": "2027-12-31",
-        "epsAvg": 13.64
+        "date": "2027-12-30",
+        "epsAvg": 15.75
       }
     ]
   },
   "epsGrowth": {
     "AAPL": 0.1,
-    "MSFT": 0.16,
+    "MSFT": 0.15,
     "GOOGL": 0.18,
-    "AMZN": 0.23,
-    "META": 0.3,
-    "NVDA": 0.89,
-    "AMD": 0.57,
-    "INTC": -0.15,
+    "AMZN": 0.22,
+    "META": 0.2,
+    "NVDA": 0.55,
+    "AMD": 0.42,
+    "INTC": 0.3,
     "QCOM": 0.08,
-    "AVGO": 0.27,
+    "AVGO": 0.25,
     "TSM": 0.22,
-    "MU": 0.42,
+    "MU": 0.38,
     "ARM": 0.35,
-    "MRVL": 0.32,
-    "TSEM": 0.16,
-    "CRM": 0.21,
+    "MRVL": 0.35,
+    "TSEM": 0.18,
+    "ASML": 0.25,
+    "AMAT": 0.18,
+    "KLAC": 0.18,
+    "COHR": 0.42,
+    "CRM": 0.15,
     "ORCL": 0.18,
-    "SAP": 0.21,
+    "SAP": 0.2,
     "NOW": 0.25,
-    "ADBE": 0.11,
+    "ADBE": 0.1,
     "SNOW": 0.35,
     "PLTR": 0.38,
-    "SHOP": 0.37,
-    "UBER": 0.54,
-    "TEAM": 0.26,
-    "DDOG": 0.33,
-    "PATH": 0.37,
-    "IBM": 0.12,
+    "SHOP": 0.35,
+    "UBER": 0.4,
+    "TEAM": 0.25,
+    "DDOG": 0.32,
+    "PATH": 0.4,
+    "IBM": 0.1,
     "CSCO": 0.07,
-    "ASML": 0.26,
-    "AMAT": 0.18,
-    "KLAC": 0.19,
-    "COHR": 0.37,
-    "SMCI": 0.43,
-    "DELL": 0.15,
+    "SMCI": 0.42,
+    "DELL": 0.12,
     "RGTI": 0.1,
-    "JPM": 0.12,
-    "BAC": 0.12,
-    "GS": 0.14,
-    "MS": 0.18,
-    "V": 0.14,
-    "MA": 0.14,
-    "PYPL": 0.16,
-    "COIN": 0.28,
+    "JPM": 0.1,
+    "BAC": 0.1,
+    "GS": 0.12,
+    "MS": 0.15,
+    "V": 0.13,
+    "MA": 0.13,
+    "PYPL": 0.15,
+    "COIN": 0.3,
     "SOFI": 0.5,
-    "BRK-B": 0.09,
+    "BRK-B": 0.08,
     "XOM": 0.05,
     "CVX": 0.05,
     "SLB": 0.06,
-    "CEG": 0.25,
+    "CEG": 0.22,
     "VST": 0.2,
-    "NEE": 0.1,
-    "LLY": 0.42,
+    "NEE": 0.08,
+    "LLY": 0.4,
     "JNJ": 0.05,
-    "PFE": 0.06,
-    "MRNA": 0.12,
-    "ABBV": 0.14,
-    "BA": 0.25,
-    "CAT": 0.09,
-    "DE": 0.1,
-    "HON": 0.13,
+    "PFE": 0.05,
+    "MRNA": 0.15,
+    "ABBV": 0.12,
+    "BA": 0.45,
+    "CAT": 0.08,
+    "DE": 0.08,
+    "HON": 0.1,
     "GE": 0.22,
-    "TSLA": 0.15,
-    "MELI": 0.39,
-    "SE": 0.47,
+    "TSLA": 0.2,
+    "MELI": 0.35,
+    "SE": 0.4,
     "BABA": 0.1,
     "PDD": 0.15,
-    "ABNB": 0.21,
+    "ABNB": 0.18,
     "BKNG": 0.15,
-    "NKE": 0.13,
+    "NKE": 0.1,
     "SBUX": 0.12,
-    "MCD": 0.1,
+    "MCD": 0.08,
     "WMT": 0.13,
-    "COST": 0.16,
+    "COST": 0.14,
     "NFLX": 0.22,
-    "DIS": 0.3,
-    "SPOT": 0.6
+    "DIS": 0.25,
+    "SPOT": 0.55
   }
 }
