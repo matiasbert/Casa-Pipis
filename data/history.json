@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "savedAt": "2026-06-01T17:57:40.785Z",
+  "savedAt": "2026-06-02T12:36:32.255Z",
   "months": {
     "2026-05": {
       "key": "2026-05",
@@ -122,7 +122,7 @@
           "id": "5ka0l62gmpvhy9nn",
           "name": "Expensas",
           "currency": "ARS",
-          "amount": 0,
+          "amount": 107935,
           "splitOverride": null,
           "notes": "",
           "installments": null,
