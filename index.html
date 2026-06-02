@@ -827,7 +827,7 @@ function buildPinaEditRow(item) {
         <option value="USD"${item.currency==='USD'?' selected':''}>USD</option>
       </select>
     </td>
-    <td><input type="number" id="pAmount" value="${item.amount||\'\'}" placeholder="0" min="0" step="0.01"></td>
+    <td><input type="number" id="pAmount" value="${item.amount||''}" placeholder="0" min="0" step="0.01"></td>
     <td colspan="1">
       <div class="install-row">
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
