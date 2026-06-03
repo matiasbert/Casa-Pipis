@@ -561,12 +561,19 @@ function saveAll() { localStorage.setItem(STORAGE_KEY, JSON.stringify(allMonths)
 function loadAll() {
   try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) allMonths = JSON.parse(raw); }
   catch(e) { allMonths = {}; }
-  // migrate: add pinaItems to months saved before v1.5
+  // migrate: add pinaItems / mark recurring templates
   let needsSave = false;
   for (const month of Object.values(allMonths)) {
     if (!month.pinaItems) {
       month.pinaItems = PINA_RECURRING_TEMPLATES.map(newPinaItemFromTemplate);
       needsSave = true;
+    } else {
+      for (const item of month.pinaItems) {
+        if (!item.isRecurring && PINA_RECURRING_TEMPLATES.some(t => t.name === item.name && t.currency === item.currency)) {
+          item.isRecurring = true;
+          needsSave = true;
+        }
+      }
     }
   }
   if (needsSave) saveAll();
@@ -576,7 +583,7 @@ function newItemFromTemplate(tpl) {
   return { id: uid(), name: tpl.name, currency: tpl.currency, amount: 0, splitOverride: null, notes: '', installments: null, isRecurring: true };
 }
 function newPinaItemFromTemplate(tpl) {
-  return { id: uid(), name: tpl.name, currency: tpl.currency, amount: 0, notes: '', installments: null };
+  return { id: uid(), name: tpl.name, currency: tpl.currency, amount: 0, notes: '', installments: null, isRecurring: true };
 }
 function createMonthRecord(key) {
   return { key, matiSplit: 75, pinaSplit: 25, locked: false, items: RECURRING_TEMPLATES.map(newItemFromTemplate), pinaItems: PINA_RECURRING_TEMPLATES.map(newPinaItemFromTemplate) };
@@ -842,7 +849,7 @@ function buildPinaViewRow(item, readonly) {
     <td>${escHtml(item.name)}</td>${arsCell}
     <td><div class="actions-cell">${!readonly
       ? `<button class="btn btn-sm" onclick="startPinaEdit('${item.id}')">✏️ Editar</button>
-         <button class="btn btn-sm btn-danger" onclick="deletePinaItem('${item.id}')">✕</button>`
+         ${!item.isRecurring ? `<button class="btn btn-sm btn-danger" onclick="deletePinaItem('${item.id}')">✕</button>` : ''}`
       : '—'}</div></td>`;
   return tr;
 }
@@ -859,8 +866,8 @@ function buildPinaPairedRow(arsItem, usdItem, readonly) {
     <td class="amount"><span class="badge-usd">USD</span> ${fmtUSD(usdAmt)}${instBadge(usdItem)}${notesFrag(usdItem)}</td>
     <td><div class="actions-cell">${!readonly
       ? `<button class="btn btn-sm" onclick="startPinaEdit('${arsItem.id}')">✏️ Editar</button>
-         <button class="btn btn-sm btn-danger" onclick="deletePinaItem('${arsItem.id}')" title="Borrar pesos">✕$</button>
-         <button class="btn btn-sm btn-danger" onclick="deletePinaItem('${usdItem.id}')" title="Borrar USD">✕USD</button>`
+         ${!arsItem.isRecurring ? `<button class="btn btn-sm btn-danger" onclick="deletePinaItem('${arsItem.id}')" title="Borrar pesos">✕$</button>` : ''}
+         ${!usdItem.isRecurring ? `<button class="btn btn-sm btn-danger" onclick="deletePinaItem('${usdItem.id}')" title="Borrar USD">✕USD</button>` : ''}`
       : '—'}</div></td>`;
   return tr;
 }
@@ -872,12 +879,12 @@ function buildPinaPairedEditRow(arsItem, usdItem) {
     <td><input type="text" id="pPairName" value="${escAttr(arsItem.name)}" placeholder="Concepto"></td>
     <td>
       <span class="badge-ars" style="display:inline-block;margin-bottom:5px">ARS</span>
-      <input type="number" id="pAmountARS" value="${arsItem.amount||''}" placeholder="0" min="0" step="0.01">
+      <input type="number" id="pAmountARS" value="${arsItem.amount||\'\'}" placeholder="0" min="0" step="0.01">
       <input type="text" id="pNotesARS" value="${escAttr(arsItem.notes||'')}" placeholder="Notas" style="margin-top:4px">
     </td>
     <td>
       <span class="badge-usd" style="display:inline-block;margin-bottom:5px">USD</span>
-      <input type="number" id="pAmountUSD" value="${usdItem.amount||''}" placeholder="0" min="0" step="0.01">
+      <input type="number" id="pAmountUSD" value="${usdItem.amount||\'\'}" placeholder="0" min="0" step="0.01">
       <input type="text" id="pNotesUSD" value="${escAttr(usdItem.notes||'')}" placeholder="Notas" style="margin-top:4px">
     </td>
     <td>
@@ -904,7 +911,7 @@ function buildPinaEditRow(item) {
           <option value="ARS"${item.currency==='ARS'?' selected':''}>ARS</option>
           <option value="USD"${item.currency==='USD'?' selected':''}>USD</option>
         </select>
-        <input type="number" id="pAmount" value="${item.amount||''}" placeholder="0" min="0" step="0.01" style="width:130px!important">
+        <input type="number" id="pAmount" value="${item.amount||\'\'}" placeholder="0" min="0" step="0.01" style="width:130px!important">
       </div>
       <div class="install-row">
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
@@ -1585,4 +1592,4 @@ function escText(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&
   await autoLoadFromGithub();
 })();
 </script>
-</body></html>
+</body>
