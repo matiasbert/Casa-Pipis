@@ -419,7 +419,7 @@ body.dark .sync-status.busy { color:#fbbf24; }
       <table>
         <thead>
           <tr>
-            <th>Concepto</th><th>Moneda</th><th>Monto</th><th>Acciones</th>
+            <th>Concepto</th><th>Pesos</th><th>Dólares</th>
           </tr>
         </thead>
         <tbody id="pinaExpenseTbody"></tbody>
@@ -794,30 +794,75 @@ function renderPinaTable(month, readonly) {
   const items = month.pinaItems || [];
   if (!items.length) {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="5"><div class="empty-state">Sin gastos propios.<br><p>Hacé clic en "+ Agregar gasto" para empezar.</p></div></td>`;
+    tr.innerHTML = `<td colspan="3"><div class="empty-state">Sin gastos propios.<br><p>Hacé clic en "+ Agregar gasto" para empezar.</p></div></td>`;
     tbody.appendChild(tr);
     return;
   }
+  // Group items with same name: one ARS + one USD → merged row
+  const byName = {};
   for (const item of items) {
-    if (editingPinaItemId === item.id && !readonly) tbody.appendChild(buildPinaEditRow(item));
-    else tbody.appendChild(buildPinaViewRow(item, readonly));
+    const k = item.name.trim().toLowerCase();
+    if (!byName[k]) byName[k] = [];
+    byName[k].push(item);
+  }
+  const rendered = new Set();
+  for (const item of items) {
+    if (rendered.has(item.id)) continue;
+    const k = item.name.trim().toLowerCase();
+    const group = byName[k];
+    const arsItem = group.find(i => i.currency === 'ARS');
+    const usdItem = group.find(i => i.currency === 'USD');
+    const isPair = arsItem && usdItem && group.length === 2;
+    if (isPair) {
+      rendered.add(arsItem.id);
+      rendered.add(usdItem.id);
+      const editingThis = editingPinaItemId === arsItem.id || editingPinaItemId === usdItem.id;
+      if (editingThis && !readonly) {
+        tbody.appendChild(buildPinaEditRow(editingPinaItemId === arsItem.id ? arsItem : usdItem));
+      } else {
+        tbody.appendChild(buildPinaPairedRow(arsItem, usdItem, readonly));
+      }
+    } else {
+      rendered.add(item.id);
+      if (editingPinaItemId === item.id && !readonly) tbody.appendChild(buildPinaEditRow(item));
+      else tbody.appendChild(buildPinaViewRow(item, readonly));
+    }
   }
 }
 
 function buildPinaViewRow(item, readonly) {
-  const installBadge = item.installments
-    ? `<span class="installment-badge">cuota ${item.installments.current}/${item.installments.total}</span>` : '';
-  const notesHtml = item.notes
-    ? `<div class="item-notes">${escHtml(item.notes)}</div>` : '';
+  const installBadge = item.installments ? `<span class="installment-badge">cuota ${item.installments.current}/${item.installments.total}</span>` : '';
+  const notesHtml = item.notes ? `<div class="item-notes">${escHtml(item.notes)}</div>` : '';
+  const actionsHtml = !readonly
+    ? `<div class="actions-cell" style="margin-top:4px">
+         <button class="btn btn-sm" onclick="startPinaEdit('${item.id}')">✏️ Editar</button>
+         <button class="btn btn-sm btn-danger" onclick="deletePinaItem('${item.id}')">✕</button>
+       </div>` : '';
+  const amtHtml = `${fmtAmount(parseFloat(item.amount)||0, item.currency)}${installBadge}${notesHtml}${actionsHtml}`;
+  const tr = document.createElement('tr');
+  if (item.currency === 'ARS') {
+    tr.innerHTML = `<td>${escHtml(item.name)}</td><td class="amount">${amtHtml}</td><td style="color:var(--text-muted)">—</td>`;
+  } else {
+    tr.innerHTML = `<td>${escHtml(item.name)}</td><td style="color:var(--text-muted)">—</td><td class="amount">${amtHtml}</td>`;
+  }
+  return tr;
+}
+
+function buildPinaPairedRow(arsItem, usdItem, readonly) {
+  const arsAmt = parseFloat(arsItem.amount) || 0;
+  const usdAmt = parseFloat(usdItem.amount) || 0;
+  const instBadge = (i) => i.installments ? `<span class="installment-badge">c.${i.installments.current}/${i.installments.total}</span>` : '';
+  const notesFrag = (i) => i.notes ? `<div class="item-notes">${escHtml(i.notes)}</div>` : '';
+  const actionsFrag = (i) => !readonly
+    ? `<div class="actions-cell" style="margin-top:4px">
+         <button class="btn btn-sm" onclick="startPinaEdit('${i.id}')">✏️</button>
+         <button class="btn btn-sm btn-danger" onclick="deletePinaItem('${i.id}')">✕</button>
+       </div>` : '';
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td>${escHtml(item.name)}${installBadge}${notesHtml}</td>
-    <td><span class="badge-${item.currency.toLowerCase()}">${item.currency}</span></td>
-    <td class="amount">${fmtAmount(parseFloat(item.amount)||0, item.currency)}</td>
-    <td><div class="actions-cell">${!readonly
-      ? `<button class="btn btn-sm" onclick="startPinaEdit('${item.id}')">✏️ Editar</button>
-         <button class="btn btn-sm btn-danger" onclick="deletePinaItem('${item.id}')">✕</button>`
-      : '—'}</div></td>`;
+    <td>${escHtml(arsItem.name)}</td>
+    <td class="amount">${fmtARS(arsAmt)}${instBadge(arsItem)}${notesFrag(arsItem)}${actionsFrag(arsItem)}</td>
+    <td class="amount">${fmtUSD(usdAmt)}${instBadge(usdItem)}${notesFrag(usdItem)}${actionsFrag(usdItem)}</td>`;
   return tr;
 }
 
@@ -830,14 +875,14 @@ function buildPinaEditRow(item) {
   tr.className = 'edit-row';
   tr.innerHTML = `
     <td><input type="text" id="pName" value="${escAttr(item.name)}" placeholder="Concepto"></td>
-    <td>
-      <select id="pCurrency">
-        <option value="ARS"${item.currency==='ARS'?' selected':''}>ARS</option>
-        <option value="USD"${item.currency==='USD'?' selected':''}>USD</option>
-      </select>
-    </td>
-    <td><input type="number" id="pAmount" value="${item.amount||""}" placeholder="0" min="0" step="0.01"></td>
-    <td colspan="1">
+    <td colspan="2">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <select id="pCurrency">
+          <option value="ARS"${item.currency==='ARS'?' selected':''}>ARS</option>
+          <option value="USD"${item.currency==='USD'?' selected':''}>USD</option>
+        </select>
+        <input type="number" id="pAmount" value="${item.amount||""}" placeholder="0" min="0" step="0.01" style="width:130px!important">
+      </div>
       <div class="install-row">
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
           <input type="checkbox" id="pInstall" ${instChecked} onchange="togglePinaInstallUI()">
