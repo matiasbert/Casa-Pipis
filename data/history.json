@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "savedAt": "2026-06-02T12:36:32.255Z",
+  "savedAt": "2026-06-03T04:34:21.671Z",
   "months": {
     "2026-05": {
       "key": "2026-05",
@@ -100,6 +100,40 @@
             "total": 12
           }
         }
+      ],
+      "pinaItems": [
+        {
+          "id": "ytsjg5gimpxknh5d",
+          "name": "Visa",
+          "currency": "ARS",
+          "amount": 0,
+          "notes": "",
+          "installments": null
+        },
+        {
+          "id": "0lveviwjmpxknh5d",
+          "name": "Visa",
+          "currency": "USD",
+          "amount": 0,
+          "notes": "",
+          "installments": null
+        },
+        {
+          "id": "dyjdn4acmpxknh5d",
+          "name": "Mastercard",
+          "currency": "ARS",
+          "amount": 0,
+          "notes": "",
+          "installments": null
+        },
+        {
+          "id": "5fmnd251mpxknh5d",
+          "name": "Mastercard",
+          "currency": "USD",
+          "amount": 0,
+          "notes": "",
+          "installments": null
+        }
       ]
     },
     "2026-06": {
@@ -171,7 +205,8 @@
             "total": 12
           }
         }
-      ]
+      ],
+      "pinaItems": []
     }
   }
 }
