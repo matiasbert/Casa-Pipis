@@ -419,7 +419,7 @@ body.dark .sync-status.busy { color:#fbbf24; }
       <table>
         <thead>
           <tr>
-            <th>Concepto</th><th>Pesos</th><th>Dólares</th>
+            <th>Concepto</th><th>Pesos</th><th>Dólares</th><th>Acciones</th>
           </tr>
         </thead>
         <tbody id="pinaExpenseTbody"></tbody>
@@ -818,7 +818,7 @@ function renderPinaTable(month, readonly) {
       rendered.add(usdItem.id);
       const editingThis = editingPinaItemId === arsItem.id || editingPinaItemId === usdItem.id;
       if (editingThis && !readonly) {
-        tbody.appendChild(buildPinaEditRow(editingPinaItemId === arsItem.id ? arsItem : usdItem));
+        tbody.appendChild(buildPinaPairedEditRow(arsItem, usdItem));
       } else {
         tbody.appendChild(buildPinaPairedRow(arsItem, usdItem, readonly));
       }
@@ -831,20 +831,19 @@ function renderPinaTable(month, readonly) {
 }
 
 function buildPinaViewRow(item, readonly) {
-  const installBadge = item.installments ? `<span class="installment-badge">cuota ${item.installments.current}/${item.installments.total}</span>` : '';
+  const installBadge = item.installments ? `<span class="installment-badge">c.${item.installments.current}/${item.installments.total}</span>` : '';
   const notesHtml = item.notes ? `<div class="item-notes">${escHtml(item.notes)}</div>` : '';
-  const actionsHtml = !readonly
-    ? `<div class="actions-cell" style="margin-top:4px">
-         <button class="btn btn-sm" onclick="startPinaEdit('${item.id}')">✏️ Editar</button>
-         <button class="btn btn-sm btn-danger" onclick="deletePinaItem('${item.id}')">✕</button>
-       </div>` : '';
-  const amtHtml = `${fmtAmount(parseFloat(item.amount)||0, item.currency)}${installBadge}${notesHtml}${actionsHtml}`;
+  const badge = item.currency === 'ARS' ? `<span class="badge-ars">ARS</span>` : `<span class="badge-usd">USD</span>`;
+  const amtHtml = `${badge} ${fmtAmount(parseFloat(item.amount)||0, item.currency)}${installBadge}${notesHtml}`;
   const tr = document.createElement('tr');
-  if (item.currency === 'ARS') {
-    tr.innerHTML = `<td>${escHtml(item.name)}</td><td class="amount">${amtHtml}</td><td style="color:var(--text-muted)">—</td>`;
-  } else {
-    tr.innerHTML = `<td>${escHtml(item.name)}</td><td style="color:var(--text-muted)">—</td><td class="amount">${amtHtml}</td>`;
-  }
+  const arsCell = item.currency === 'ARS' ? `<td class="amount">${amtHtml}</td><td style="color:var(--text-muted)">—</td>` :
+                                            `<td style="color:var(--text-muted)">—</td><td class="amount">${amtHtml}</td>`;
+  tr.innerHTML = `
+    <td>${escHtml(item.name)}</td>${arsCell}
+    <td><div class="actions-cell">${!readonly
+      ? `<button class="btn btn-sm" onclick="startPinaEdit('${item.id}')">✏️ Editar</button>
+         <button class="btn btn-sm btn-danger" onclick="deletePinaItem('${item.id}')">✕</button>`
+      : '—'}</div></td>`;
   return tr;
 }
 
@@ -853,16 +852,40 @@ function buildPinaPairedRow(arsItem, usdItem, readonly) {
   const usdAmt = parseFloat(usdItem.amount) || 0;
   const instBadge = (i) => i.installments ? `<span class="installment-badge">c.${i.installments.current}/${i.installments.total}</span>` : '';
   const notesFrag = (i) => i.notes ? `<div class="item-notes">${escHtml(i.notes)}</div>` : '';
-  const actionsFrag = (i) => !readonly
-    ? `<div class="actions-cell" style="margin-top:4px">
-         <button class="btn btn-sm" onclick="startPinaEdit('${i.id}')">✏️</button>
-         <button class="btn btn-sm btn-danger" onclick="deletePinaItem('${i.id}')">✕</button>
-       </div>` : '';
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td>${escHtml(arsItem.name)}</td>
-    <td class="amount">${fmtARS(arsAmt)}${instBadge(arsItem)}${notesFrag(arsItem)}${actionsFrag(arsItem)}</td>
-    <td class="amount">${fmtUSD(usdAmt)}${instBadge(usdItem)}${notesFrag(usdItem)}${actionsFrag(usdItem)}</td>`;
+    <td class="amount"><span class="badge-ars">ARS</span> ${fmtARS(arsAmt)}${instBadge(arsItem)}${notesFrag(arsItem)}</td>
+    <td class="amount"><span class="badge-usd">USD</span> ${fmtUSD(usdAmt)}${instBadge(usdItem)}${notesFrag(usdItem)}</td>
+    <td><div class="actions-cell">${!readonly
+      ? `<button class="btn btn-sm" onclick="startPinaEdit('${arsItem.id}')">✏️ Editar</button>
+         <button class="btn btn-sm btn-danger" onclick="deletePinaItem('${arsItem.id}')" title="Borrar pesos">✕$</button>
+         <button class="btn btn-sm btn-danger" onclick="deletePinaItem('${usdItem.id}')" title="Borrar USD">✕USD</button>`
+      : '—'}</div></td>`;
+  return tr;
+}
+
+function buildPinaPairedEditRow(arsItem, usdItem) {
+  const tr = document.createElement('tr');
+  tr.className = 'edit-row';
+  tr.innerHTML = `
+    <td><input type="text" id="pPairName" value="${escAttr(arsItem.name)}" placeholder="Concepto"></td>
+    <td>
+      <span class="badge-ars" style="display:inline-block;margin-bottom:5px">ARS</span>
+      <input type="number" id="pAmountARS" value="${arsItem.amount||''}" placeholder="0" min="0" step="0.01">
+      <input type="text" id="pNotesARS" value="${escAttr(arsItem.notes||'')}" placeholder="Notas" style="margin-top:4px">
+    </td>
+    <td>
+      <span class="badge-usd" style="display:inline-block;margin-bottom:5px">USD</span>
+      <input type="number" id="pAmountUSD" value="${usdItem.amount||''}" placeholder="0" min="0" step="0.01">
+      <input type="text" id="pNotesUSD" value="${escAttr(usdItem.notes||'')}" placeholder="Notas" style="margin-top:4px">
+    </td>
+    <td>
+      <div class="actions-cell">
+        <button class="btn btn-sm btn-primary" onclick="savePinaPairedEdit('${arsItem.id}','${usdItem.id}')">✓ Guardar</button>
+        <button class="btn btn-sm" onclick="cancelPinaEdit()">✕</button>
+      </div>
+    </td>`;
   return tr;
 }
 
@@ -875,13 +898,13 @@ function buildPinaEditRow(item) {
   tr.className = 'edit-row';
   tr.innerHTML = `
     <td><input type="text" id="pName" value="${escAttr(item.name)}" placeholder="Concepto"></td>
-    <td colspan="2">
+    <td colspan="3">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
         <select id="pCurrency">
           <option value="ARS"${item.currency==='ARS'?' selected':''}>ARS</option>
           <option value="USD"${item.currency==='USD'?' selected':''}>USD</option>
         </select>
-        <input type="number" id="pAmount" value="${item.amount||""}" placeholder="0" min="0" step="0.01" style="width:130px!important">
+        <input type="number" id="pAmount" value="${item.amount||''}" placeholder="0" min="0" step="0.01" style="width:130px!important">
       </div>
       <div class="install-row">
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
@@ -943,6 +966,22 @@ function savePinaEdit(id) {
   editingPinaItemId = null;
   saveAll();
   renderAll();
+}
+
+function savePinaPairedEdit(arsId, usdId) {
+  const month = getMonth();
+  if (!month) return;
+  const name    = (document.getElementById('pPairName')?.value || '').trim();
+  const amtARS  = parseFloat(document.getElementById('pAmountARS')?.value) || 0;
+  const amtUSD  = parseFloat(document.getElementById('pAmountUSD')?.value) || 0;
+  const notesARS = (document.getElementById('pNotesARS')?.value || '').trim();
+  const notesUSD = (document.getElementById('pNotesUSD')?.value || '').trim();
+  const arsItem = (month.pinaItems || []).find(i => i.id === arsId);
+  const usdItem = (month.pinaItems || []).find(i => i.id === usdId);
+  if (arsItem) { if (name) arsItem.name = name; arsItem.amount = amtARS; arsItem.notes = notesARS; }
+  if (usdItem) { if (name) usdItem.name = name; usdItem.amount = amtUSD; usdItem.notes = notesUSD; }
+  editingPinaItemId = null;
+  saveAll(); renderAll();
 }
 
 function deletePinaItem(id) {
@@ -1546,5 +1585,4 @@ function escText(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&
   await autoLoadFromGithub();
 })();
 </script>
-</body>
-</html>
+</body></html>
