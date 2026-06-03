@@ -561,6 +561,15 @@ function saveAll() { localStorage.setItem(STORAGE_KEY, JSON.stringify(allMonths)
 function loadAll() {
   try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) allMonths = JSON.parse(raw); }
   catch(e) { allMonths = {}; }
+  // migrate: add pinaItems to months saved before v1.5
+  let needsSave = false;
+  for (const month of Object.values(allMonths)) {
+    if (!month.pinaItems) {
+      month.pinaItems = PINA_RECURRING_TEMPLATES.map(newPinaItemFromTemplate);
+      needsSave = true;
+    }
+  }
+  if (needsSave) saveAll();
 }
 
 function newItemFromTemplate(tpl) {
@@ -827,7 +836,7 @@ function buildPinaEditRow(item) {
         <option value="USD"${item.currency==='USD'?' selected':''}>USD</option>
       </select>
     </td>
-    <td><input type="number" id="pAmount" value="${item.amount||''}" placeholder="0" min="0" step="0.01"></td>
+    <td><input type="number" id="pAmount" value="${item.amount||""}" placeholder="0" min="0" step="0.01"></td>
     <td colspan="1">
       <div class="install-row">
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
@@ -1467,10 +1476,13 @@ function _applyImportedMonths(imported, githubWins) {
     for (const k of newKeys)      allMonths[k] = imported[k];
     for (const k of conflictKeys) allMonths[k] = imported[k];
   }
+  for (const month of Object.values(allMonths)) {
+    if (!month.pinaItems) month.pinaItems = PINA_RECURRING_TEMPLATES.map(newPinaItemFromTemplate);
+  }
   saveAll();
   const keys = getSortedKeys();
   currentKey = keys[keys.length-1];
-  editingItemId = null; renderAll();
+  editingItemId = null; editingPinaItemId = null; renderAll();
   showNotif(`✓ ${importedKeys.length} ${importedKeys.length===1?'mes importado':'meses importados'}`);
 }
 
