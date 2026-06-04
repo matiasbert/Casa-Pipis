@@ -574,6 +574,13 @@ function loadAll() {
           needsSave = true;
         }
       }
+      const missingTpls = PINA_RECURRING_TEMPLATES.filter(tpl =>
+        !month.pinaItems.some(i => i.name === tpl.name && i.currency === tpl.currency)
+      );
+      if (missingTpls.length) {
+        month.pinaItems.unshift(...missingTpls.map(newPinaItemFromTemplate));
+        needsSave = true;
+      }
     }
   }
   if (needsSave) saveAll();
@@ -876,7 +883,7 @@ function buildPinaPairedEditRow(arsItem, usdItem) {
   const tr = document.createElement('tr');
   tr.className = 'edit-row';
   tr.innerHTML = `
-    <td><input type="text" id="pPairName" value="${escAttr(arsItem.name)}" placeholder="Concepto"></td>
+    <td><input type="text" id="pPairName" value="${escAttr(arsItem.name.startsWith('__new_') ? '' : arsItem.name)}" placeholder="Concepto"></td>
     <td>
       <span class="badge-ars" style="display:inline-block;margin-bottom:5px">ARS</span>
       <input type="number" id="pAmountARS" value="${arsItem.amount||''}" placeholder="0" min="0" step="0.01">
@@ -945,9 +952,24 @@ function togglePinaInstallUI() {
 function startPinaEdit(id) {
   editingPinaItemId = id;
   renderAll();
-  setTimeout(() => { const el = document.getElementById('pName'); if (el) el.focus(); }, 50);
+  setTimeout(() => {
+    const el = document.getElementById('pPairName') || document.getElementById('pName');
+    if (el) el.focus();
+  }, 50);
 }
-function cancelPinaEdit() { editingPinaItemId = null; renderAll(); }
+function cancelPinaEdit() {
+  const month = getMonth();
+  if (month && editingPinaItemId) {
+    const item = (month.pinaItems || []).find(i => i.id === editingPinaItemId);
+    if (item && item.name && item.name.startsWith('__new_')) {
+      const tempName = item.name;
+      month.pinaItems = month.pinaItems.filter(i => i.name !== tempName);
+      saveAll();
+    }
+  }
+  editingPinaItemId = null;
+  renderAll();
+}
 
 function savePinaEdit(id) {
   const month = getMonth();
@@ -985,8 +1007,11 @@ function savePinaPairedEdit(arsId, usdId) {
   const notesUSD = (document.getElementById('pNotesUSD')?.value || '').trim();
   const arsItem = (month.pinaItems || []).find(i => i.id === arsId);
   const usdItem = (month.pinaItems || []).find(i => i.id === usdId);
-  if (arsItem) { if (name) arsItem.name = name; arsItem.amount = amtARS; arsItem.notes = notesARS; }
-  if (usdItem) { if (name) usdItem.name = name; usdItem.amount = amtUSD; usdItem.notes = notesUSD; }
+  const existingName = arsItem ? arsItem.name : (usdItem ? usdItem.name : '');
+  const isNew = existingName.startsWith('__new_');
+  const finalName = name || (isNew ? 'Sin nombre' : existingName);
+  if (arsItem) { arsItem.name = finalName; arsItem.amount = amtARS; arsItem.notes = notesARS; }
+  if (usdItem) { usdItem.name = finalName; usdItem.amount = amtUSD; usdItem.notes = notesUSD; }
   editingPinaItemId = null;
   saveAll(); renderAll();
 }
@@ -1003,13 +1028,17 @@ function addNewPinaItem() {
   const month = getMonth();
   if (!month) return;
   if (!month.pinaItems) month.pinaItems = [];
-  const newItem = { id: uid(), name: '', currency: 'ARS', amount: 0, notes: '', installments: null };
-  month.pinaItems.push(newItem);
-  editingPinaItemId = newItem.id;
+  const tempName = `__new_${uid()}`;
+  const newARS = { id: uid(), name: tempName, currency: 'ARS', amount: 0, notes: '', installments: null };
+  const newUSD = { id: uid(), name: tempName, currency: 'USD', amount: 0, notes: '', installments: null };
+  month.pinaItems.push(newARS, newUSD);
+  editingPinaItemId = newARS.id;
   saveAll(); renderAll();
   setTimeout(() => {
     const lastRow = document.getElementById('pinaExpenseTbody').lastElementChild;
     if (lastRow) lastRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const nameInput = document.getElementById('pPairName');
+    if (nameInput) { nameInput.value = ''; nameInput.focus(); }
   }, 100);
 }
 
@@ -1568,7 +1597,21 @@ function _applyImportedMonths(imported, githubWins) {
     for (const k of conflictKeys) allMonths[k] = imported[k];
   }
   for (const month of Object.values(allMonths)) {
-    if (!month.pinaItems) month.pinaItems = PINA_RECURRING_TEMPLATES.map(newPinaItemFromTemplate);
+    if (!month.pinaItems) {
+      month.pinaItems = PINA_RECURRING_TEMPLATES.map(newPinaItemFromTemplate);
+    } else {
+      for (const item of month.pinaItems) {
+        if (!item.isRecurring && PINA_RECURRING_TEMPLATES.some(t => t.name === item.name && t.currency === item.currency)) {
+          item.isRecurring = true;
+        }
+      }
+      const missingTpls = PINA_RECURRING_TEMPLATES.filter(tpl =>
+        !month.pinaItems.some(i => i.name === tpl.name && i.currency === tpl.currency)
+      );
+      if (missingTpls.length) {
+        month.pinaItems.unshift(...missingTpls.map(newPinaItemFromTemplate));
+      }
+    }
   }
   saveAll();
   const keys = getSortedKeys();
