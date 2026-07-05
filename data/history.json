@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "savedAt": "2026-06-03T04:34:21.671Z",
+  "savedAt": "2026-07-05T17:21:57.218Z",
   "months": {
     "2026-05": {
       "key": "2026-05",
@@ -108,7 +108,8 @@
           "currency": "ARS",
           "amount": 0,
           "notes": "",
-          "installments": null
+          "installments": null,
+          "isRecurring": true
         },
         {
           "id": "0lveviwjmpxknh5d",
@@ -116,7 +117,8 @@
           "currency": "USD",
           "amount": 0,
           "notes": "",
-          "installments": null
+          "installments": null,
+          "isRecurring": true
         },
         {
           "id": "dyjdn4acmpxknh5d",
@@ -124,7 +126,8 @@
           "currency": "ARS",
           "amount": 0,
           "notes": "",
-          "installments": null
+          "installments": null,
+          "isRecurring": true
         },
         {
           "id": "5fmnd251mpxknh5d",
@@ -132,7 +135,8 @@
           "currency": "USD",
           "amount": 0,
           "notes": "",
-          "installments": null
+          "installments": null,
+          "isRecurring": true
         }
       ]
     },
@@ -204,9 +208,156 @@
             "current": 2,
             "total": 12
           }
+        },
+        {
+          "id": "ig7hbihomq07gv5y",
+          "name": "Coto",
+          "currency": "ARS",
+          "amount": 117000,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": false
         }
       ],
-      "pinaItems": []
+      "pinaItems": [
+        {
+          "id": "9sarwhj4mq07drz3",
+          "name": "Thelonious",
+          "currency": "ARS",
+          "amount": 23000,
+          "notes": "",
+          "installments": {
+            "current": 2,
+            "total": 2
+          }
+        },
+        {
+          "id": "x89iclsumq07mbmj",
+          "name": "Biorender",
+          "currency": "USD",
+          "amount": 20,
+          "notes": "",
+          "installments": null
+        }
+      ]
+    },
+    "2026-07": {
+      "key": "2026-07",
+      "matiSplit": 75,
+      "pinaSplit": 25,
+      "locked": false,
+      "items": [
+        {
+          "id": "r47u2w75mr81kw54",
+          "name": "Alquiler",
+          "currency": "ARS",
+          "amount": 655520,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "zr0s31fqmr81kw54",
+          "name": "Expensas",
+          "currency": "ARS",
+          "amount": 89277,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "kjtbqz45mr81kw54",
+          "name": "Telecentro",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "ri26xr13mr81kw54",
+          "name": "Edesur",
+          "currency": "ARS",
+          "amount": 28837,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "yi3iy7rsmr81kw54",
+          "name": "Metrogas",
+          "currency": "ARS",
+          "amount": 16256,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "y10vfjnbmr81kw54",
+          "name": "Colchon",
+          "currency": "ARS",
+          "amount": 341666,
+          "splitOverride": null,
+          "isRecurring": false,
+          "notes": "",
+          "installments": {
+            "current": 3,
+            "total": 12
+          }
+        }
+      ],
+      "pinaItems": [
+        {
+          "id": "bm5xo39tmr81kw54",
+          "name": "Visa",
+          "currency": "ARS",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "qu8jwihumr81kw54",
+          "name": "Visa",
+          "currency": "USD",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "qrx986jbmr81kw54",
+          "name": "Mastercard",
+          "currency": "ARS",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "uo8vu2ubmr81kw54",
+          "name": "Mastercard",
+          "currency": "USD",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "z9qd12a7mr81vvbg",
+          "name": "Claude",
+          "currency": "USD",
+          "amount": 20,
+          "notes": "",
+          "installments": null
+        }
+      ]
     }
   }
 }
