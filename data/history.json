@@ -1,7 +1,109 @@
 {
   "version": 2,
-  "savedAt": "2026-07-05T17:21:57.218Z",
+  "savedAt": "2026-07-10T03:13:09.318Z",
   "months": {
+    "2026-06": {
+      "key": "2026-06",
+      "matiSplit": 75,
+      "pinaSplit": 25,
+      "locked": false,
+      "items": [
+        {
+          "id": "qwgorn0gmpvhy9nn",
+          "name": "Alquiler",
+          "currency": "ARS",
+          "amount": 585499,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "5ka0l62gmpvhy9nn",
+          "name": "Expensas",
+          "currency": "ARS",
+          "amount": 107935,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "z1cegd8gmpvhy9nn",
+          "name": "Telecentro",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "ep3uofodmpvhy9nn",
+          "name": "Edesur",
+          "currency": "ARS",
+          "amount": 20190,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "7glp9otkmpvhy9nn",
+          "name": "Metrogas",
+          "currency": "ARS",
+          "amount": 6000,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "t1zox3mzmpvhy9nn",
+          "name": "Colchon",
+          "currency": "ARS",
+          "amount": 341666,
+          "splitOverride": null,
+          "isRecurring": false,
+          "notes": "",
+          "installments": {
+            "current": 2,
+            "total": 12
+          }
+        },
+        {
+          "id": "ig7hbihomq07gv5y",
+          "name": "Coto",
+          "currency": "ARS",
+          "amount": 117000,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": false
+        }
+      ],
+      "pinaItems": [
+        {
+          "id": "9sarwhj4mq07drz3",
+          "name": "Thelonious",
+          "currency": "ARS",
+          "amount": 23000,
+          "notes": "",
+          "installments": {
+            "current": 2,
+            "total": 2
+          }
+        },
+        {
+          "id": "x89iclsumq07mbmj",
+          "name": "Biorender",
+          "currency": "USD",
+          "amount": 20,
+          "notes": "",
+          "installments": null
+        }
+      ]
+    },
     "2026-05": {
       "key": "2026-05",
       "matiSplit": 75,
@@ -140,108 +242,6 @@
         }
       ]
     },
-    "2026-06": {
-      "key": "2026-06",
-      "matiSplit": 75,
-      "pinaSplit": 25,
-      "locked": false,
-      "items": [
-        {
-          "id": "qwgorn0gmpvhy9nn",
-          "name": "Alquiler",
-          "currency": "ARS",
-          "amount": 585499,
-          "splitOverride": null,
-          "notes": "",
-          "installments": null,
-          "isRecurring": true
-        },
-        {
-          "id": "5ka0l62gmpvhy9nn",
-          "name": "Expensas",
-          "currency": "ARS",
-          "amount": 107935,
-          "splitOverride": null,
-          "notes": "",
-          "installments": null,
-          "isRecurring": true
-        },
-        {
-          "id": "z1cegd8gmpvhy9nn",
-          "name": "Telecentro",
-          "currency": "ARS",
-          "amount": 0,
-          "splitOverride": null,
-          "notes": "",
-          "installments": null,
-          "isRecurring": true
-        },
-        {
-          "id": "ep3uofodmpvhy9nn",
-          "name": "Edesur",
-          "currency": "ARS",
-          "amount": 20190,
-          "splitOverride": null,
-          "notes": "",
-          "installments": null,
-          "isRecurring": true
-        },
-        {
-          "id": "7glp9otkmpvhy9nn",
-          "name": "Metrogas",
-          "currency": "ARS",
-          "amount": 6000,
-          "splitOverride": null,
-          "notes": "",
-          "installments": null,
-          "isRecurring": true
-        },
-        {
-          "id": "t1zox3mzmpvhy9nn",
-          "name": "Colchon",
-          "currency": "ARS",
-          "amount": 341666,
-          "splitOverride": null,
-          "isRecurring": false,
-          "notes": "",
-          "installments": {
-            "current": 2,
-            "total": 12
-          }
-        },
-        {
-          "id": "ig7hbihomq07gv5y",
-          "name": "Coto",
-          "currency": "ARS",
-          "amount": 117000,
-          "splitOverride": null,
-          "notes": "",
-          "installments": null,
-          "isRecurring": false
-        }
-      ],
-      "pinaItems": [
-        {
-          "id": "9sarwhj4mq07drz3",
-          "name": "Thelonious",
-          "currency": "ARS",
-          "amount": 23000,
-          "notes": "",
-          "installments": {
-            "current": 2,
-            "total": 2
-          }
-        },
-        {
-          "id": "x89iclsumq07mbmj",
-          "name": "Biorender",
-          "currency": "USD",
-          "amount": 20,
-          "notes": "",
-          "installments": null
-        }
-      ]
-    },
     "2026-07": {
       "key": "2026-07",
       "matiSplit": 75,
@@ -272,7 +272,7 @@
           "id": "kjtbqz45mr81kw54",
           "name": "Telecentro",
           "currency": "ARS",
-          "amount": 0,
+          "amount": 40700,
           "splitOverride": null,
           "notes": "",
           "installments": null,
@@ -310,6 +310,19 @@
             "current": 3,
             "total": 12
           }
+        },
+        {
+          "id": "b0vtzmshmrecr2up",
+          "name": "COTO",
+          "currency": "ARS",
+          "amount": 323000,
+          "splitOverride": {
+            "mati": 80,
+            "pina": 20
+          },
+          "notes": "",
+          "installments": null,
+          "isRecurring": false
         }
       ],
       "pinaItems": [
@@ -317,7 +330,7 @@
           "id": "bm5xo39tmr81kw54",
           "name": "Visa",
           "currency": "ARS",
-          "amount": 0,
+          "amount": 158900,
           "notes": "",
           "installments": null,
           "isRecurring": true
