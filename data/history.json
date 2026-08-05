@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "savedAt": "2026-07-10T03:13:09.318Z",
+  "savedAt": "2026-08-05T13:17:24.973Z",
   "months": {
     "2026-06": {
       "key": "2026-06",
@@ -369,6 +369,128 @@
           "amount": 20,
           "notes": "",
           "installments": null
+        }
+      ]
+    },
+    "2026-08": {
+      "key": "2026-08",
+      "matiSplit": 75,
+      "pinaSplit": 25,
+      "locked": false,
+      "items": [
+        {
+          "id": "yparl8mxmsf820uy",
+          "name": "Alquiler",
+          "currency": "ARS",
+          "amount": 655520,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "cnev5g0emsf820uy",
+          "name": "Expensas",
+          "currency": "ARS",
+          "amount": 88041,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "5xfghe2xmsf820uy",
+          "name": "Telecentro",
+          "currency": "ARS",
+          "amount": 32358,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "07x8dhidmsf820uy",
+          "name": "Edesur",
+          "currency": "ARS",
+          "amount": 38182,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "au6ku84rmsf820uy",
+          "name": "Metrogas",
+          "currency": "ARS",
+          "amount": 15844,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "3fjhm5lxmsf820uy",
+          "name": "Colchon",
+          "currency": "ARS",
+          "amount": 341666,
+          "splitOverride": null,
+          "isRecurring": false,
+          "notes": "",
+          "installments": {
+            "current": 4,
+            "total": 12
+          }
+        },
+        {
+          "id": "o30xc22pmsf95kks",
+          "name": "COTO",
+          "currency": "ARS",
+          "amount": 338711,
+          "splitOverride": {
+            "mati": 80,
+            "pina": 20
+          },
+          "notes": "",
+          "installments": null,
+          "isRecurring": false
+        }
+      ],
+      "pinaItems": [
+        {
+          "id": "8r5quclqmsf820uy",
+          "name": "Visa",
+          "currency": "ARS",
+          "amount": 46000,
+          "notes": "NORDICOSPORT 02/02; TIENDAFUEGO 02/03",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "grk23v6jmsf820uy",
+          "name": "Visa",
+          "currency": "USD",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "e6lxd5flmsf820uy",
+          "name": "Mastercard",
+          "currency": "ARS",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "izkht9pomsf820uy",
+          "name": "Mastercard",
+          "currency": "USD",
+          "amount": 20,
+          "notes": "Claude",
+          "installments": null,
+          "isRecurring": true
         }
       ]
     }
