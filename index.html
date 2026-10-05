@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Casa Pipi's — Gastos de casita</title>
+<meta name="theme-color" content="#0d9488">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Casa Pipi's</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -320,6 +324,56 @@ body.dark .sync-status.busy { color:#fbbf24; }
 .snap-pina-lbl { font-size:12px; color:#6b7280; margin-bottom:4px; font-weight:500; }
 .snap-pina-val { font-size:22px; font-weight:800; color:#0f766e; font-variant-numeric:tabular-nums; }
 
+/* SYNC CHIP / MISC */
+.sync-chip { font-size:12px; font-weight:600; padding:3px 9px; border-radius:12px; border:1px solid var(--border); color:var(--text-muted); background:var(--bg); cursor:default; white-space:nowrap; }
+.sync-chip.ok { color:var(--accent-dark); border-color:var(--accent); }
+.sync-chip.busy { color:#92400e; border-color:#fde68a; background:#fef3c7; }
+.sync-chip.error { color:var(--danger); border-color:#fca5a5; background:var(--danger-light); }
+body.dark .sync-chip.busy { color:#fbbf24; background:#451a03; border-color:#92400e; }
+a.btn { text-decoration:none; }
+.sync-help { margin-top:10px; font-size:12px; color:var(--text-muted); line-height:1.6; }
+.zero-amt { color:var(--text-muted); font-weight:400; }
+.fixed-tag { font-size:11px; color:var(--text-muted); white-space:nowrap; padding:0 4px; }
+.month-nav-main { display:flex; align-items:center; gap:8px; flex:1 1 auto; min-width:0; }
+.month-nav-actions { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+.month-label { flex:1; }
+
+/* TOAST (with undo) */
+.toast {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:#1e293b; color:#fff; padding:10px 12px 10px 18px; border-radius:8px;
+  font-size:14px; font-weight:500; z-index:999; display:flex; align-items:center; gap:14px;
+  opacity:0; pointer-events:none; box-shadow:var(--shadow-lg); max-width:92vw;
+}
+.toast.show { opacity:1; pointer-events:auto; }
+.toast-btn { background:none; border:none; color:#5eead4; font-weight:700; font-size:14px; cursor:pointer; font-family:inherit; padding:2px 4px; }
+
+/* PHONE LAYOUT: tables become cards */
+@media (max-width:640px) {
+  body { font-size:14px; }
+  .app-header { position:static; padding:12px 14px; }
+  .month-nav { padding:10px 14px; }
+  .month-nav-actions { width:100%; justify-content:center; }
+  .main { padding:12px; }
+  table { min-width:0; }
+  thead { display:none; }
+  tbody tr { display:block; padding:10px 12px; border-bottom:1px solid var(--border); }
+  tbody tr:last-child { border-bottom:none; }
+  td { display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:none; padding:4px 0; }
+  td[data-label]::before {
+    content:attr(data-label); font-size:11px; font-weight:600; color:var(--text-muted);
+    text-transform:uppercase; letter-spacing:0.4px; flex:0 0 auto;
+  }
+  td:first-child { font-weight:600; font-size:15px; }
+  td.amount { text-align:right; }
+  .edit-row td { display:block; padding:6px 0; }
+  .edit-row td[data-label]::before { display:block; margin-bottom:4px; }
+  .actions-cell { width:100%; justify-content:flex-end; }
+  .sync-token-input-wrap input { width:100%; }
+  .sync-token-input-wrap { width:100%; }
+  .split-inputs .meta-input { width:52px; }
+}
+
 /* PRINT */
 @media print {
   .app-header,.month-nav,.table-wrap,.export-section,.sync-section,.btn,
@@ -334,11 +388,13 @@ body.dark .sync-status.busy { color:#fbbf24; }
 }
 .print-header { display:none; }
 .print-expense-table { display:none; }
+@media print { .print-expense-table.print-empty { display:none !important; } }
 </style>
 </head>
 <body>
 
 <div class="notif" id="notif"></div>
+<div class="toast" id="toast"><span id="toastMsg"></span><button class="toast-btn" id="toastBtn"></button></div>
 
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
@@ -354,9 +410,12 @@ body.dark .sync-status.busy { color:#fbbf24; }
   <div class="header-top">
     <div>
       <div class="app-title">🏠 Casa Pipi's</div>
-      <div class="app-subtitle">Gastos de casita · v1.5</div>
+      <div class="app-subtitle">Gastos de casita · v1.6</div>
     </div>
-    <button class="btn btn-sm" id="darkModeBtn" onclick="toggleDarkMode()" title="Cambiar tema">🌙</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="sync-chip" id="syncChip">☁ —</span>
+      <button class="btn btn-sm" id="darkModeBtn" onclick="toggleDarkMode()" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
+    </div>
   </div>
   <div class="header-meta">
     <div class="meta-field">
@@ -374,17 +433,20 @@ body.dark .sync-status.busy { color:#fbbf24; }
 </header>
 
 <div class="month-nav">
-  <button class="btn btn-icon" id="prevMonthBtn" title="Mes anterior">‹</button>
-  <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex:1;min-width:0;">
-    <span class="month-label" id="monthLabel">—</span>
-    <span id="readonlyBadge" class="readonly-badge" style="display:none">Solo lectura</span>
+  <div class="month-nav-main">
+    <button class="btn btn-icon" id="prevMonthBtn" title="Mes anterior" aria-label="Mes anterior">‹</button>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex:1;min-width:0;flex-wrap:wrap">
+      <span class="month-label" id="monthLabel">—</span>
+      <span id="readonlyBadge" class="readonly-badge" style="display:none">Solo lectura</span>
+    </div>
+    <button class="btn btn-icon" id="nextMonthBtn" title="Mes siguiente" aria-label="Mes siguiente">›</button>
   </div>
-  <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+  <div class="month-nav-actions">
+    <button class="btn btn-sm btn-primary" id="unlockBtn" onclick="unlockMonth()" style="display:none">✏️ Editar este mes</button>
     <button class="btn btn-sm" id="lockBtn" onclick="toggleLockMonth()" style="display:none">🔒 Cerrar mes</button>
     <button class="btn btn-sm" onclick="openModal()">📋 Historial</button>
     <button class="btn btn-primary btn-sm" onclick="createNewMonth()">+ Nuevo mes</button>
   </div>
-  <button class="btn btn-icon" id="nextMonthBtn" title="Mes siguiente">›</button>
 </div>
 
 <div class="print-header" id="printHeader"></div>
@@ -457,6 +519,10 @@ body.dark .sync-status.busy { color:#fbbf24; }
     <thead><tr><th>Concepto</th><th>Moneda</th><th>Monto</th><th>Split</th><th>Mati</th><th>Pina</th></tr></thead>
     <tbody id="printTbody"></tbody>
   </table>
+  <table class="print-expense-table" id="printPinaTable">
+    <thead><tr><th>Gastos Pina</th><th>Pesos</th><th>Dólares</th></tr></thead>
+    <tbody id="printPinaTbody"></tbody>
+  </table>
 
   <div class="export-section">
     <div class="export-title">Exportar mes</div>
@@ -480,21 +546,27 @@ body.dark .sync-status.busy { color:#fbbf24; }
 
   <div class="sync-section">
     <div class="export-title">Sincronización con GitHub</div>
+    <div class="sync-status" id="syncStatus">● Sin token configurado</div>
+    <div class="export-btns" style="margin-bottom:14px">
+      <button class="btn btn-primary" onclick="syncNow({manual:true})">🔄 Sincronizar ahora</button>
+    </div>
     <div class="sync-token-row">
       <span class="sync-label">Token de acceso:</span>
       <div class="sync-token-input-wrap">
-        <input type="password" id="ghTokenInput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
-        <button class="btn btn-sm" onclick="toggleTokenVisibility()" title="Mostrar/ocultar">👁</button>
+        <input type="password" id="ghTokenInput" placeholder="github_pat_xxxxxxxxxxxx" autocomplete="off">
+        <button class="btn btn-sm" onclick="toggleTokenVisibility()" title="Mostrar/ocultar" aria-label="Mostrar u ocultar token">👁</button>
         <button class="btn btn-sm btn-primary" onclick="saveGhToken()">Guardar token</button>
       </div>
     </div>
-    <div class="sync-status" id="syncStatus">● Sin token configurado</div>
     <div class="export-btns">
-      <button class="btn btn-primary" onclick="pushToGithub()">☁ Guardar en GitHub</button>
-      <button class="btn" onclick="pullFromGithub()">⬇ Traer desde GitHub</button>
+      <button class="btn btn-sm" onclick="copyAccessLink()">🔗 Copiar link de acceso para otro dispositivo</button>
+      <a class="btn btn-sm" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">➕ Generar token nuevo</a>
     </div>
-    <div style="margin-top:10px;font-size:12px;color:var(--text-muted);line-height:1.6">
-      Los datos se guardan en <code style="background:var(--bg);padding:1px 5px;border-radius:3px;font-size:11px">data/history.json</code> dentro de tu repo.
+    <div class="sync-help">
+      Los cambios se suben solos unos segundos después de guardar. Para <b>ver</b> el historial no hace falta token; solo para <b>guardar</b>.
+      El token tiene que ser <i>fine-grained</i>, limitado al repo Casa-Pipis, con permiso <b>Contents: Read and write</b>.
+      El link de acceso lleva el token adentro: abrilo en el otro dispositivo y queda configurado (no lo compartas con nadie más).
+      Los datos se guardan en <code style="background:var(--bg);padding:1px 5px;border-radius:3px;font-size:11px">data/history.json</code>.
     </div>
   </div>
 
@@ -504,6 +576,10 @@ body.dark .sync-status.busy { color:#fbbf24; }
 const STORAGE_KEY      = 'casapi_months';
 const GH_TOKEN_KEY     = 'casapi_github_token';
 const GH_LAST_SYNC_KEY = 'casapi_last_sync';
+const GH_DIRTY_KEY     = 'casapi_dirty';
+const GH_DELETED_KEY   = 'casapi_deleted';
+const BACKUP_KEY       = 'casapi_months_backup';
+const REPAIR_KEY       = 'casapi_repair_v16';
 const DARK_MODE_KEY    = 'casapi_darkmode';
 const GH_OWNER         = 'matiasbert';
 const GH_REPO          = 'casa-pipis';
@@ -525,9 +601,17 @@ const PINA_RECURRING_TEMPLATES = [
 const MONTH_NAMES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 let allMonths = {};
+let deletedMonths = {};          // key -> timestamp (tombstones so a deleted month does not come back on sync)
 let currentKey = '';
 let editingItemId = null;
-let editingPinaItemId = null;
+let editingPinaPairId = null;
+let pendingNewItemId = null;     // row added with "+ Agregar" but not saved yet
+let pendingNewPinaPairId = null;
+const unlockedKeys = new Set();  // past months the user enabled for editing in this session
+
+function lsGet(k)    { try { return localStorage.getItem(k); } catch(e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch(e) { return false; } }
+function lsDel(k)    { try { localStorage.removeItem(k); } catch(e) {} }
 
 function todayKey() {
   const d = new Date();
@@ -537,6 +621,9 @@ function keyToLabel(key) {
   const [y, m] = key.split('-');
   return `${MONTH_NAMES_ES[parseInt(m,10)-1]} ${y}`;
 }
+function monthIndex(key) { const [y, m] = key.split('-').map(Number); return y * 12 + (m - 1); }
+function keyFromIndex(i) { return `${Math.floor(i / 12)}-${String(i % 12 + 1).padStart(2, '0')}`; }
+function monthDiff(a, b) { return monthIndex(b) - monthIndex(a); }
 function uid() { return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 
 function fmtARS(n) {
@@ -557,36 +644,139 @@ function showNotif(msg) {
   setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-function saveAll() { localStorage.setItem(STORAGE_KEY, JSON.stringify(allMonths)); }
+let toastTimer = null;
+function hideToast() { document.getElementById('toast').classList.remove('show'); }
+function showToast(msg, label, fn) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  const btn = document.getElementById('toastBtn');
+  btn.textContent = label;
+  btn.onclick = () => { hideToast(); fn(); };
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 7000);
+}
+
+function saveAll() {
+  const ok = lsSet(STORAGE_KEY, JSON.stringify(allMonths)) && lsSet(GH_DELETED_KEY, JSON.stringify(deletedMonths));
+  if (!ok) showNotif('⚠ No se pudo guardar en este dispositivo');
+}
+function markDirty() { lsSet(GH_DIRTY_KEY, '1'); }
+function backupLocal() { lsSet(BACKUP_KEY, JSON.stringify(allMonths)); }
+
+// Every edit goes through commit(): stamp the month, save locally, queue the upload.
+function commit(key) {
+  const m = allMonths[key || currentKey];
+  if (m) m.updatedAt = Date.now();
+  saveAll(); markDirty(); schedulePush();
+}
+
 function loadAll() {
-  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) allMonths = JSON.parse(raw); }
-  catch(e) { allMonths = {}; }
-  // migrate: add pinaItems / mark recurring templates
-  let needsSave = false;
-  for (const month of Object.values(allMonths)) {
-    if (!month.pinaItems) {
-      month.pinaItems = PINA_RECURRING_TEMPLATES.map(newPinaItemFromTemplate);
-      needsSave = true;
-    } else {
-      for (const item of month.pinaItems) {
-        if (!item.isRecurring && PINA_RECURRING_TEMPLATES.some(t => t.name === item.name && t.currency === item.currency)) {
-          item.isRecurring = true;
-          needsSave = true;
-        }
-      }
-    }
+  const raw = lsGet(STORAGE_KEY);
+  if (raw) {
+    try { allMonths = JSON.parse(raw) || {}; }
+    catch(e) { lsSet(BACKUP_KEY + '_corrupt', raw); allMonths = {}; }
   }
-  if (needsSave) saveAll();
+  try { deletedMonths = JSON.parse(lsGet(GH_DELETED_KEY) || '{}') || {}; } catch(e) { deletedMonths = {}; }
+  normalizeAll();
+  saveAll();
 }
 
 function newItemFromTemplate(tpl) {
   return { id: uid(), name: tpl.name, currency: tpl.currency, amount: 0, splitOverride: null, notes: '', installments: null, isRecurring: true };
 }
 function newPinaItemFromTemplate(tpl) {
-  return { id: uid(), name: tpl.name, currency: tpl.currency, amount: 0, notes: '', installments: null, isRecurring: true };
+  return { id: uid(), pairId: 'tpl:' + tpl.name.toLowerCase(), name: tpl.name, currency: tpl.currency, amount: 0, notes: '', installments: null, isRecurring: true };
 }
+
+// Gastos Pina is stored as a flat list, but every concept always has exactly one ARS and one USD
+// entry sharing a pairId. This repairs old data (no pairId, lone currency, duplicated names, missing
+// Visa/Mastercard) so the UI can rely on complete pairs.
+function normalizePina(month) {
+  const src = (month.pinaItems || []).filter(i => i && (i.currency === 'ARS' || i.currency === 'USD'));
+  const pairs = new Map();
+  const slot = (pid) => { if (!pairs.has(pid)) pairs.set(pid, { pairId: pid, ars: null, usd: null }); return pairs.get(pid); };
+  const leftovers = [];
+  for (const it of src) {
+    const nm = (it.name || '').trim().toLowerCase();
+    const tpl = PINA_RECURRING_TEMPLATES.find(t => t.name.toLowerCase() === nm);
+    const pid = it.pairId || (tpl ? 'tpl:' + nm : null);
+    if (pid) {
+      const s = slot(pid);
+      const k = it.currency === 'ARS' ? 'ars' : 'usd';
+      if (!s[k]) { s[k] = it; continue; }
+    }
+    leftovers.push(it);
+  }
+  const byName = {};
+  for (const it of leftovers) {
+    const nm = (it.name || '').trim().toLowerCase();
+    if (!byName[nm]) byName[nm] = [];
+    byName[nm].push(it);
+  }
+  for (const list of Object.values(byName)) {
+    const ars = list.filter(i => i.currency === 'ARS');
+    const usd = list.filter(i => i.currency === 'USD');
+    const n = Math.max(ars.length, usd.length);
+    for (let i = 0; i < n; i++) { const s = slot(uid()); s.ars = ars[i] || null; s.usd = usd[i] || null; }
+  }
+  for (const tpl of PINA_RECURRING_TEMPLATES) slot('tpl:' + tpl.name.toLowerCase());
+  const ordered = [];
+  for (const tpl of PINA_RECURRING_TEMPLATES) {
+    const s = pairs.get('tpl:' + tpl.name.toLowerCase());
+    if (!ordered.includes(s)) ordered.push(s);
+  }
+  for (const s of pairs.values()) if (!ordered.includes(s)) ordered.push(s);
+  const out = [];
+  for (const s of ordered) {
+    const isTpl = s.pairId.indexOf('tpl:') === 0;
+    const tplName = isTpl ? PINA_RECURRING_TEMPLATES.find(t => 'tpl:' + t.name.toLowerCase() === s.pairId).name : null;
+    const base = s.ars || s.usd;
+    const name = isTpl ? tplName : ((base && base.name) || '');
+    if (!isTpl && s.pairId !== pendingNewPinaPairId && !name.trim() && !(parseFloat(s.ars && s.ars.amount) > 0) && !(parseFloat(s.usd && s.usd.amount) > 0)) continue;
+    for (const cur of ['ARS', 'USD']) {
+      const k = cur === 'ARS' ? 'ars' : 'usd';
+      if (!s[k]) s[k] = { id: uid(), name, currency: cur, amount: 0, notes: '', installments: null, isRecurring: isTpl };
+      s[k].pairId = s.pairId;
+      s[k].name = name;
+      if (isTpl) s[k].isRecurring = true;
+      out.push(s[k]);
+    }
+  }
+  month.pinaItems = out;
+}
+
+function normalizeAll() {
+  for (const m of Object.values(allMonths)) {
+    if (!Array.isArray(m.items)) m.items = [];
+    m.items = m.items.filter(i => i && (i.isRecurring || i.id === pendingNewItemId || (i.name || '').trim() || parseFloat(i.amount) > 0));
+    normalizePina(m);
+  }
+}
+
 function createMonthRecord(key) {
-  return { key, matiSplit: 75, pinaSplit: 25, locked: false, items: RECURRING_TEMPLATES.map(newItemFromTemplate), pinaItems: PINA_RECURRING_TEMPLATES.map(newPinaItemFromTemplate) };
+  const m = { key, matiSplit: 75, pinaSplit: 25, locked: false, updatedAt: Date.now(),
+              items: RECURRING_TEMPLATES.map(newItemFromTemplate),
+              pinaItems: PINA_RECURRING_TEMPLATES.map(newPinaItemFromTemplate) };
+  return m;
+}
+
+// Copy installment items forward. `gap` = months between the source month and the new one, so the
+// counter stays right even when a month in between was never created.
+function carryInstallments(from, into, gap) {
+  for (const item of from) {
+    if (!item.installments) continue;
+    const next = item.installments.current + gap;
+    if (next > item.installments.total) continue;
+    const inst = { current: next, total: item.installments.total };
+    if (item.isRecurring) {
+      const same = into.find(i => i.isRecurring && i.name === item.name && i.currency === item.currency);
+      if (same) { same.installments = inst; same.amount = item.amount; continue; }
+    }
+    const dup = into.some(i => i.name === item.name && i.currency === item.currency && i.installments && i.installments.total === item.installments.total);
+    if (dup) continue;
+    into.push({ ...item, id: uid(), installments: inst });
+  }
 }
 
 function applyCarryOver(newMonth) {
@@ -594,42 +784,78 @@ function applyCarryOver(newMonth) {
   if (!prevKeys.length) return;
   const prev = allMonths[prevKeys[prevKeys.length - 1]];
   if (!prev) return;
-  const prevAlq = prev.items.find(i => i.name === 'Alquiler');
-  const newAlq  = newMonth.items.find(i => i.name === 'Alquiler');
-  if (prevAlq && newAlq) newAlq.amount = prevAlq.amount;
-  for (const item of prev.items) {
-    if (item.installments && item.installments.current < item.installments.total) {
-      newMonth.items.push({
-        ...item,
-        id: uid(),
-        installments: { current: item.installments.current + 1, total: item.installments.total }
-      });
+  const gap = Math.max(1, monthDiff(prev.key, newMonth.key));
+  newMonth.matiSplit = prev.matiSplit;
+  newMonth.pinaSplit = prev.pinaSplit;
+  const newAlq = newMonth.items.find(i => i.name === 'Alquiler');
+  if (newAlq) {
+    for (let i = prevKeys.length - 1; i >= 0; i--) {
+      const a = allMonths[prevKeys[i]].items.find(x => x.name === 'Alquiler' && parseFloat(x.amount) > 0);
+      if (a) { newAlq.amount = a.amount; break; }
     }
   }
-  for (const item of (prev.pinaItems || [])) {
-    if (item.installments && item.installments.current < item.installments.total) {
-      newMonth.pinaItems.push({
-        ...item,
-        id: uid(),
-        installments: { current: item.installments.current + 1, total: item.installments.total }
-      });
-    }
-  }
+  carryInstallments(prev.items, newMonth.items, gap);
+  carryInstallments(prev.pinaItems || [], newMonth.pinaItems, gap);
+  normalizePina(newMonth);
 }
 
-function ensureCurrentMonth() {
-  const key = todayKey();
-  if (!allMonths[key]) {
+function getSortedKeys() { return Object.keys(allMonths).sort(); }
+function latestKey() { const k = getSortedKeys(); return k.length ? k[k.length - 1] : ''; }
+function getMonth() { return allMonths[currentKey]; }
+
+// Creates every month from the first stored one up to today (also fills holes in the middle),
+// carrying over Alquiler and installments from the previous month each time.
+function ensureMonths() {
+  const keys = getSortedKeys();
+  const todayIdx = monthIndex(todayKey());
+  const first = keys.length ? monthIndex(keys[0]) : todayIdx;
+  const last  = Math.max(keys.length ? monthIndex(keys[keys.length - 1]) : todayIdx, todayIdx);
+  const created = [];
+  for (let i = first; i <= last; i++) {
+    const key = keyFromIndex(i);
+    if (allMonths[key]) continue;
+    if (deletedMonths[key] && i !== todayIdx) continue;
+    delete deletedMonths[key];
     const m = createMonthRecord(key);
     applyCarryOver(m);
     allMonths[key] = m;
-    saveAll();
+    created.push(key);
   }
-  return key;
+  if (created.length) { saveAll(); markDirty(); }
+  return created;
 }
-function getSortedKeys() { return Object.keys(allMonths).sort(); }
-function getMonth() { return allMonths[currentKey]; }
-function isReadonly() { const m = getMonth(); return currentKey !== todayKey() || !!(m && m.locked); }
+
+// One-time fix for months created by v1.5 on a device that had no history yet: they never received
+// the Alquiler amount nor the next installment. Only touches months never edited with v1.6+.
+function repairLegacyCarryOver() {
+  if (lsGet(REPAIR_KEY)) return false;
+  const keys = getSortedKeys();
+  let any = false;
+  for (let i = 1; i < keys.length; i++) {
+    const m = allMonths[keys[i]], p = allMonths[keys[i - 1]];
+    if (m.updatedAt) continue;
+    const gap = Math.max(1, monthDiff(p.key, m.key));
+    let changed = false;
+    const alq = m.items.find(x => x.name === 'Alquiler');
+    const palq = p.items.find(x => x.name === 'Alquiler');
+    if (alq && palq && !(parseFloat(alq.amount) > 0) && parseFloat(palq.amount) > 0) { alq.amount = palq.amount; changed = true; }
+    const n1 = m.items.length, n2 = (m.pinaItems || []).length;
+    carryInstallments(p.items, m.items, gap);
+    carryInstallments(p.pinaItems || [], m.pinaItems, gap);
+    if (m.items.length !== n1 || m.pinaItems.length !== n2) changed = true;
+    if (changed) { normalizePina(m); m.updatedAt = Date.now(); any = true; }
+  }
+  lsSet(REPAIR_KEY, '1');
+  if (any) { saveAll(); markDirty(); }
+  return any;
+}
+
+function isReadonly() {
+  const m = getMonth();
+  if (!m) return true;
+  if (m.locked) return true;
+  return currentKey < todayKey() && !unlockedKeys.has(currentKey);
+}
 
 function calcShares(item, month) {
   const matiPct = item.splitOverride ? item.splitOverride.mati : month.matiSplit;
@@ -656,25 +882,27 @@ function calcTotals(month) {
 
 function renderAll() {
   const month = getMonth();
-  if (!month) return;
+  if (!month) {
+    document.getElementById('monthLabel').textContent = Object.keys(allMonths).length ? '—' : 'Cargando…';
+    return;
+  }
   const readonly = isReadonly();
+  const past = currentKey < todayKey();
 
   document.getElementById('matiSplitInput').value = month.matiSplit;
   document.getElementById('pinaSplitInput').value = month.pinaSplit;
   document.getElementById('monthLabel').textContent = keyToLabel(currentKey);
 
   const badge = document.getElementById('readonlyBadge');
-  if (readonly) {
-    badge.style.display = '';
-    if (month.locked) { badge.textContent = '🔒 Cerrado'; badge.className = 'locked-badge'; }
-    else              { badge.textContent = 'Solo lectura'; badge.className = 'readonly-badge'; }
-  } else {
-    badge.style.display = 'none';
-    badge.className = 'readonly-badge';
-  }
+  if (month.locked)      { badge.style.display = ''; badge.textContent = '🔒 Cerrado';             badge.className = 'locked-badge'; }
+  else if (readonly)     { badge.style.display = ''; badge.textContent = 'Solo lectura';           badge.className = 'readonly-badge'; }
+  else if (past)         { badge.style.display = ''; badge.textContent = 'Editando mes anterior';  badge.className = 'readonly-badge'; }
+  else                   { badge.style.display = 'none'; badge.className = 'readonly-badge'; }
 
   const lockBtn = document.getElementById('lockBtn');
-  if (currentKey === todayKey()) {
+  const unlockBtn = document.getElementById('unlockBtn');
+  unlockBtn.style.display = (past && !month.locked && !unlockedKeys.has(currentKey)) ? '' : 'none';
+  if (!past || month.locked || unlockedKeys.has(currentKey)) {
     lockBtn.style.display = '';
     lockBtn.textContent = month.locked ? '🔓 Reabrir mes' : '🔒 Cerrar mes';
     lockBtn.className = month.locked ? 'btn btn-sm btn-primary' : 'btn btn-sm';
@@ -726,11 +954,11 @@ function buildViewRow(item, month, readonly) {
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td>${escHtml(item.name)}${installBadge}${notesHtml}</td>
-    <td><span class="badge-${item.currency.toLowerCase()}">${item.currency}</span></td>
-    <td class="amount">${fmtAmount(parseFloat(item.amount)||0, item.currency)}</td>
-    <td>${splitLabel}</td>
-    <td class="share">${fmtAmount(mati, item.currency)}</td>
-    <td class="share">${fmtAmount(pina, item.currency)}</td>
+    <td data-label="Moneda"><span class="badge-${item.currency.toLowerCase()}">${item.currency}</span></td>
+    <td class="amount" data-label="Monto">${fmtAmount(parseFloat(item.amount)||0, item.currency)}</td>
+    <td data-label="Split">${splitLabel}</td>
+    <td class="share" data-label="Mati">${fmtAmount(mati, item.currency)}</td>
+    <td class="share" data-label="Pina">${fmtAmount(pina, item.currency)}</td>
     <td><div class="actions-cell">${!readonly
       ? `<button class="btn btn-sm" onclick="startEdit('${item.id}')">✏️ Editar</button>
          <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')">✕</button>`
@@ -750,14 +978,14 @@ function buildEditRow(item, month) {
   tr.className = 'edit-row';
   tr.innerHTML = `
     <td><input type="text" id="eName" value="${escAttr(item.name)}" placeholder="Concepto"></td>
-    <td>
+    <td data-label="Moneda">
       <select id="eCurrency">
         <option value="ARS"${item.currency==='ARS'?' selected':''}>ARS</option>
         <option value="USD"${item.currency==='USD'?' selected':''}>USD</option>
       </select>
     </td>
-    <td><input type="number" id="eAmount" value="${item.amount||""}" placeholder="0" min="0" step="0.01"></td>
-    <td colspan="3">
+    <td data-label="Monto"><input type="number" inputmode="decimal" id="eAmount" value="${item.amount||""}" placeholder="0" min="0" step="0.01"></td>
+    <td colspan="3" data-label="Split">
       <div class="split-edit-row">
         <div class="split-edit-inputs">
           <span style="font-size:12px;color:var(--text-muted)">Mati</span>
@@ -795,221 +1023,193 @@ function buildEditRow(item, month) {
   return tr;
 }
 
+function pinaPairs(month) {
+  const items = month.pinaItems || [];
+  const seen = new Set();
+  const pairs = [];
+  for (const it of items) {
+    if (seen.has(it.pairId)) continue;
+    seen.add(it.pairId);
+    pairs.push({
+      pairId: it.pairId,
+      ars: items.find(i => i.pairId === it.pairId && i.currency === 'ARS'),
+      usd: items.find(i => i.pairId === it.pairId && i.currency === 'USD'),
+    });
+  }
+  return pairs.filter(p => p.ars && p.usd);
+}
+
 function renderPinaTable(month, readonly) {
   const tbody = document.getElementById('pinaExpenseTbody');
   tbody.innerHTML = '';
-  const items = month.pinaItems || [];
-  if (!items.length) {
+  const pairs = pinaPairs(month);
+  if (!pairs.length) {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="3"><div class="empty-state">Sin gastos propios.<br><p>Hacé clic en "+ Agregar gasto" para empezar.</p></div></td>`;
+    tr.innerHTML = `<td colspan="4"><div class="empty-state">Sin gastos propios.<br><p>Hacé clic en "+ Agregar gasto" para empezar.</p></div></td>`;
     tbody.appendChild(tr);
     return;
   }
-  // Group items with same name: one ARS + one USD → merged row
-  const byName = {};
-  for (const item of items) {
-    const k = item.name.trim().toLowerCase();
-    if (!byName[k]) byName[k] = [];
-    byName[k].push(item);
-  }
-  const rendered = new Set();
-  for (const item of items) {
-    if (rendered.has(item.id)) continue;
-    const k = item.name.trim().toLowerCase();
-    const group = byName[k];
-    const arsItem = group.find(i => i.currency === 'ARS');
-    const usdItem = group.find(i => i.currency === 'USD');
-    const isPair = arsItem && usdItem && group.length === 2;
-    if (isPair) {
-      rendered.add(arsItem.id);
-      rendered.add(usdItem.id);
-      const editingThis = editingPinaItemId === arsItem.id || editingPinaItemId === usdItem.id;
-      if (editingThis && !readonly) {
-        tbody.appendChild(buildPinaPairedEditRow(arsItem, usdItem));
-      } else {
-        tbody.appendChild(buildPinaPairedRow(arsItem, usdItem, readonly));
-      }
-    } else {
-      rendered.add(item.id);
-      if (editingPinaItemId === item.id && !readonly) tbody.appendChild(buildPinaEditRow(item));
-      else tbody.appendChild(buildPinaViewRow(item, readonly));
-    }
+  for (const p of pairs) {
+    if (editingPinaPairId === p.pairId && !readonly) tbody.appendChild(buildPinaPairedEditRow(p.ars, p.usd));
+    else tbody.appendChild(buildPinaPairedRow(p.ars, p.usd, readonly));
   }
 }
 
-function buildPinaViewRow(item, readonly) {
-  const installBadge = item.installments ? `<span class="installment-badge">c.${item.installments.current}/${item.installments.total}</span>` : '';
-  const notesHtml = item.notes ? `<div class="item-notes">${escHtml(item.notes)}</div>` : '';
-  const badge = item.currency === 'ARS' ? `<span class="badge-ars">ARS</span>` : `<span class="badge-usd">USD</span>`;
-  const amtHtml = `${badge} ${fmtAmount(parseFloat(item.amount)||0, item.currency)}${installBadge}${notesHtml}`;
-  const tr = document.createElement('tr');
-  const arsCell = item.currency === 'ARS' ? `<td class="amount">${amtHtml}</td><td style="color:var(--text-muted)">—</td>` :
-                                            `<td style="color:var(--text-muted)">—</td><td class="amount">${amtHtml}</td>`;
-  tr.innerHTML = `
-    <td>${escHtml(item.name)}</td>${arsCell}
-    <td><div class="actions-cell">${!readonly
-      ? `<button class="btn btn-sm" onclick="startPinaEdit('${item.id}')">✏️ Editar</button>
-         ${!item.isRecurring ? `<button class="btn btn-sm btn-danger" onclick="deletePinaItem('${item.id}')">✕</button>` : ''}`
-      : '—'}</div></td>`;
-  return tr;
+function pinaCell(item, badgeClass, badgeText, fmt) {
+  const amt = parseFloat(item.amount) || 0;
+  const inst = item.installments ? `<span class="installment-badge">c.${item.installments.current}/${item.installments.total}</span>` : "";
+  const notes = item.notes ? `<div class="item-notes">${escHtml(item.notes)}</div>` : "";
+  return `<span class="${badgeClass}">${badgeText}</span> <span class="${amt ? "" : "zero-amt"}">${fmt(amt)}</span>${inst}${notes}`;
 }
 
 function buildPinaPairedRow(arsItem, usdItem, readonly) {
-  const arsAmt = parseFloat(arsItem.amount) || 0;
-  const usdAmt = parseFloat(usdItem.amount) || 0;
-  const instBadge = (i) => i.installments ? `<span class="installment-badge">c.${i.installments.current}/${i.installments.total}</span>` : '';
-  const notesFrag = (i) => i.notes ? `<div class="item-notes">${escHtml(i.notes)}</div>` : '';
   const tr = document.createElement('tr');
+  const fixed = !!arsItem.isRecurring;
+  const actions = readonly ? "—" :
+    `<button class="btn btn-sm" onclick="startPinaEdit('${arsItem.pairId}')">✏️ Editar</button>` +
+    (fixed ? `<span class="fixed-tag" title="Concepto fijo: no se puede eliminar">🔒 fijo</span>`
+           : `<button class="btn btn-sm btn-danger" onclick="deletePinaPair('${arsItem.pairId}')" title="Eliminar">✕</button>`);
   tr.innerHTML = `
-    <td>${escHtml(arsItem.name)}</td>
-    <td class="amount"><span class="badge-ars">ARS</span> ${fmtARS(arsAmt)}${instBadge(arsItem)}${notesFrag(arsItem)}</td>
-    <td class="amount"><span class="badge-usd">USD</span> ${fmtUSD(usdAmt)}${instBadge(usdItem)}${notesFrag(usdItem)}</td>
-    <td><div class="actions-cell">${!readonly
-      ? `<button class="btn btn-sm" onclick="startPinaEdit('${arsItem.id}')">✏️ Editar</button>
-         ${!arsItem.isRecurring ? `<button class="btn btn-sm btn-danger" onclick="deletePinaItem('${arsItem.id}')" title="Borrar pesos">✕$</button>` : ''}
-         ${!usdItem.isRecurring ? `<button class="btn btn-sm btn-danger" onclick="deletePinaItem('${usdItem.id}')" title="Borrar USD">✕USD</button>` : ''}`
-      : '—'}</div></td>`;
+    <td>${escHtml(arsItem.name || "Sin nombre")}</td>
+    <td class="amount" data-label="Pesos">${pinaCell(arsItem, "badge-ars", "ARS", fmtARS)}</td>
+    <td class="amount" data-label="Dólares">${pinaCell(usdItem, "badge-usd", "USD", fmtUSD)}</td>
+    <td><div class="actions-cell">${actions}</div></td>`;
   return tr;
+}
+
+function pinaInstBlock(sfx, item) {
+  const on  = !!item.installments;
+  const cur = on ? item.installments.current : 1;
+  const tot = on ? item.installments.total : 12;
+  return `<div class="install-row">
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
+        <input type="checkbox" id="pInst${sfx}" ${on ? "checked" : ""} onchange="togglePinaInst('${sfx}')"><span>Cuotas</span>
+      </label>
+      <span id="pInstBox${sfx}" style="display:${on ? "inline-flex" : "none"};align-items:center;gap:4px">
+        <input type="number" id="pInstCur${sfx}" value="${cur}" min="1" style="width:48px!important"><span>de</span>
+        <input type="number" id="pInstTot${sfx}" value="${tot}" min="1" style="width:48px!important">
+      </span>
+    </div>`;
 }
 
 function buildPinaPairedEditRow(arsItem, usdItem) {
+  const fixed = !!arsItem.isRecurring;
   const tr = document.createElement('tr');
   tr.className = 'edit-row';
   tr.innerHTML = `
-    <td><input type="text" id="pPairName" value="${escAttr(arsItem.name)}" placeholder="Concepto"></td>
-    <td>
+    <td data-label="Concepto"><input type="text" id="pName" value="${escAttr(arsItem.name || "")}" placeholder="Concepto" ${fixed ? "readonly" : ""}></td>
+    <td data-label="Pesos">
       <span class="badge-ars" style="display:inline-block;margin-bottom:5px">ARS</span>
-      <input type="number" id="pAmountARS" value="${arsItem.amount||''}" placeholder="0" min="0" step="0.01">
-      <input type="text" id="pNotesARS" value="${escAttr(arsItem.notes||'')}" placeholder="Notas" style="margin-top:4px">
+      <input type="number" inputmode="decimal" id="pAmountARS" value="${arsItem.amount || ""}" placeholder="0" min="0" step="0.01">
+      <input type="text" id="pNotesARS" value="${escAttr(arsItem.notes || "")}" placeholder="Notas" style="margin-top:4px">
+      ${pinaInstBlock("ARS", arsItem)}
     </td>
-    <td>
+    <td data-label="Dólares">
       <span class="badge-usd" style="display:inline-block;margin-bottom:5px">USD</span>
-      <input type="number" id="pAmountUSD" value="${usdItem.amount||''}" placeholder="0" min="0" step="0.01">
-      <input type="text" id="pNotesUSD" value="${escAttr(usdItem.notes||'')}" placeholder="Notas" style="margin-top:4px">
+      <input type="number" inputmode="decimal" id="pAmountUSD" value="${usdItem.amount || ""}" placeholder="0" min="0" step="0.01">
+      <input type="text" id="pNotesUSD" value="${escAttr(usdItem.notes || "")}" placeholder="Notas" style="margin-top:4px">
+      ${pinaInstBlock("USD", usdItem)}
     </td>
     <td>
       <div class="actions-cell">
-        <button class="btn btn-sm btn-primary" onclick="savePinaPairedEdit('${arsItem.id}','${usdItem.id}')">✓ Guardar</button>
-        <button class="btn btn-sm" onclick="cancelPinaEdit()">✕</button>
+        <button class="btn btn-sm btn-primary" onclick="savePinaPair('${arsItem.pairId}')">✓ Guardar</button>
+        <button class="btn btn-sm" data-act="cancel" onclick="cancelPinaEdit()">✕</button>
       </div>
     </td>`;
   return tr;
 }
 
-function buildPinaEditRow(item) {
-  const instChecked = item.installments ? 'checked' : '';
-  const instCurrent = item.installments ? item.installments.current : 1;
-  const instTotal   = item.installments ? item.installments.total   : 12;
-  const instDisplay = item.installments ? 'inline-flex' : 'none';
-  const tr = document.createElement('tr');
-  tr.className = 'edit-row';
-  tr.innerHTML = `
-    <td><input type="text" id="pName" value="${escAttr(item.name)}" placeholder="Concepto"></td>
-    <td colspan="3">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
-        <select id="pCurrency">
-          <option value="ARS"${item.currency==='ARS'?' selected':''}>ARS</option>
-          <option value="USD"${item.currency==='USD'?' selected':''}>USD</option>
-        </select>
-        <input type="number" id="pAmount" value="${item.amount||''}" placeholder="0" min="0" step="0.01" style="width:130px!important">
-      </div>
-      <div class="install-row">
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
-          <input type="checkbox" id="pInstall" ${instChecked} onchange="togglePinaInstallUI()">
-          <span>Cuotas</span>
-        </label>
-        <span id="pinaInstallDetails" style="display:${instDisplay};align-items:center;gap:4px">
-          <span>Cuota</span>
-          <input type="number" id="pInstallCurrent" value="${instCurrent}" min="1" style="width:48px!important">
-          <span>de</span>
-          <input type="number" id="pInstallTotal" value="${instTotal}" min="1" style="width:48px!important">
-        </span>
-      </div>
-      <div style="margin-top:6px">
-        <textarea id="pNotes" placeholder="Notas (opcional)" rows="2">${escText(item.notes || '')}</textarea>
-      </div>
-      <div class="actions-cell" style="margin-top:6px">
-        <button class="btn btn-sm btn-primary" onclick="savePinaEdit('${item.id}')">✓ Guardar</button>
-        <button class="btn btn-sm" onclick="cancelPinaEdit()">✕</button>
-      </div>
-    </td>`;
-  return tr;
+function togglePinaInst(sfx) {
+  const chk = document.getElementById('pInst' + sfx);
+  const box = document.getElementById('pInstBox' + sfx);
+  if (box) box.style.display = chk.checked ? 'inline-flex' : 'none';
 }
 
-function togglePinaInstallUI() {
-  const chk = document.getElementById('pInstall');
-  const det = document.getElementById('pinaInstallDetails');
-  if (det) det.style.display = chk.checked ? 'inline-flex' : 'none';
-}
-
-function startPinaEdit(id) {
-  editingPinaItemId = id;
+function startPinaEdit(pairId) {
+  discardPending();
+  editingItemId = null;
+  editingPinaPairId = pairId;
   renderAll();
-  setTimeout(() => { const el = document.getElementById('pName'); if (el) el.focus(); }, 50);
+  setTimeout(() => {
+    const el = document.getElementById('pName');
+    const target = (el && !el.readOnly) ? el : document.getElementById('pAmountARS');
+    if (target) target.focus();
+  }, 50);
 }
-function cancelPinaEdit() { editingPinaItemId = null; renderAll(); }
 
-function savePinaEdit(id) {
-  const month = getMonth();
-  if (!month) return;
-  const name     = (document.getElementById('pName')?.value || '').trim();
-  const currency = document.getElementById('pCurrency')?.value || 'ARS';
-  const amount   = parseFloat(document.getElementById('pAmount')?.value) || 0;
-  const notes    = (document.getElementById('pNotes')?.value || '').trim();
-  const instChk  = document.getElementById('pInstall');
-  const instCur  = parseInt(document.getElementById('pInstallCurrent')?.value) || 1;
-  const instTot  = parseInt(document.getElementById('pInstallTotal')?.value)   || instCur;
-  const installments = instChk?.checked
-    ? { current: Math.max(1, instCur), total: Math.max(instCur, instTot) }
-    : null;
-  const item = (month.pinaItems || []).find(i => i.id === id);
-  if (item) {
-    item.name = name || item.name;
-    item.currency = currency;
-    item.amount = amount;
-    item.notes = notes;
-    item.installments = installments;
-  }
-  editingPinaItemId = null;
-  saveAll();
+function cancelPinaEdit() {
+  discardPending();
+  editingPinaPairId = null;
   renderAll();
 }
 
-function savePinaPairedEdit(arsId, usdId) {
-  const month = getMonth();
-  if (!month) return;
-  const name    = (document.getElementById('pPairName')?.value || '').trim();
-  const amtARS  = parseFloat(document.getElementById('pAmountARS')?.value) || 0;
-  const amtUSD  = parseFloat(document.getElementById('pAmountUSD')?.value) || 0;
-  const notesARS = (document.getElementById('pNotesARS')?.value || '').trim();
-  const notesUSD = (document.getElementById('pNotesUSD')?.value || '').trim();
-  const arsItem = (month.pinaItems || []).find(i => i.id === arsId);
-  const usdItem = (month.pinaItems || []).find(i => i.id === usdId);
-  if (arsItem) { if (name) arsItem.name = name; arsItem.amount = amtARS; arsItem.notes = notesARS; }
-  if (usdItem) { if (name) usdItem.name = name; usdItem.amount = amtUSD; usdItem.notes = notesUSD; }
-  editingPinaItemId = null;
-  saveAll(); renderAll();
+function readPinaInst(sfx) {
+  const chk = document.getElementById('pInst' + sfx);
+  if (!chk || !chk.checked) return null;
+  const cur = parseInt(document.getElementById('pInstCur' + sfx)?.value) || 1;
+  const tot = parseInt(document.getElementById('pInstTot' + sfx)?.value) || cur;
+  return { current: Math.max(1, cur), total: Math.max(cur, tot) };
 }
 
-function deletePinaItem(id) {
+function savePinaPair(pairId) {
   const month = getMonth();
   if (!month) return;
-  month.pinaItems = (month.pinaItems || []).filter(i => i.id !== id);
-  if (editingPinaItemId === id) editingPinaItemId = null;
-  saveAll(); renderAll();
+  const items = (month.pinaItems || []).filter(i => i.pairId === pairId);
+  const ars = items.find(i => i.currency === 'ARS');
+  const usd = items.find(i => i.currency === 'USD');
+  if (!ars || !usd) return;
+  let name = (document.getElementById('pName')?.value || '').trim();
+  if (ars.isRecurring) name = ars.name;
+  if (!name) name = 'Sin nombre';
+  ars.name = name; usd.name = name;
+  ars.amount = parseFloat(document.getElementById('pAmountARS')?.value) || 0;
+  usd.amount = parseFloat(document.getElementById('pAmountUSD')?.value) || 0;
+  ars.notes = (document.getElementById('pNotesARS')?.value || '').trim();
+  usd.notes = (document.getElementById('pNotesUSD')?.value || '').trim();
+  ars.installments = readPinaInst('ARS');
+  usd.installments = readPinaInst('USD');
+  editingPinaPairId = null;
+  pendingNewPinaPairId = null;
+  commit();
+  renderAll();
+}
+
+function deletePinaPair(pairId) {
+  const month = getMonth();
+  if (!month) return;
+  const removed = (month.pinaItems || []).filter(i => i.pairId === pairId);
+  if (!removed.length || removed.some(i => i.isRecurring)) return;
+  const idx = month.pinaItems.findIndex(i => i.pairId === pairId);
+  month.pinaItems = month.pinaItems.filter(i => i.pairId !== pairId);
+  if (editingPinaPairId === pairId) editingPinaPairId = null;
+  const key = currentKey;
+  commit(key);
+  renderAll();
+  showToast(`"${removed[0].name || "Gasto"}" eliminado`, 'Deshacer', () => {
+    const m = allMonths[key];
+    if (!m) return;
+    m.pinaItems.splice(Math.min(idx, m.pinaItems.length), 0, ...removed);
+    commit(key);
+    if (currentKey === key) renderAll();
+  });
 }
 
 function addNewPinaItem() {
   const month = getMonth();
   if (!month) return;
-  if (!month.pinaItems) month.pinaItems = [];
-  const newItem = { id: uid(), name: '', currency: 'ARS', amount: 0, notes: '', installments: null };
-  month.pinaItems.push(newItem);
-  editingPinaItemId = newItem.id;
-  saveAll(); renderAll();
+  discardPending();
+  editingItemId = null;
+  const pairId = uid();
+  const mk = (cur) => ({ id: uid(), pairId, name: "", currency: cur, amount: 0, notes: "", installments: null, isRecurring: false });
+  month.pinaItems.push(mk("ARS"), mk("USD"));
+  editingPinaPairId = pairId;
+  pendingNewPinaPairId = pairId;
+  renderAll();
   setTimeout(() => {
     const lastRow = document.getElementById('pinaExpenseTbody').lastElementChild;
     if (lastRow) lastRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const nameInput = document.getElementById('pName');
+    if (nameInput) nameInput.focus();
   }, 100);
 }
 
@@ -1089,14 +1289,43 @@ function renderPrintHeader(month) {
       <td>${fmtAmount(mati, item.currency)}</td><td>${fmtAmount(pina, item.currency)}</td>`;
     ptbody.appendChild(tr);
   }
+  const pbody = document.getElementById('printPinaTbody');
+  pbody.innerHTML = '';
+  for (const p of pinaPairs(month)) {
+    const a = parseFloat(p.ars.amount) || 0, u = parseFloat(p.usd.amount) || 0;
+    if (!a && !u) continue;
+    const cuota = (it) => it.installments ? ` (cuota ${it.installments.current}/${it.installments.total})` : '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${escHtml(p.ars.name)}</td><td>${a ? fmtARS(a) + escHtml(cuota(p.ars)) : '—'}</td><td>${u ? fmtUSD(u) + escHtml(cuota(p.usd)) : '—'}</td>`;
+    pbody.appendChild(tr);
+  }
+  document.getElementById('printPinaTable').classList.toggle('print-empty', !pbody.children.length);
+}
+
+function resetEditing() {
+  discardPending();
+  editingItemId = null;
+  editingPinaPairId = null;
+}
+// Rows added with "+ Agregar" only exist in memory until saved; leaving the form drops them.
+function discardPending() {
+  const month = getMonth();
+  if (month) {
+    if (pendingNewItemId) month.items = month.items.filter(i => i.id !== pendingNewItemId);
+    if (pendingNewPinaPairId) month.pinaItems = (month.pinaItems || []).filter(i => i.pairId !== pendingNewPinaPairId);
+  }
+  pendingNewItemId = null;
+  pendingNewPinaPairId = null;
 }
 
 function startEdit(id) {
+  discardPending();
+  editingPinaPairId = null;
   editingItemId = id;
   renderAll();
   setTimeout(() => { const el = document.getElementById('eName'); if (el) el.focus(); }, 50);
 }
-function cancelEdit() { editingItemId = null; renderAll(); }
+function cancelEdit() { discardPending(); editingItemId = null; renderAll(); }
 
 function saveEdit(id) {
   const month = getMonth();
@@ -1120,7 +1349,7 @@ function saveEdit(id) {
 
   const item = month.items.find(i => i.id === id);
   if (item) {
-    item.name = name || item.name;
+    item.name = name || item.name || 'Sin nombre';
     item.currency = currency;
     item.amount = amount;
     item.splitOverride = splitOverride;
@@ -1128,42 +1357,66 @@ function saveEdit(id) {
     item.installments = installments;
   }
   editingItemId = null;
-  saveAll();
+  pendingNewItemId = null;
+  commit();
   renderAll();
 }
 
 function deleteItem(id) {
   const month = getMonth();
   if (!month) return;
-  month.items = month.items.filter(i => i.id !== id);
+  const idx = month.items.findIndex(i => i.id === id);
+  if (idx < 0) return;
+  const removed = month.items.splice(idx, 1)[0];
   if (editingItemId === id) editingItemId = null;
-  saveAll(); renderAll();
+  const key = currentKey;
+  commit(key);
+  renderAll();
+  showToast(`"${removed.name || "Gasto"}" eliminado`, 'Deshacer', () => {
+    const mm = allMonths[key];
+    if (!mm) return;
+    mm.items.splice(Math.min(idx, mm.items.length), 0, removed);
+    commit(key);
+    if (currentKey === key) renderAll();
+  });
 }
 
 function addNewItem() {
   const month = getMonth();
   if (!month) return;
+  discardPending();
+  editingPinaPairId = null;
   const newItem = { id: uid(), name: '', currency: 'ARS', amount: 0, splitOverride: null, notes: '', installments: null, isRecurring: false };
   month.items.push(newItem);
   editingItemId = newItem.id;
-  saveAll(); renderAll();
+  pendingNewItemId = newItem.id;
+  renderAll();
   setTimeout(() => {
     const lastRow = document.getElementById('expenseTbody').lastElementChild;
     if (lastRow) lastRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const el = document.getElementById('eName'); if (el) el.focus();
   }, 100);
 }
 
+// Creates the month after the latest one (at most one month ahead of today), carrying over
+// Alquiler and installments.
 function createNewMonth() {
-  const key = todayKey();
-  if (allMonths[key]) {
-    currentKey = key; editingItemId = null; editingPinaItemId = null; renderAll();
-    showNotif('Ya existe el mes actual'); return;
+  resetEditing();
+  const last = latestKey();
+  const nextIdx = last ? monthIndex(last) + 1 : monthIndex(todayKey());
+  if (nextIdx > monthIndex(todayKey()) + 1) {
+    currentKey = last; renderAll();
+    showNotif('Ya existe el mes siguiente');
+    return;
   }
-  const newMonth = createMonthRecord(key);
-  applyCarryOver(newMonth);
-  allMonths[key] = newMonth;
-  currentKey = key; editingItemId = null; editingPinaItemId = null;
-  saveAll(); renderAll();
+  const key = keyFromIndex(nextIdx);
+  const m = createMonthRecord(key);
+  applyCarryOver(m);
+  allMonths[key] = m;
+  delete deletedMonths[key];
+  currentKey = key;
+  commit();
+  renderAll();
   showNotif(`Nuevo mes creado: ${keyToLabel(key)}`);
 }
 
@@ -1172,16 +1425,26 @@ function navigateMonth(delta) {
   const idx = keys.indexOf(currentKey);
   const newIdx = idx + delta;
   if (newIdx < 0 || newIdx >= keys.length) return;
-  editingItemId = null; editingPinaItemId = null; currentKey = keys[newIdx]; renderAll();
+  resetEditing();
+  currentKey = keys[newIdx];
+  renderAll();
 }
 
 function toggleLockMonth() {
   const month = getMonth();
-  if (!month || currentKey !== todayKey()) return;
+  if (!month) return;
   if (!month.locked && !confirm('¿Cerrar el mes? No podrás editar los gastos hasta reabrirlo.')) return;
+  resetEditing();
   month.locked = !month.locked;
-  saveAll(); renderAll();
+  if (!month.locked && currentKey < todayKey()) unlockedKeys.add(currentKey);
+  commit(); renderAll();
   showNotif(month.locked ? '🔒 Mes cerrado' : '🔓 Mes reabierto');
+}
+
+function unlockMonth() {
+  unlockedKeys.add(currentKey);
+  renderAll();
+  showNotif('✏️ Edición habilitada para ' + keyToLabel(currentKey));
 }
 
 document.getElementById('matiSplitInput').addEventListener('change', function() {
@@ -1190,7 +1453,7 @@ document.getElementById('matiSplitInput').addEventListener('change', function() 
   let m = clamp(parseFloat(this.value)||0, 0, 100);
   month.matiSplit = m; month.pinaSplit = 100 - m;
   document.getElementById('pinaSplitInput').value = month.pinaSplit;
-  saveAll(); renderAll();
+  commit(); renderAll();
 });
 document.getElementById('pinaSplitInput').addEventListener('change', function() {
   const month = getMonth();
@@ -1198,10 +1461,25 @@ document.getElementById('pinaSplitInput').addEventListener('change', function() 
   let p = clamp(parseFloat(this.value)||0, 0, 100);
   month.pinaSplit = p; month.matiSplit = 100 - p;
   document.getElementById('matiSplitInput').value = month.matiSplit;
-  saveAll(); renderAll();
+  commit(); renderAll();
 });
 document.getElementById('prevMonthBtn').addEventListener('click', () => navigateMonth(-1));
 document.getElementById('nextMonthBtn').addEventListener('click', () => navigateMonth(1));
+
+// Enter saves, Escape cancels while an edit row is open.
+document.addEventListener('keydown', (e) => {
+  const row = e.target && e.target.closest ? e.target.closest('.edit-row') : null;
+  if (!row) return;
+  if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON') {
+    e.preventDefault();
+    const btn = row.querySelector('.btn-primary');
+    if (btn) btn.click();
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    const btn = row.querySelector('[data-act="cancel"]');
+    if (btn) btn.click();
+  }
+});
 
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle('dark');
@@ -1235,13 +1513,17 @@ function openModal() {
 }
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
-function goToMonth(key) { currentKey = key; editingItemId = null; editingPinaItemId = null; closeModal(); renderAll(); }
+function goToMonth(key) { resetEditing(); currentKey = key; closeModal(); renderAll(); }
 function deleteMonth(key) {
   if (!confirm(`¿Borrar el registro de ${keyToLabel(key)}? Esta acción no se puede deshacer.`)) return;
+  resetEditing();
+  backupLocal();
   delete allMonths[key];
-  saveAll();
-  const keys = getSortedKeys();
-  currentKey = keys.length ? keys[keys.length-1] : ensureCurrentMonth();
+  deletedMonths[key] = Date.now();
+  saveAll(); markDirty(); schedulePush();
+  const last = latestKey();
+  currentKey = last || todayKey();
+  if (!last) { ensureMonths(); currentKey = latestKey(); }
   closeModal(); renderAll(); showNotif('Mes borrado');
 }
 
@@ -1464,13 +1746,41 @@ function importHistory(event) {
   reader.readAsText(file);
 }
 
-function loadGhToken() { return localStorage.getItem(GH_TOKEN_KEY) || ''; }
+// ---------- GitHub sync ----------
+// Reading history.json needs no token (the repo is public); a token is only needed to write.
+// Edits are uploaded automatically a few seconds after saving; every sync first merges what is on
+// GitHub (per month, newest edit wins) so a stale device can never overwrite newer data.
+let syncBusy = false, syncAgain = false, pushTimer = null;
+
+function loadGhToken() { return lsGet(GH_TOKEN_KEY) || ''; }
+
+class SyncError extends Error { constructor(code, msg) { super(msg); this.code = code; } }
+
+function adoptTokenFromHash() {
+  const m = /[#&]t=([^&]+)/.exec(location.hash || '');
+  if (!m) return false;
+  let tok = '';
+  try { tok = decodeURIComponent(m[1]).trim(); } catch(e) {}
+  try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {}
+  if (!tok) return false;
+  lsSet(GH_TOKEN_KEY, tok);
+  return true;
+}
 
 function saveGhToken() {
   const val = document.getElementById('ghTokenInput').value.trim();
   if (!val) { showNotif('⚠ Ingresá un token antes de guardar'); return; }
-  localStorage.setItem(GH_TOKEN_KEY, val);
+  lsSet(GH_TOKEN_KEY, val);
   renderSyncStatus(); showNotif('✓ Token guardado');
+  syncNow({ manual: true });
+}
+
+function copyAccessLink() {
+  const t = loadGhToken();
+  if (!t) { showNotif('⚠ Primero guardá un token'); return; }
+  const url = location.origin + location.pathname + '#t=' + encodeURIComponent(t);
+  const done = () => showNotif('✓ Link copiado: abrilo en el otro dispositivo');
+  navigator.clipboard.writeText(url).then(done).catch(() => { prompt('Copiá este link:', url); });
 }
 
 function toggleTokenVisibility() {
@@ -1480,100 +1790,179 @@ function toggleTokenVisibility() {
 
 function renderSyncStatus(msg, cls) {
   const el = document.getElementById('syncStatus');
-  if (!el) return;
-  if (msg) { el.textContent = msg; el.className = 'sync-status ' + (cls||''); return; }
+  const chip = document.getElementById('syncChip');
   const token = loadGhToken();
-  if (!token) { el.textContent = '● Sin token configurado'; el.className = 'sync-status'; }
-  else {
-    const last = localStorage.getItem(GH_LAST_SYNC_KEY);
+  const dirty = lsGet(GH_DIRTY_KEY) === '1';
+  let text, klass, chipTxt, chipCls;
+  if (msg) {
+    text = msg; klass = cls || '';
+    chipTxt = cls === 'error' ? '☁ ✗' : '☁ ⟳'; chipCls = cls === 'error' ? 'error' : 'busy';
+  } else if (!token) {
+    text = '● Sin token: se lee el historial de GitHub, pero los cambios quedan solo en este dispositivo';
+    klass = ''; chipTxt = '☁ —'; chipCls = '';
+  } else if (dirty) {
+    text = '● Hay cambios pendientes de subir a GitHub'; klass = 'busy'; chipTxt = '☁ ●'; chipCls = 'busy';
+  } else {
+    const last = lsGet(GH_LAST_SYNC_KEY);
     if (last) {
       const d = new Date(last);
       const fmt = d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
-      el.textContent = `● Último guardado en GitHub: ${fmt}`; el.className = 'sync-status ok';
-    } else { el.textContent = '● Token configurado — sin guardar aún'; el.className = 'sync-status ok'; }
+      text = `● Sincronizado con GitHub (${fmt})`;
+    } else text = '● Token configurado — todavía sin sincronizar';
+    klass = 'ok'; chipTxt = '☁ ✓'; chipCls = 'ok';
   }
+  if (el) { el.textContent = text; el.className = 'sync-status ' + klass; }
+  if (chip) { chip.textContent = chipTxt; chip.className = 'sync-chip ' + chipCls; chip.title = text; }
   const input = document.getElementById('ghTokenInput');
-  if (input && token) input.value = token;
+  if (input && token && !input.value) input.value = token;
 }
 
 function toBase64(str)   { return btoa(unescape(encodeURIComponent(str))); }
 function fromBase64(str) { return decodeURIComponent(escape(atob(str))); }
 
-async function ghGetFile(token) {
-  const res = await fetch(GH_API_URL, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' } });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`GitHub API error ${res.status}`);
-  return await res.json();
+async function ghFetchPages() {
+  try {
+    const r = await fetch('data/history.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return { payload: null, sha: null };
+    return { payload: await r.json(), sha: null };
+  } catch(e) { throw new SyncError('offline', 'Sin conexión'); }
 }
 
-async function pushToGithub() {
+async function ghFetchRemote() {
   const token = loadGhToken();
-  if (!token) { showNotif('⚠ Configurá el token primero'); return; }
-  renderSyncStatus('⟳ Guardando en GitHub...', 'busy');
-  try {
-    const existing = await ghGetFile(token);
-    const payload  = { version: 2, savedAt: new Date().toISOString(), months: allMonths };
-    const body     = { message: `Casa Pipi's: actualizar historial ${new Date().toLocaleDateString('es-AR')}`, content: toBase64(JSON.stringify(payload, null, 2)), ...(existing ? { sha: existing.sha } : {}) };
-    const res = await fetch(GH_API_URL, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.message || `Error ${res.status}`); }
-    localStorage.setItem(GH_LAST_SYNC_KEY, new Date().toISOString());
-    renderSyncStatus(); showNotif('✓ Historial guardado en GitHub');
-  } catch(e) { renderSyncStatus(`✗ Error: ${e.message}`, 'error'); showNotif('⚠ No se pudo guardar en GitHub'); }
+  const headers = { 'Accept': 'application/vnd.github+json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  let res;
+  try { res = await fetch(GH_API_URL + '?t=' + Date.now(), { headers, cache: 'no-store' }); }
+  catch(e) { throw new SyncError('offline', 'Sin conexión'); }
+  if (!res.ok) {
+    if (!token) return await ghFetchPages();
+    if (res.status === 404) return { payload: null, sha: null };
+    if (res.status === 401) throw new SyncError('auth', 'Token vencido o inválido');
+    if (res.status === 403) throw new SyncError('perm', 'El token no tiene permiso de escritura (Contents: Read and write)');
+    throw new SyncError('http', 'GitHub respondió ' + res.status);
+  }
+  const file = await res.json();
+  const payload = JSON.parse(fromBase64(String(file.content || '').replace(/\n/g, '')));
+  return { payload, sha: file.sha };
 }
 
-async function pullFromGithub() {
+// Per-month merge: the newest edit wins; months only on one side are kept; deletions are honored.
+function mergeRemote(remote) {
+  const rm   = (remote && remote.months) || remote || {};
+  const rdel = (remote && remote.deleted) || {};
+  let changed = false, localAhead = false;
+  for (const [k, ts] of Object.entries(rdel)) if (ts > (deletedMonths[k] || 0)) deletedMonths[k] = ts;
+  for (const [k, r] of Object.entries(rm)) {
+    if (!r || typeof r !== 'object' || !Array.isArray(r.items)) continue;
+    const l = allMonths[k];
+    const ru = r.updatedAt || 0, lu = l ? (l.updatedAt || 0) : 0;
+    const del = deletedMonths[k] || 0;
+    if (del && del > ru && del > lu) { if (l) { delete allMonths[k]; changed = true; } continue; }
+    if (!l) { allMonths[k] = r; changed = true; }
+    else if (ru > lu) { allMonths[k] = r; changed = true; }
+    else if (lu > ru) localAhead = true;
+  }
+  for (const k of Object.keys(allMonths)) if (!(k in rm)) localAhead = true;
+  for (const [k, ts] of Object.entries(deletedMonths)) if (ts > (rdel[k] || 0)) localAhead = true;
+  return { changed, localAhead };
+}
+
+function afterMerge() {
+  normalizeAll();
+  ensureMonths();
+  saveAll();
+  if (!allMonths[currentKey]) currentKey = allMonths[todayKey()] ? todayKey() : latestKey();
+  if (!editingItemId && !editingPinaPairId) renderAll();
+}
+
+function schedulePush() {
+  if (!loadGhToken()) { renderSyncStatus(); return; }
+  clearTimeout(pushTimer);
+  renderSyncStatus('● Guardando cambios…', 'busy');
+  pushTimer = setTimeout(() => syncNow(), 2500);
+}
+
+async function syncNow({ manual = false } = {}) {
+  if (syncBusy) { syncAgain = true; return; }
+  syncBusy = true;
   const token = loadGhToken();
-  if (!token) { showNotif('⚠ Configurá el token primero'); return; }
-  renderSyncStatus('⟳ Trayendo desde GitHub...', 'busy');
+  renderSyncStatus('⟳ Sincronizando con GitHub…', 'busy');
   try {
-    const file = await ghGetFile(token);
-    if (!file) { renderSyncStatus(); showNotif('ℹ No hay historial guardado en GitHub todavía'); return; }
-    const payload  = JSON.parse(fromBase64(file.content.replace(/\n/g,'')));
-    _applyImportedMonths(payload.months || payload, true);
+    let pushed = false, merged = false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const remote = await ghFetchRemote();
+      let ahead = !remote.payload && getSortedKeys().length > 0;
+      if (remote.payload) {
+        const before = JSON.stringify(allMonths);
+        const r = mergeRemote(remote.payload);
+        ahead = r.localAhead;
+        if (r.changed) { backupLocal(); afterMerge(); merged = JSON.stringify(allMonths) !== before; }
+      }
+      const dirty = lsGet(GH_DIRTY_KEY) === '1';
+      if (!token) break;
+      if (!ahead && !dirty) { lsSet(GH_LAST_SYNC_KEY, new Date().toISOString()); break; }
+      const payload = { version: 3, savedAt: new Date().toISOString(), months: allMonths, deleted: deletedMonths };
+      const body = { message: `Casa Pipi's: actualizar historial ${new Date().toLocaleDateString('es-AR')}`,
+                     content: toBase64(JSON.stringify(payload, null, 2)), ...(remote.sha ? { sha: remote.sha } : {}) };
+      let res;
+      try {
+        res = await fetch(GH_API_URL, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      } catch(e) { throw new SyncError('offline', 'Sin conexión'); }
+      if (res.status === 409 || res.status === 422) continue;   // someone else saved in between: re-fetch, merge, retry
+      if (res.status === 401) throw new SyncError('auth', 'Token vencido o inválido');
+      if (res.status === 403 || res.status === 404) throw new SyncError('perm', 'El token no tiene permiso de escritura (Contents: Read and write)');
+      if (!res.ok) { const err = await res.json().catch(() => ({})); throw new SyncError('http', err.message || 'Error ' + res.status); }
+      lsDel(GH_DIRTY_KEY);
+      lsSet(GH_LAST_SYNC_KEY, new Date().toISOString());
+      pushed = true;
+      break;
+    }
     renderSyncStatus();
-  } catch(e) { renderSyncStatus(`✗ Error: ${e.message}`, 'error'); showNotif('⚠ No se pudo traer desde GitHub'); }
+    if (manual) showNotif(pushed ? '✓ Cambios guardados en GitHub' : merged ? '✓ Datos actualizados desde GitHub' : '✓ Todo sincronizado');
+  } catch(e) {
+    const code = e.code || 'http';
+    if (code === 'auth') renderSyncStatus('✗ Token vencido o inválido: generá uno nuevo (link abajo) y pegalo acá', 'error');
+    else if (code === 'offline') renderSyncStatus('● Sin conexión: los cambios se suben cuando vuelva', 'busy');
+    else renderSyncStatus('✗ ' + (e.message || 'Error al sincronizar'), 'error');
+    if (manual) showNotif('⚠ No se pudo sincronizar');
+  } finally {
+    syncBusy = false;
+    if (syncAgain) { syncAgain = false; syncNow(); }
+  }
 }
 
-async function autoLoadFromGithub() {
-  const token = loadGhToken();
-  if (!token) return;
-  renderSyncStatus('⟳ Cargando historial de GitHub...', 'busy');
-  try {
-    const file = await ghGetFile(token);
-    if (!file) { renderSyncStatus(); return; }
-    const payload  = JSON.parse(fromBase64(file.content.replace(/\n/g,'')));
-    const imported = payload.months || payload;
-    let added = 0;
-    for (const k of Object.keys(imported)) { if (!allMonths[k]) { allMonths[k] = imported[k]; added++; } }
-    if (added) { saveAll(); const keys = getSortedKeys(); currentKey = keys[keys.length-1]; renderAll(); }
-    renderSyncStatus();
-    if (added) showNotif(`✓ ${added} ${added===1?'mes cargado':'meses cargados'} desde GitHub`);
-  } catch(e) { renderSyncStatus('✗ Error al conectar con GitHub', 'error'); }
-}
+function withTimeout(p, ms) { return Promise.race([p, new Promise(r => setTimeout(r, ms))]); }
 
-function _applyImportedMonths(imported, githubWins) {
-  const importedKeys = Object.keys(imported);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !loadGhToken()) return;
+  const last = Date.parse(lsGet(GH_LAST_SYNC_KEY) || '') || 0;
+  if (Date.now() - last > 60000 && !editingItemId && !editingPinaPairId) syncNow();
+});
+window.addEventListener('online', () => { if (loadGhToken()) syncNow(); });
+
+function _applyImportedMonths(imported, replaceAll) {
+  const importedKeys = Object.keys(imported).filter(k => imported[k] && Array.isArray(imported[k].items));
   const newKeys      = importedKeys.filter(k => !allMonths[k]);
   const conflictKeys = importedKeys.filter(k =>  allMonths[k]);
   if (!importedKeys.length) { showNotif('ℹ El archivo no tiene datos'); return; }
-  if (conflictKeys.length && !githubWins) {
+  backupLocal();
+  const take = (k) => { allMonths[k] = imported[k]; allMonths[k].updatedAt = Date.now(); delete deletedMonths[k]; };
+  if (conflictKeys.length && !replaceAll) {
     let msg = `Se encontraron ${importedKeys.length} ${importedKeys.length===1?'mes':'meses'}.\n`;
     if (newKeys.length)      msg += `• ${newKeys.length} nuevos (se agregarán)\n`;
     if (conflictKeys.length) msg += `• ${conflictKeys.length} ya existentes:\n\n  OK = Reemplazar\n  Cancelar = Conservar locales`;
     const replace = confirm(msg);
-    for (const k of newKeys) allMonths[k] = imported[k];
-    if (replace) for (const k of conflictKeys) allMonths[k] = imported[k];
+    for (const k of newKeys) take(k);
+    if (replace) for (const k of conflictKeys) take(k);
   } else {
-    for (const k of newKeys)      allMonths[k] = imported[k];
-    for (const k of conflictKeys) allMonths[k] = imported[k];
+    for (const k of importedKeys) take(k);
   }
-  for (const month of Object.values(allMonths)) {
-    if (!month.pinaItems) month.pinaItems = PINA_RECURRING_TEMPLATES.map(newPinaItemFromTemplate);
-  }
-  saveAll();
-  const keys = getSortedKeys();
-  currentKey = keys[keys.length-1];
-  editingItemId = null; editingPinaItemId = null; renderAll();
+  resetEditing();
+  normalizeAll();
+  saveAll(); markDirty(); schedulePush();
+  currentKey = latestKey();
+  renderAll();
   showNotif(`✓ ${importedKeys.length} ${importedKeys.length===1?'mes importado':'meses importados'}`);
 }
 
@@ -1583,13 +1972,33 @@ function escHtml(str) {
 function escAttr(str) { return String(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function escText(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+// Opening the access link in a tab that is already open only changes the hash (no reload).
+window.addEventListener('hashchange', () => {
+  if (adoptTokenFromHash()) { renderSyncStatus(); showNotif('✓ Token configurado'); syncNow({ manual: true }); }
+});
+
+function registerSW() {
+  if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+}
+
 (async function init() {
+  adoptTokenFromHash();
   loadAll();
-  currentKey = ensureCurrentMonth();
+  currentKey = allMonths[todayKey()] ? todayKey() : latestKey();
   initDarkMode();
-  renderAll();
   renderSyncStatus();
-  await autoLoadFromGithub();
+  renderAll();
+  registerSW();
+  // Pull first (works without a token) so a new device gets the history before any month is created.
+  await withTimeout(syncNow(), 8000);
+  const created = ensureMonths();
+  const repaired = repairLegacyCarryOver();
+  currentKey = allMonths[todayKey()] ? todayKey() : latestKey();
+  renderAll();
+  if (created.length || repaired) schedulePush();
+  renderSyncStatus();
 })();
 </script></body>
 </html>
