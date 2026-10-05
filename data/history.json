@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "savedAt": "2026-10-05T02:36:31.554Z",
+  "savedAt": "2026-10-05T02:36:36.058Z",
   "months": {
     "2026-10": {
       "key": "2026-10",
@@ -12,7 +12,7 @@
           "id": "8vcfip0pmuulzuku",
           "name": "Alquiler",
           "currency": "ARS",
-          "amount": 0,
+          "amount": 655520,
           "splitOverride": null,
           "notes": "",
           "installments": null,
@@ -57,6 +57,19 @@
           "notes": "",
           "installments": null,
           "isRecurring": true
+        },
+        {
+          "id": "rxo8zfvemuun226l",
+          "name": "Colchon",
+          "currency": "ARS",
+          "amount": 341666,
+          "splitOverride": null,
+          "isRecurring": false,
+          "notes": "",
+          "installments": {
+            "current": 6,
+            "total": 12
+          }
         }
       ],
       "pinaItems": [
@@ -100,7 +113,8 @@
           "isRecurring": true,
           "pairId": "tpl:mastercard"
         }
-      ]
+      ],
+      "updatedAt": 1791167792781
     },
     "2026-06": {
       "key": "2026-06",
@@ -676,6 +690,120 @@
           "installments": null,
           "isRecurring": true,
           "pairId": "tpl:mastercard"
+        }
+      ]
+    },
+    "2026-09": {
+      "key": "2026-09",
+      "matiSplit": 75,
+      "pinaSplit": 25,
+      "locked": false,
+      "updatedAt": 1791167792781,
+      "items": [
+        {
+          "id": "oxqnsr1lmuun226l",
+          "name": "Alquiler",
+          "currency": "ARS",
+          "amount": 655520,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "tcdsdf07muun226l",
+          "name": "Expensas",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "e2gdynv6muun226l",
+          "name": "Telecentro",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "7vnjztqwmuun226l",
+          "name": "Edesur",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "4zp778mqmuun226l",
+          "name": "Metrogas",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "sr6kq10imuun226l",
+          "name": "Colchon",
+          "currency": "ARS",
+          "amount": 341666,
+          "splitOverride": null,
+          "isRecurring": false,
+          "notes": "",
+          "installments": {
+            "current": 5,
+            "total": 12
+          }
+        }
+      ],
+      "pinaItems": [
+        {
+          "id": "tv5q6yoemuun226l",
+          "pairId": "tpl:visa",
+          "name": "Visa",
+          "currency": "ARS",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "u08wwnd5muun226l",
+          "pairId": "tpl:visa",
+          "name": "Visa",
+          "currency": "USD",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "0nbtpl4hmuun226l",
+          "pairId": "tpl:mastercard",
+          "name": "Mastercard",
+          "currency": "ARS",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "to0k3wu9muun226l",
+          "pairId": "tpl:mastercard",
+          "name": "Mastercard",
+          "currency": "USD",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
         }
       ]
     }
