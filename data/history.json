@@ -1,7 +1,107 @@
 {
-  "version": 2,
-  "savedAt": "2026-08-05T13:17:24.973Z",
+  "version": 3,
+  "savedAt": "2026-10-05T02:36:31.554Z",
   "months": {
+    "2026-10": {
+      "key": "2026-10",
+      "matiSplit": 75,
+      "pinaSplit": 25,
+      "locked": false,
+      "items": [
+        {
+          "id": "8vcfip0pmuulzuku",
+          "name": "Alquiler",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "jtwsyl0lmuulzuku",
+          "name": "Expensas",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "o87l44gomuulzuku",
+          "name": "Telecentro",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "4rq2itv6muulzuku",
+          "name": "Edesur",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        },
+        {
+          "id": "uy1xkg9ymuulzuku",
+          "name": "Metrogas",
+          "currency": "ARS",
+          "amount": 0,
+          "splitOverride": null,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true
+        }
+      ],
+      "pinaItems": [
+        {
+          "id": "efv36chwmuulzuku",
+          "name": "Visa",
+          "currency": "ARS",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true,
+          "pairId": "tpl:visa"
+        },
+        {
+          "id": "5kmaj1m5muulzuku",
+          "name": "Visa",
+          "currency": "USD",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true,
+          "pairId": "tpl:visa"
+        },
+        {
+          "id": "meyh4vjqmuulzuku",
+          "name": "Mastercard",
+          "currency": "ARS",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true,
+          "pairId": "tpl:mastercard"
+        },
+        {
+          "id": "bsopj6odmuulzuku",
+          "name": "Mastercard",
+          "currency": "USD",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true,
+          "pairId": "tpl:mastercard"
+        }
+      ]
+    },
     "2026-06": {
       "key": "2026-06",
       "matiSplit": 75,
@@ -84,6 +184,46 @@
       ],
       "pinaItems": [
         {
+          "id": "8r4vw446muun209p",
+          "name": "Visa",
+          "currency": "ARS",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true,
+          "pairId": "tpl:visa"
+        },
+        {
+          "id": "8n9e9wf2muun209p",
+          "name": "Visa",
+          "currency": "USD",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true,
+          "pairId": "tpl:visa"
+        },
+        {
+          "id": "8r3wsyd8muun209p",
+          "name": "Mastercard",
+          "currency": "ARS",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true,
+          "pairId": "tpl:mastercard"
+        },
+        {
+          "id": "hcyuvsiomuun209p",
+          "name": "Mastercard",
+          "currency": "USD",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": true,
+          "pairId": "tpl:mastercard"
+        },
+        {
           "id": "9sarwhj4mq07drz3",
           "name": "Thelonious",
           "currency": "ARS",
@@ -92,7 +232,28 @@
           "installments": {
             "current": 2,
             "total": 2
-          }
+          },
+          "pairId": "is29ihdymuun209p"
+        },
+        {
+          "id": "8pe7rhirmuun209p",
+          "name": "Thelonious",
+          "currency": "USD",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": false,
+          "pairId": "is29ihdymuun209p"
+        },
+        {
+          "id": "j1winsramuun209p",
+          "name": "Biorender",
+          "currency": "ARS",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": false,
+          "pairId": "ak0lbpvxmuun209p"
         },
         {
           "id": "x89iclsumq07mbmj",
@@ -100,7 +261,8 @@
           "currency": "USD",
           "amount": 20,
           "notes": "",
-          "installments": null
+          "installments": null,
+          "pairId": "ak0lbpvxmuun209p"
         }
       ]
     },
@@ -211,7 +373,8 @@
           "amount": 0,
           "notes": "",
           "installments": null,
-          "isRecurring": true
+          "isRecurring": true,
+          "pairId": "tpl:visa"
         },
         {
           "id": "0lveviwjmpxknh5d",
@@ -220,7 +383,8 @@
           "amount": 0,
           "notes": "",
           "installments": null,
-          "isRecurring": true
+          "isRecurring": true,
+          "pairId": "tpl:visa"
         },
         {
           "id": "dyjdn4acmpxknh5d",
@@ -229,7 +393,8 @@
           "amount": 0,
           "notes": "",
           "installments": null,
-          "isRecurring": true
+          "isRecurring": true,
+          "pairId": "tpl:mastercard"
         },
         {
           "id": "5fmnd251mpxknh5d",
@@ -238,7 +403,8 @@
           "amount": 0,
           "notes": "",
           "installments": null,
-          "isRecurring": true
+          "isRecurring": true,
+          "pairId": "tpl:mastercard"
         }
       ]
     },
@@ -333,7 +499,8 @@
           "amount": 158900,
           "notes": "",
           "installments": null,
-          "isRecurring": true
+          "isRecurring": true,
+          "pairId": "tpl:visa"
         },
         {
           "id": "qu8jwihumr81kw54",
@@ -342,7 +509,8 @@
           "amount": 0,
           "notes": "",
           "installments": null,
-          "isRecurring": true
+          "isRecurring": true,
+          "pairId": "tpl:visa"
         },
         {
           "id": "qrx986jbmr81kw54",
@@ -351,7 +519,8 @@
           "amount": 0,
           "notes": "",
           "installments": null,
-          "isRecurring": true
+          "isRecurring": true,
+          "pairId": "tpl:mastercard"
         },
         {
           "id": "uo8vu2ubmr81kw54",
@@ -360,7 +529,18 @@
           "amount": 0,
           "notes": "",
           "installments": null,
-          "isRecurring": true
+          "isRecurring": true,
+          "pairId": "tpl:mastercard"
+        },
+        {
+          "id": "7quhpb03muun209p",
+          "name": "Claude",
+          "currency": "ARS",
+          "amount": 0,
+          "notes": "",
+          "installments": null,
+          "isRecurring": false,
+          "pairId": "yq8u05jimuun209p"
         },
         {
           "id": "z9qd12a7mr81vvbg",
@@ -368,7 +548,8 @@
           "currency": "USD",
           "amount": 20,
           "notes": "",
-          "installments": null
+          "installments": null,
+          "pairId": "yq8u05jimuun209p"
         }
       ]
     },
@@ -463,7 +644,8 @@
           "amount": 46000,
           "notes": "NORDICOSPORT 02/02; TIENDAFUEGO 02/03",
           "installments": null,
-          "isRecurring": true
+          "isRecurring": true,
+          "pairId": "tpl:visa"
         },
         {
           "id": "grk23v6jmsf820uy",
@@ -472,7 +654,8 @@
           "amount": 0,
           "notes": "",
           "installments": null,
-          "isRecurring": true
+          "isRecurring": true,
+          "pairId": "tpl:visa"
         },
         {
           "id": "e6lxd5flmsf820uy",
@@ -481,7 +664,8 @@
           "amount": 0,
           "notes": "",
           "installments": null,
-          "isRecurring": true
+          "isRecurring": true,
+          "pairId": "tpl:mastercard"
         },
         {
           "id": "izkht9pomsf820uy",
@@ -490,9 +674,11 @@
           "amount": 20,
           "notes": "Claude",
           "installments": null,
-          "isRecurring": true
+          "isRecurring": true,
+          "pairId": "tpl:mastercard"
         }
       ]
     }
-  }
+  },
+  "deleted": {}
 }
