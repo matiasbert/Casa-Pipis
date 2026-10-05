@@ -6,6 +6,8 @@ const GH_LAST_SYNC_KEY = 'casapi_last_sync';
 const GH_DIRTY_KEY     = 'casapi_dirty';
 const GH_DELETED_KEY   = 'casapi_deleted';
 const BACKUP_KEY       = 'casapi_months_backup';
+const BACKUPS_KEY      = 'casapi_backups';        // ring of the last local snapshots
+const BACKUP_MAX       = 6;
 const REPAIR_KEY       = 'casapi_repair_v16';
 const DARK_MODE_KEY    = 'casapi_darkmode';
 const GH_OWNER         = 'matiasbert';
@@ -40,7 +42,7 @@ const unlockedKeys = new Set();  // past months the user enabled for editing in 
 // private shared database) or 'local' (framed but no database: this browser only).
 const IS_FRAMED = typeof window.claude === 'object' && window.claude !== null && typeof window.claude.use === 'function';
 let storeMode = IS_FRAMED ? 'local' : 'github';
-let dbNs = null, viewerReadOnly = false, remoteStamp = {}, firstDelivered = false;
+let dbNs = null, viewerReadOnly = false, remoteSig = {}, remoteTomb = {}, firstDelivered = false, backupInfo = null;
 let firstSnap = Promise.resolve();
 let claudeSample = null;
 
@@ -67,10 +69,35 @@ function fmtARS(n) {
 }
 function fmtUSD(n) {
   if (n === null || n === undefined || isNaN(n)) return 'USD 0';
-  return 'USD ' + Math.round(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const cents = Math.abs(n - Math.round(n)) > 0.004;   // USD 19,99 must not read as USD 20
+  return 'USD ' + n.toLocaleString('es-AR', { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });
 }
 function fmtAmount(n, currency) { return currency === 'USD' ? fmtUSD(n) : fmtARS(n); }
 function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+
+// Reads an amount typed the Argentine way: "655.520" (thousands), "655520", "1.234,56", "12,5", "$ 1.000".
+// A lone separator followed by 1-2 digits is a decimal; followed by 3 digits it is a thousands separator.
+function parseAmount(raw) {
+  let s = String(raw == null ? '' : raw).trim().replace(/[^\d.,]/g, '');
+  if (!s) return 0;
+  const dots = (s.match(/\./g) || []).length, commas = (s.match(/,/g) || []).length;
+  let dec = null;
+  if (dots && commas) dec = s.lastIndexOf('.') > s.lastIndexOf(',') ? '.' : ',';
+  else if (commas) dec = (commas === 1 && /,\d{1,2}$/.test(s)) ? ',' : null;
+  else if (dots) dec = (dots === 1 && (/\.\d{1,2}$/.test(s) || /^0\./.test(s))) ? '.' : null;
+  if (dec) {
+    const i = s.lastIndexOf(dec);
+    s = s.slice(0, i).replace(/[.,]/g, '') + '.' + s.slice(i + 1).replace(/[.,]/g, '');
+  } else s = s.replace(/[.,]/g, '');
+  const n = parseFloat(s);
+  return isFinite(n) ? Math.round(n * 100) / 100 : 0;
+}
+// Value shown inside an amount field: plain digits, decimal comma.
+function amountForInput(n) {
+  const v = parseFloat(n) || 0;
+  return v ? String(v).replace('.', ',') : '';
+}
+function slug(str) { return String(str).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
 
 function showNotif(msg) {
   const el = document.getElementById('notif');
@@ -97,13 +124,29 @@ function saveAll() {
   if (!ok) showNotif('⚠ No se pudo guardar en este dispositivo');
 }
 function markDirty() { lsSet(GH_DIRTY_KEY, '1'); }
-function backupLocal() { lsSet(BACKUP_KEY, JSON.stringify(allMonths)); }
+// Local safety copies: a ring of the last BACKUP_MAX distinct snapshots (taken before merges, imports,
+// deletions and restores), at most one every 10 minutes unless forced.
+function backupLocal(force) {
+  const data = JSON.stringify(allMonths);
+  if (data === '{}') return;
+  let list = listBackups();
+  const last = list[0];
+  if (last && last.data === data) return;
+  if (last && !force && Date.now() - last.at < 10 * 60 * 1000) return;
+  list.unshift({ at: Date.now(), data });
+  list = list.slice(0, BACKUP_MAX);
+  if (!lsSet(BACKUPS_KEY, JSON.stringify(list))) lsSet(BACKUPS_KEY, JSON.stringify(list.slice(0, 2)));
+  lsSet(BACKUP_KEY, data);
+}
+function listBackups() {
+  try { const l = JSON.parse(lsGet(BACKUPS_KEY) || '[]'); return Array.isArray(l) ? l : []; } catch(e) { return []; }
+}
 
 // Every edit goes through commit(): stamp the month, save locally, queue the upload.
 function commit(key) {
   if (viewerReadOnly) return;
   const m = allMonths[key || currentKey];
-  if (m) m.updatedAt = Date.now();
+  if (m) { m.updatedAt = Date.now(); delete m.auto; }
   saveAll(); markDirty(); schedulePush();
 }
 

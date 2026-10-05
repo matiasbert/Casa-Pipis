@@ -42,7 +42,7 @@
   <div class="header-top">
     <div>
       <div class="app-title">🏠 Casa Pipi's</div>
-      <div class="app-subtitle">Gastos de casita · v1.7</div>
+      <div class="app-subtitle">Gastos de casita · v1.8</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <span class="sync-chip" id="syncChip">☁ —</span>
@@ -158,6 +158,15 @@
     <details class="chart-details"><summary>Ver como tabla</summary><div class="chart-table-wrap"><table class="mini" id="trendTable"></table></div></details>
   </div>
 
+  <div class="card" id="yearCard" hidden>
+    <div class="card-head">
+      <div class="card-title">Resumen del año</div>
+      <select id="yearSel" class="year-sel" aria-label="Año" onchange="onYearChange()"></select>
+    </div>
+    <div class="kpis" id="yearKpis"></div>
+    <div class="chart-table-wrap"><table class="mini year-table" id="yearTable"></table></div>
+  </div>
+
   <div class="card" id="claudeCard" hidden>
     <div class="card-title">Claude</div>
     <div class="card-sub">Trabaja con los datos de esta página y usa tu cuenta de Claude.</div>
@@ -167,6 +176,12 @@
       <button class="btn btn-sm" onclick="copyDraft()">📋 Copiar</button>
       <a class="btn btn-sm btn-wa" id="draftWa" target="_blank" rel="noopener">💬 Abrir en WhatsApp</a>
     </div>
+    <div class="photo-row" id="photoRow" hidden>
+      <label class="btn" for="photoInput">📷 Leer un resumen o una factura desde una foto</label>
+      <input type="file" id="photoInput" accept="image/*" hidden onchange="readPhoto(this)">
+      <div class="card-sub" style="margin:6px 0 0">La imagen se envía a Claude con tu cuenta. Nada se carga hasta que lo confirmes.</div>
+    </div>
+    <div class="proposal" id="proposal" hidden></div>
     <div class="ask-row">
       <input type="text" id="askInput" placeholder="Preguntale algo al historial de gastos" autocomplete="off">
       <button class="btn btn-primary" id="askBtn" onclick="askClaude()">Preguntar</button>
@@ -213,6 +228,10 @@
   <div class="sync-section">
     <div class="export-title" id="syncTitle">Sincronización con GitHub</div>
     <div class="sync-status" id="syncStatus">● Sin token configurado</div>
+    <details class="chart-details backups">
+      <summary id="backupSummary">Copias de seguridad en este dispositivo</summary>
+      <ul class="backup-list" id="backupList"></ul>
+    </details>
     <div class="only-github">
       <div class="export-btns" style="margin-bottom:14px">
         <button class="btn btn-primary" onclick="syncNow({manual:true})">🔄 Sincronizar ahora</button>
@@ -241,6 +260,7 @@
         Los datos viven en la base privada de esta página y se guardan solos. No hace falta token ni sincronizar.
         Para dejar una copia en el repo de GitHub, descargá el historial y pasáselo a Claude (o subilo a <code style="background:var(--bg);padding:1px 5px;border-radius:3px;font-size:11px">data/history.json</code>).
       </div>
+      <div class="sync-help" id="backupInfo" style="margin-top:8px">Todavía no hay un respaldo automático en GitHub.</div>
       <div class="export-btns owner-only" style="margin-top:10px">
         <button class="btn btn-primary" onclick="exportHistory()">⬇ Descargar historial para el repo (.json)</button>
       </div>
@@ -252,6 +272,7 @@
 <script src="js/core.js"></script>
 <script src="js/model.js"></script>
 <script src="js/reports.js"></script>
+<script src="js/summary.js"></script>
 <script src="js/claude.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/tables.js"></script>

@@ -1,10 +1,12 @@
 // Data model: months/items, Gastos Pina pairs, carry-over of Alquiler and installments, totals.
 
+// Items created automatically get ids derived from what they are (not random), so two devices that
+// create the same month independently produce the same ids and their edits merge cleanly.
 function newItemFromTemplate(tpl) {
-  return { id: uid(), name: tpl.name, currency: tpl.currency, amount: 0, splitOverride: null, notes: '', installments: null, isRecurring: true };
+  return { id: 'tpl-' + slug(tpl.name) + '-' + tpl.currency, name: tpl.name, currency: tpl.currency, amount: 0, splitOverride: null, notes: '', installments: null, isRecurring: true, ts: 0 };
 }
 function newPinaItemFromTemplate(tpl) {
-  return { id: uid(), pairId: 'tpl:' + tpl.name.toLowerCase(), name: tpl.name, currency: tpl.currency, amount: 0, notes: '', installments: null, isRecurring: true };
+  return { id: 'tplp-' + slug(tpl.name) + '-' + tpl.currency, pairId: 'tpl:' + tpl.name.toLowerCase(), name: tpl.name, currency: tpl.currency, amount: 0, notes: '', installments: null, isRecurring: true, ts: 0 };
 }
 
 // Gastos Pina is stored as a flat list, but every concept always has exactly one ARS and one USD
@@ -36,7 +38,7 @@ function normalizePina(month) {
     const ars = list.filter(i => i.currency === 'ARS');
     const usd = list.filter(i => i.currency === 'USD');
     const n = Math.max(ars.length, usd.length);
-    for (let i = 0; i < n; i++) { const s = slot(uid()); s.ars = ars[i] || null; s.usd = usd[i] || null; }
+    for (let i = 0; i < n; i++) { const s = slot('pr-' + (ars[i] || usd[i]).id); s.ars = ars[i] || null; s.usd = usd[i] || null; }
   }
   for (const tpl of PINA_RECURRING_TEMPLATES) slot('tpl:' + tpl.name.toLowerCase());
   const ordered = [];
@@ -54,7 +56,7 @@ function normalizePina(month) {
     if (!isTpl && s.pairId !== pendingNewPinaPairId && !name.trim() && !(parseFloat(s.ars && s.ars.amount) > 0) && !(parseFloat(s.usd && s.usd.amount) > 0)) continue;
     for (const cur of ['ARS', 'USD']) {
       const k = cur === 'ARS' ? 'ars' : 'usd';
-      if (!s[k]) s[k] = { id: uid(), name, currency: cur, amount: 0, notes: '', installments: null, isRecurring: isTpl };
+      if (!s[k]) s[k] = { id: isTpl ? 'tplp-' + slug(name) + '-' + cur : 'cp-' + (base ? base.id : uid()) + '-' + cur, name, currency: cur, amount: 0, notes: '', installments: null, isRecurring: isTpl, ts: 0 };
       s[k].pairId = s.pairId;
       s[k].name = name;
       if (isTpl) s[k].isRecurring = true;
@@ -72,8 +74,11 @@ function normalizeAll() {
   }
 }
 
+// A month created by the app (not by the user) is flagged `auto` and carries no edit time: any real copy of
+// that month (on GitHub or in the database) always wins over it, so a slow or offline device can never
+// overwrite data with an empty month. The first edit (commit) clears the flag.
 function createMonthRecord(key) {
-  const m = { key, matiSplit: 75, pinaSplit: 25, locked: false, updatedAt: Date.now(),
+  const m = { key, matiSplit: 75, pinaSplit: 25, locked: false, updatedAt: 0, auto: true,
               items: RECURRING_TEMPLATES.map(newItemFromTemplate),
               pinaItems: PINA_RECURRING_TEMPLATES.map(newPinaItemFromTemplate) };
   return m;
@@ -93,7 +98,7 @@ function carryInstallments(from, into, gap) {
     }
     const dup = into.some(i => i.name === item.name && i.currency === item.currency && i.installments && i.installments.total === item.installments.total);
     if (dup) continue;
-    into.push({ ...item, id: uid(), installments: inst });
+    into.push({ ...item, id: 'car-' + slug(item.name) + '-' + item.currency + '-' + item.installments.total, ts: 0, installments: inst });
   }
 }
 
@@ -152,7 +157,7 @@ function repairLegacyCarryOver() {
   let any = false;
   for (let i = 1; i < keys.length; i++) {
     const m = allMonths[keys[i]], p = allMonths[keys[i - 1]];
-    if (m.updatedAt) continue;
+    if (m.updatedAt || m.auto) continue;
     const gap = Math.max(1, monthDiff(p.key, m.key));
     let changed = false;
     const alq = m.items.find(x => x.name === 'Alquiler');
@@ -167,6 +172,51 @@ function repairLegacyCarryOver() {
   lsSet(REPAIR_KEY, '1');
   if (any) { saveAll(); markDirty(); }
   return any;
+}
+
+// ---------- merging two copies of the same month ----------
+function canon(v) {
+  if (Array.isArray(v)) return v.map(canon);
+  if (v && typeof v === 'object') { const o = {}; for (const k of Object.keys(v).sort()) o[k] = canon(v[k]); return o; }
+  return v;
+}
+// Content signature (ignores the edit time and the auto flag): equal signature = same data.
+function monthSig(m) {
+  const byId = (a, b) => (String(a.id) < String(b.id) ? -1 : 1);
+  return JSON.stringify(canon({ k: m.key, ms: m.matiSplit, ps: m.pinaSplit, l: !!m.locked,
+    i: [...(m.items || [])].sort(byId), p: [...(m.pinaItems || [])].sort(byId), r: m.removed || {} }));
+}
+// Merges two copies of one month item by item. Month-level fields come from the copy edited last; each
+// item takes its newest version (`ts`); an item that exists on one side only is kept when it was added or
+// edited after the other side's deletion of it (`removed`). Legacy items (no `ts`) follow the newest copy.
+function mergeMonth(l, r) {
+  const lu = l.updatedAt || 0, ru = r.updatedAt || 0;
+  const win = ru > lu ? r : l, lose = win === r ? l : r;
+  const removed = { ...(lose.removed || {}) };
+  for (const [id, ts] of Object.entries(win.removed || {})) removed[id] = Math.max(removed[id] || 0, ts);
+  const mergeList = (wl, ll) => {
+    const out = [], seen = new Set();
+    const lmap = new Map((ll || []).map(i => [i.id, i]));
+    for (const it of wl || []) {
+      seen.add(it.id);
+      const o = lmap.get(it.id);
+      if (!o && (lose.removed || {})[it.id] >= (it.ts || 0) && (it.ts || 0) > 0) continue;   // the other side deleted it after its last edit
+      out.push(o && (o.ts || 0) > (it.ts || 0) ? o : it);
+    }
+    for (const it of ll || []) {
+      if (seen.has(it.id)) continue;
+      const ts = it.ts || 0;
+      if (ts === 0) continue;
+      if ((removed[it.id] || 0) >= ts) continue;
+      out.push(it);
+    }
+    return out;
+  };
+  const merged = { ...win, items: mergeList(win.items, lose.items), pinaItems: mergeList(win.pinaItems, lose.pinaItems),
+                   updatedAt: Math.max(lu, ru) };
+  if (Object.keys(removed).length) merged.removed = removed; else delete merged.removed;
+  delete merged.auto;
+  return merged;
 }
 
 function isReadonly() {

@@ -186,18 +186,22 @@ function buildImageSnapshot() {
     </tr>`;
   }
   let pinaRowsHtml = '';
-  for (const item of (month.pinaItems || [])) {
-    const amt = parseFloat(item.amount) || 0;
-    if (!amt) continue;
-    const cuota = item.installments ? ` <small style="background:#fef3c7;color:#92400e;border-radius:3px;padding:1px 4px;font-size:10px">c.${item.installments.current}/${item.installments.total}</small>` : '';
-    const notesHtml = item.notes ? `<div style="font-size:11px;color:#6b7280;font-style:italic;margin-top:1px">${escHtml(item.notes)}</div>` : '';
-    const badge = item.currency === 'USD'
-      ? 'background:#dcfce7;color:#166534;border-radius:3px;padding:1px 5px;font-size:11px;font-weight:700'
-      : 'background:#dbeafe;color:#1e40af;border-radius:3px;padding:1px 5px;font-size:11px;font-weight:700';
+  const snapBadge = (cur) => cur === 'USD'
+    ? 'background:#dcfce7;color:#166534;border-radius:3px;padding:1px 5px;font-size:11px;font-weight:700'
+    : 'background:#dbeafe;color:#1e40af;border-radius:3px;padding:1px 5px;font-size:11px;font-weight:700';
+  const snapCell = (it, fmt) => {
+    const amt = parseFloat(it.amount) || 0;
+    if (!amt) return '<span style="color:#9ca3af">—</span>';
+    const cuota = it.installments ? ` <small style="background:#fef3c7;color:#92400e;border-radius:3px;padding:1px 4px;font-size:10px">c.${it.installments.current}/${it.installments.total}</small>` : '';
+    const notesHtml = it.notes ? `<div style="font-size:11px;color:#6b7280;font-style:italic;margin-top:1px">${escHtml(it.notes)}</div>` : '';
+    return `<span style="${snapBadge(it.currency)}">${it.currency}</span> <b style="font-variant-numeric:tabular-nums">${fmt(amt)}</b>${cuota}${notesHtml}`;
+  };
+  for (const p of pinaPairs(month)) {
+    if (!(parseFloat(p.ars.amount) > 0) && !(parseFloat(p.usd.amount) > 0)) continue;
     pinaRowsHtml += `<tr>
-      <td>${escHtml(item.name)}${cuota}${notesHtml}</td>
-      <td><span style="${badge}">${item.currency}</span></td>
-      <td style="font-weight:600;font-variant-numeric:tabular-nums" colspan="4">${fmtAmount(amt, item.currency)}</td>
+      <td>${escHtml(p.ars.name)}</td>
+      <td colspan="3">${snapCell(p.ars, fmtARS)}</td>
+      <td colspan="2">${snapCell(p.usd, fmtUSD)}</td>
     </tr>`;
   }
   const combinedARS = t.pinaARS + t.pinaPersonalARS;
@@ -217,7 +221,7 @@ function buildImageSnapshot() {
     ${pinaRowsHtml ? `
     <div style="font-weight:700;font-size:13px;color:#374151;padding:10px 10px 4px">Gastos Pina</div>
     <table class="snap-table">
-      <thead><tr><th>Concepto</th><th>Moneda</th><th colspan="4">Monto</th></tr></thead>
+      <thead><tr><th>Concepto</th><th colspan="3">Pesos</th><th colspan="2">Dólares</th></tr></thead>
       <tbody>${pinaRowsHtml}</tbody>
     </table>` : ''}
     <div class="snap-totals">
@@ -325,7 +329,7 @@ async function _applyImportedMonths(imported, replaceAll) {
   const newKeys      = importedKeys.filter(k => !allMonths[k]);
   const conflictKeys = importedKeys.filter(k =>  allMonths[k]);
   if (!importedKeys.length) { showNotif('ℹ El archivo no tiene datos'); return; }
-  backupLocal();
+  backupLocal(true);
   const take = (k) => { allMonths[k] = imported[k]; allMonths[k].updatedAt = Date.now(); delete deletedMonths[k]; };
   if (conflictKeys.length && !replaceAll) {
     let msg = `Se encontraron ${importedKeys.length} ${importedKeys.length===1?'mes':'meses'}.\n`;

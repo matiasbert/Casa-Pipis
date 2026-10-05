@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Runs every suite in a real Chromium. Usage: cd tests && npm install && npm test
 const L = require('./lib');
-const suites = ['unit', 'github', 'artifact'].filter(n => require('fs').existsSync(require('path').join(__dirname, n + '.test.js')));
+const suites = ['unit', 'github', 'artifact', 'features'].filter(n => require('fs').existsSync(require('path').join(__dirname, n + '.test.js')));
 
 (async () => {
   const { server, url } = await L.serve({ '/__artifact.html': { type: 'text/html', body: L.buildArtifactPage() } });

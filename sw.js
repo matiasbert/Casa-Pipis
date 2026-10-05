@@ -2,7 +2,7 @@
 // Network first (so a new version shows up right away), cache as fallback.
 // GitHub API calls and data/history.json are never cached: they must always be fresh.
 const CACHE = 'casapipis-v1.8';
-const SHELL = ['./', 'index.html', 'css/app.css', 'js/core.js', 'js/model.js', 'js/reports.js', 'js/claude.js', 'js/sync.js',
+const SHELL = ['./', 'index.html', 'css/app.css', 'js/core.js', 'js/model.js', 'js/reports.js', 'js/summary.js', 'js/claude.js', 'js/sync.js',
                'js/tables.js', 'js/app.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {

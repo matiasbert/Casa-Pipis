@@ -45,6 +45,7 @@ function renderAll() {
   renderTotals(month);
   renderPrintHeader(month);
   renderTrend();
+  renderYearSummary();
   const wa = document.getElementById('waLink');
   if (wa) wa.href = 'https://wa.me/?text=' + encodeURIComponent(buildTextSummary());
 }
@@ -101,8 +102,9 @@ function buildViewRow(item, month, readonly) {
     <td class="share" data-label="Mati">${fmtAmount(mati, item.currency)}</td>
     <td class="share" data-label="Pina">${fmtAmount(pina, item.currency)}</td>
     <td><div class="actions-cell">${!readonly
-      ? `<button class="btn btn-sm" onclick="startEdit('${item.id}')">✏️ Editar</button>
-         <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')">✕</button>`
+      ? `<button class="btn btn-sm" onclick="startEdit('${item.id}')">✏️ Editar</button>` +
+        (item.isRecurring ? `<span class="fixed-tag" title="Concepto fijo: no se puede eliminar">🔒 fijo</span>`
+                          : `<button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')">✕</button>`)
       : '—'}</div></td>`;
   return tr;
 }
@@ -118,14 +120,14 @@ function buildEditRow(item, month) {
   const tr = document.createElement('tr');
   tr.className = 'edit-row';
   tr.innerHTML = `
-    <td><input type="text" id="eName" value="${escAttr(item.name)}" placeholder="Concepto"></td>
+    <td><input type="text" id="eName" value="${escAttr(item.name)}" placeholder="Concepto" ${item.isRecurring ? "readonly" : ""}></td>
     <td data-label="Moneda">
-      <select id="eCurrency">
+      <select id="eCurrency" onchange="previewAmount('eAmount','eAmountHint')">
         <option value="ARS"${item.currency==='ARS'?' selected':''}>ARS</option>
         <option value="USD"${item.currency==='USD'?' selected':''}>USD</option>
       </select>
     </td>
-    <td data-label="Monto"><input type="number" inputmode="decimal" id="eAmount" value="${item.amount||""}" placeholder="0" min="0" step="0.01"></td>
+    <td data-label="Monto"><input type="text" inputmode="decimal" id="eAmount" value="${amountForInput(item.amount)}" placeholder="0" autocomplete="off" oninput="previewAmount('eAmount','eAmountHint')"><div class="amount-hint" id="eAmountHint"></div></td>
     <td colspan="3" data-label="Split">
       <div class="split-edit-row">
         <div class="split-edit-inputs">
@@ -158,7 +160,7 @@ function buildEditRow(item, month) {
     <td>
       <div class="actions-cell">
         <button class="btn btn-sm btn-primary" onclick="saveEdit('${item.id}')">✓ Guardar</button>
-        <button class="btn btn-sm" onclick="cancelEdit()">✕</button>
+        <button class="btn btn-sm" data-act="cancel" onclick="cancelEdit()">✕</button>
       </div>
     </td>`;
   return tr;
@@ -241,13 +243,13 @@ function buildPinaPairedEditRow(arsItem, usdItem) {
     <td data-label="Concepto"><input type="text" id="pName" value="${escAttr(arsItem.name || "")}" placeholder="Concepto" ${fixed ? "readonly" : ""}></td>
     <td data-label="Pesos">
       <span class="badge-ars" style="display:inline-block;margin-bottom:5px">ARS</span>
-      <input type="number" inputmode="decimal" id="pAmountARS" value="${arsItem.amount || ""}" placeholder="0" min="0" step="0.01">
+      <input type="text" inputmode="decimal" id="pAmountARS" value="${amountForInput(arsItem.amount)}" placeholder="0" autocomplete="off" oninput="previewAmount('pAmountARS','pAmountARSHint')"><div class="amount-hint" id="pAmountARSHint"></div>
       <input type="text" id="pNotesARS" value="${escAttr(arsItem.notes || "")}" placeholder="Notas" style="margin-top:4px">
       ${pinaInstBlock("ARS", arsItem)}
     </td>
     <td data-label="Dólares">
       <span class="badge-usd" style="display:inline-block;margin-bottom:5px">USD</span>
-      <input type="number" inputmode="decimal" id="pAmountUSD" value="${usdItem.amount || ""}" placeholder="0" min="0" step="0.01">
+      <input type="text" inputmode="decimal" id="pAmountUSD" value="${amountForInput(usdItem.amount)}" placeholder="0" autocomplete="off" oninput="previewAmount('pAmountUSD','pAmountUSDHint')"><div class="amount-hint" id="pAmountUSDHint"></div>
       <input type="text" id="pNotesUSD" value="${escAttr(usdItem.notes || "")}" placeholder="Notas" style="margin-top:4px">
       ${pinaInstBlock("USD", usdItem)}
     </td>
@@ -303,8 +305,9 @@ function savePinaPair(pairId) {
   if (ars.isRecurring) name = ars.name;
   if (!name) name = 'Sin nombre';
   ars.name = name; usd.name = name;
-  ars.amount = parseFloat(document.getElementById('pAmountARS')?.value) || 0;
-  usd.amount = parseFloat(document.getElementById('pAmountUSD')?.value) || 0;
+  ars.amount = parseAmount(document.getElementById('pAmountARS')?.value);
+  usd.amount = parseAmount(document.getElementById('pAmountUSD')?.value);
+  ars.ts = usd.ts = Date.now();
   ars.notes = (document.getElementById('pNotesARS')?.value || '').trim();
   usd.notes = (document.getElementById('pNotesUSD')?.value || '').trim();
   ars.installments = readPinaInst('ARS');
@@ -324,11 +327,14 @@ function deletePinaPair(pairId) {
   month.pinaItems = month.pinaItems.filter(i => i.pairId !== pairId);
   if (editingPinaPairId === pairId) editingPinaPairId = null;
   const key = currentKey;
+  month.removed = month.removed || {};
+  for (const it of removed) month.removed[it.id] = Date.now();
   commit(key);
   renderAll();
   showToast(`"${removed[0].name || "Gasto"}" eliminado`, 'Deshacer', () => {
     const m = allMonths[key];
     if (!m) return;
+    for (const it of removed) { if (m.removed) delete m.removed[it.id]; it.ts = Date.now(); }
     m.pinaItems.splice(Math.min(idx, m.pinaItems.length), 0, ...removed);
     commit(key);
     if (currentKey === key) renderAll();
@@ -352,6 +358,18 @@ function addNewPinaItem() {
     const nameInput = document.getElementById('pName');
     if (nameInput) nameInput.focus();
   }, 100);
+}
+
+// Live "= $655.520" under an amount field, so a misread separator is visible before saving.
+function previewAmount(inputId, hintId) {
+  const el = document.getElementById(inputId), hint = document.getElementById(hintId);
+  if (!el || !hint) return;
+  if (!el.value.trim()) { hint.textContent = ''; return; }
+  const n = parseAmount(el.value);
+  const sel = document.getElementById('eCurrency');
+  const usd = /USD$/.test(inputId) || (inputId === 'eAmount' && sel && sel.value === 'USD');
+  const frac = Math.abs(n - Math.round(n)) > 0.004;
+  hint.textContent = '= ' + (usd ? 'USD ' : '$') + n.toLocaleString('es-AR', { minimumFractionDigits: frac ? 2 : 0, maximumFractionDigits: 2 });
 }
 
 function toggleInstallUI() {
@@ -440,9 +458,9 @@ function cancelEdit() { discardPending(); editingItemId = null; renderAll(); }
 function saveEdit(id) {
   const month = getMonth();
   if (!month) return;
-  const name     = (document.getElementById('eName')?.value || '').trim();
+  let name       = (document.getElementById('eName')?.value || '').trim();
   const currency = document.getElementById('eCurrency')?.value || 'ARS';
-  const amount   = parseFloat(document.getElementById('eAmount')?.value) || 0;
+  const amount   = parseAmount(document.getElementById('eAmount')?.value);
   const m        = parseFloat(document.getElementById('eMati')?.value) || 0;
   const p        = parseFloat(document.getElementById('ePina')?.value) || 0;
   const notes    = (document.getElementById('eNotes')?.value || '').trim();
@@ -459,6 +477,8 @@ function saveEdit(id) {
 
   const item = month.items.find(i => i.id === id);
   if (item) {
+    if (item.isRecurring) name = item.name;
+    item.ts = Date.now();
     item.name = name || item.name || 'Sin nombre';
     item.currency = currency;
     item.amount = amount;
@@ -476,15 +496,19 @@ function deleteItem(id) {
   const month = getMonth();
   if (!month) return;
   const idx = month.items.findIndex(i => i.id === id);
-  if (idx < 0) return;
+  if (idx < 0 || month.items[idx].isRecurring) return;
   const removed = month.items.splice(idx, 1)[0];
   if (editingItemId === id) editingItemId = null;
   const key = currentKey;
+  month.removed = month.removed || {};
+  month.removed[removed.id] = Date.now();
   commit(key);
   renderAll();
   showToast(`"${removed.name || "Gasto"}" eliminado`, 'Deshacer', () => {
     const mm = allMonths[key];
     if (!mm) return;
+    if (mm.removed) delete mm.removed[removed.id];
+    removed.ts = Date.now();
     mm.items.splice(Math.min(idx, mm.items.length), 0, removed);
     commit(key);
     if (currentKey === key) renderAll();
@@ -615,7 +639,7 @@ function goToMonth(key) { resetEditing(); currentKey = key; closeModal(); render
 async function deleteMonth(key) {
   if (!(await askConfirm('Esta acción no se puede deshacer.', 'Borrar', 'Cancelar', `¿Borrar ${keyToLabel(key)}?`))) return;
   resetEditing();
-  backupLocal();
+  backupLocal(true);
   delete allMonths[key];
   deletedMonths[key] = Date.now();
   saveAll(); markDirty(); schedulePush();

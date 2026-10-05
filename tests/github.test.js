@@ -27,18 +27,19 @@ module.exports = async function run(browser, base) {
   assert.strictEqual(gh.puts.length, 0); pass('sin token no sube nada');
 
   section('GitHub 2) Editar Visa: pesos y dólares en un formulario');
-  await page.locator('#pinaExpenseTbody tr').first().locator('button:has-text("Editar")').click();
+  await page.locator('#pinaExpenseTbody tr').first().locator('button:has-text("Editar")').click(); await L.sleep(160);
   assert.ok(await page.locator('#pAmountARS').isVisible() && await page.locator('#pAmountUSD').isVisible()); pass('formulario con pesos y dólares');
   assert.ok(await page.locator('#pName').evaluate(e => e.readOnly)); pass('nombre fijo de solo lectura');
   await page.fill('#pAmountARS', '15000'); await page.fill('#pAmountUSD', '25');
   await page.locator('#pInstARS').check(); await page.fill('#pInstCurARS', '2'); await page.fill('#pInstTotARS', '6');
   await page.press('#pAmountUSD', 'Enter');
+  await page.waitForFunction(() => document.querySelector('#pinaExpenseTbody tr').innerText.includes('c.2/6'));
   const visa = await page.locator('#pinaExpenseTbody tr').first().innerText();
-  assert.ok(visa.includes('15.000') && visa.includes('USD 25') && visa.includes('c.2/6')); pass('Enter guarda: ' + visa.replace(/\s+/g, ' '));
+  assert.ok(visa.includes('15.000') && visa.includes('USD 25') && visa.includes('c.2/6'), 'fila Visa: ' + JSON.stringify(visa)); pass('Enter guarda: ' + visa.replace(/\s+/g, ' '));
   assert.ok((await page.locator('#pinaPersonalDetail').innerText()).includes('USD 25')); pass('total de Pina actualizado');
 
   section('GitHub 3) Agregar, cancelar, borrar y deshacer');
-  await page.click('#addPinaRowBtnWrap button');
+  await page.click('#addPinaRowBtnWrap button'); await L.sleep(250);
   await page.fill('#pName', 'Terapia'); await page.fill('#pAmountARS', '40000'); await page.fill('#pAmountUSD', '10');
   await page.click('#pinaExpenseTbody button:has-text("Guardar")');
   assert.strictEqual(await page.locator('#pinaExpenseTbody tr').count(), 3); pass('3 filas');
@@ -72,7 +73,7 @@ module.exports = async function run(browser, base) {
   assert.ok(last.months['2026-09'] && last.months['2026-10']); pass('GitHub tiene septiembre y octubre');
   assert.ok(last.months['2026-10'].pinaItems.find(i => i.name === 'Terapia')); pass('incluye el gasto nuevo de Pina');
   gh.failNextPut = 1; const before = gh.puts.length;
-  await page.locator('#expenseTbody tr').first().locator('button:has-text("Editar")').click();
+  await page.locator('#expenseTbody tr').first().locator('button:has-text("Editar")').click(); await L.sleep(160);
   await page.fill('#eAmount', '700000'); await page.press('#eAmount', 'Enter');
   await L.sleep(5000);
   assert.ok(gh.puts.length > before); pass('tras un 409 reintenta y guarda');

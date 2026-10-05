@@ -346,6 +346,7 @@ body.dark .sync-chip.busy { color:#fbbf24; background:#451a03; border-color:#924
 a.btn { text-decoration:none; }
 .sync-help { margin-top:10px; font-size:12px; color:var(--text-muted); line-height:1.6; }
 .zero-amt { color:var(--text-muted); font-weight:400; }
+.amount-hint { font-size:11px; color:var(--text-muted); margin-top:3px; min-height:14px; font-family:var(--font-num); }
 .fixed-tag { font-size:11px; color:var(--text-muted); white-space:nowrap; padding:0 4px; }
 .month-nav-main { display:flex; align-items:center; gap:8px; flex:1 1 auto; min-width:0; }
 .month-nav-actions { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
@@ -389,6 +390,34 @@ table.mini th:first-child, table.mini td:first-child { text-align:left; font-fam
 .ai-out { white-space:pre-wrap; font-size:14px; line-height:1.6; margin-top:12px; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:8px; }
 .ai-out:empty { display:none; }
 textarea.ai-draft { width:100%; margin-top:10px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font:inherit; font-size:14px; line-height:1.5; resize:vertical; }
+
+/* YEAR SUMMARY, PHOTO PROPOSAL, BACKUPS */
+.card-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px; }
+.card-head .card-title { margin-bottom:0; }
+.year-sel { padding:4px 8px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font:inherit; font-size:13px; }
+.kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:6px 0 14px; }
+.kpi { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; min-width:0; }
+.kpi-label { font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.4px; }
+.kpi-value { font-family:var(--font-num); font-size:17px; font-weight:600; margin-top:2px; overflow-wrap:anywhere; }
+.kpi-sub { font-size:12px; color:var(--text-muted); margin-top:1px; }
+table.year-table td, table.year-table th { white-space:nowrap; }
+table.year-table .group-row td { text-align:left; font-family:var(--font-ui); font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-muted); background:var(--row-alt); padding-top:8px; }
+.spark-cell { padding:2px 10px !important; }
+.spark { display:block; margin-left:auto; }
+.photo-row { margin-top:12px; }
+.proposal { margin-top:12px; border:1px solid var(--accent); border-radius:8px; padding:12px; background:var(--bg); }
+.proposal h4 { font-size:13px; margin-bottom:8px; }
+.prop-row { display:grid; grid-template-columns:auto minmax(120px,1.2fr) auto minmax(110px,1fr) minmax(120px,1.4fr); gap:8px; align-items:center; padding:6px 0; border-top:1px solid var(--border); }
+.prop-row:first-of-type { border-top:none; }
+.prop-row select, .prop-row input[type="text"] { min-width:0; width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:5px; background:var(--surface); color:var(--text); font:inherit; font-size:13px; }
+.prop-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.backup-list { list-style:none; margin-top:8px; display:flex; flex-direction:column; gap:6px; }
+.backup-list li { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:12px; color:var(--text-muted); }
+@media (max-width:640px) {
+  .prop-row { grid-template-columns:auto 1fr; grid-template-areas:"chk dest" "cur amt" "note note"; }
+  .prop-row > * { min-width:0; }
+  .prop-chk { grid-area:chk; } .prop-dest { grid-area:dest; } .prop-cur { grid-area:cur; justify-self:start; } .prop-amt { grid-area:amt; } .prop-note { grid-area:note; }
+}
 
 /* TOAST (with undo) */
 .toast {

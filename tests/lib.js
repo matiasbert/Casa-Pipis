@@ -54,6 +54,7 @@ async function mockGithub(ctx, state) {
     const rq = route.request();
     const h = { 'access-control-allow-origin': '*' };
     if (rq.method() === 'GET') {
+      if (state.getDelayFirst) { const d = state.getDelayFirst; state.getDelayFirst = 0; await new Promise(r => setTimeout(r, d)); }
       if (state.getDelayMs) await new Promise(r => setTimeout(r, state.getDelayMs));
       return route.fulfill({ status: 200, contentType: 'application/json', headers: h,
         body: JSON.stringify({ sha: state.sha, content: Buffer.from(state.content).toString('base64') }) });
@@ -80,7 +81,7 @@ const claudeMock = `(() => {
   const listeners = []; let prev = {};
   const mk = (id, data) => ({ id, exists: true, data: () => freeze(clone(data)), metadata: { fromCache: false, hasPendingWrites: false } });
   const snapshot = (fromCache) => {
-    const ids = Object.keys(store).sort(); const changes = [];
+    const ids = (fromCache && window.__cacheEmpty) ? [] : Object.keys(store).sort(); const changes = [];
     for (const id of ids) { if (!(id in prev)) changes.push({ type: 'added', doc: mk(id, store[id]) }); else if (JSON.stringify(prev[id]) !== JSON.stringify(store[id])) changes.push({ type: 'modified', doc: mk(id, store[id]) }); }
     for (const id of Object.keys(prev)) if (!(id in store)) changes.push({ type: 'removed', doc: mk(id, prev[id]) });
     prev = clone(store);
@@ -124,6 +125,20 @@ function buildArtifactPage() {
   return '<!doctype html><html><head><meta charset="utf8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui;background:#fafaf9}[hidden]{display:none!important}</style></head><body>' + art + '</body></html>';
 }
 
+async function openArtifact(browser, base, { seed, readOnly, viewport, extra } = {}) {
+  const ctx = await browser.newContext({ viewport: viewport || { width: 1280, height: 900 } });
+  await ctx.addInitScript(`window.__SEED = ${JSON.stringify(seed || null)}; window.__readOnly = ${!!readOnly};${extra || ''}`);
+  await ctx.addInitScript(fakeDate());
+  await ctx.addInitScript(claudeMock);
+  const libs = await stubExternal(ctx);
+  let api = 0; await ctx.route('https://api.github.com/**', r => { api++; r.abort(); });
+  const page = await ctx.newPage(); const errors = [];
+  page.on('pageerror', e => errors.push('pageerror: ' + e.message));
+  page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push('console: ' + m.text()); });
+  await page.goto(base + '/__artifact.html');
+  return { ctx, page, errors, api: () => api, libs };
+}
+
 function libPath(name, file) { try { return require.resolve(`${name}/${file}`); } catch (e) { return null; } }
 function libSource(name, file) { const p = libPath(name, file); return p ? fs.readFileSync(p, 'utf8') : null; }
 
@@ -150,4 +165,4 @@ async function goTo(page, label) {
   throw new Error('no pude navegar a ' + label);
 }
 
-module.exports = { root, launch, serve, FIXTURE, histUpTo, clone, fakeDate, mockGithub, claudeMock, buildArtifactPage, stubExternal, sleep, pass, section, goTo };
+module.exports = { openArtifact, root, launch, serve, FIXTURE, histUpTo, clone, fakeDate, mockGithub, claudeMock, buildArtifactPage, stubExternal, sleep, pass, section, goTo };

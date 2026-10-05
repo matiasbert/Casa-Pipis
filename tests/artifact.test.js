@@ -3,19 +3,7 @@ const assert = require('assert');
 const L = require('./lib');
 const { pass, section } = L;
 
-async function newPage(browser, base, { seed, readOnly, viewport, extra } = {}) {
-  const ctx = await browser.newContext({ viewport: viewport || { width: 1280, height: 900 } });
-  await ctx.addInitScript(`window.__SEED = ${JSON.stringify(seed || null)}; window.__readOnly = ${!!readOnly};${extra || ''}`);
-  await ctx.addInitScript(L.fakeDate());
-  await ctx.addInitScript(L.claudeMock);
-  const libs = await L.stubExternal(ctx);
-  let api = 0; await ctx.route('https://api.github.com/**', r => { api++; r.abort(); });
-  const page = await ctx.newPage(); const errors = [];
-  page.on('pageerror', e => errors.push('pageerror: ' + e.message));
-  page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push('console: ' + m.text()); });
-  await page.goto(base + '/__artifact.html');
-  return { ctx, page, errors, api: () => api, libs };
-}
+const newPage = L.openArtifact;
 const waitMonth = (page, label = 'Octubre 2026') => page.waitForFunction((l) => document.getElementById('monthLabel').textContent === l, label, { timeout: 15000 });
 
 module.exports = async function run(browser, base) {
@@ -32,13 +20,13 @@ module.exports = async function run(browser, base) {
   assert.strictEqual(await page.evaluate(() => window.__writes.length), 0); pass('abrir no escribe nada');
 
   section('claude.ai B) Editar guarda en la base; variación contra el mes anterior');
-  await page.locator('#expenseTbody tr').nth(1).locator('button:has-text("Editar")').click();
+  await page.locator('#expenseTbody tr').nth(1).locator('button:has-text("Editar")').click(); await L.sleep(160);
   await page.fill('#eAmount', '110000'); await page.press('#eAmount', 'Enter');
   await page.waitForFunction(() => window.__store['2026-10'].items.find(i => i.name === 'Expensas').amount === 110000, null, { timeout: 8000 });
   pass('Expensas $110.000 en la base');
   assert.ok((await page.evaluate(() => window.__store['2026-10'].updatedAt)) > 0); pass('con marca de edición');
   await page.click('#prevMonthBtn'); await page.click('#unlockBtn');
-  await page.locator('#expenseTbody tr').nth(1).locator('button:has-text("Editar")').click();
+  await page.locator('#expenseTbody tr').nth(1).locator('button:has-text("Editar")').click(); await L.sleep(160);
   await page.fill('#eAmount', '88000'); await page.press('#eAmount', 'Enter');
   await page.waitForFunction(() => window.__store['2026-09'].items.find(i => i.name === 'Expensas').amount === 88000);
   await page.click('#nextMonthBtn');
@@ -46,7 +34,7 @@ module.exports = async function run(browser, base) {
   assert.ok(delta.includes('▲') && delta.includes('25%')); pass('variación: ' + delta);
 
   section('claude.ai C) Pina con ambas monedas; borrar mes con diálogo propio');
-  await page.click('#addPinaRowBtnWrap button'); await page.fill('#pName', 'Terapia'); await page.fill('#pAmountARS', '40000'); await page.fill('#pAmountUSD', '10');
+  await page.click('#addPinaRowBtnWrap button'); await L.sleep(250); await page.fill('#pName', 'Terapia'); await page.fill('#pAmountARS', '40000'); await page.fill('#pAmountUSD', '10');
   await page.click('#pinaExpenseTbody button:has-text("Guardar")');
   await page.waitForFunction(() => window.__store['2026-10'].pinaItems.some(i => i.name === 'Terapia' && i.currency === 'USD' && i.amount === 10));
   pass('gasto de Pina guardado');

@@ -16,10 +16,22 @@ async function initArtifactStore() {
     let first = true;
     const done = () => { if (first) { first = false; resolve(); } };
     try {
-      db.collection('months').onSnapshot((snap) => { onMonthsSnapshot(snap); done(); },
+      db.collection('months').onSnapshot((snap) => { if (onMonthsSnapshot(snap)) done(); },
                                           (err) => { renderSyncStatus('✗ No se pudo leer la base de datos', 'error'); done(); });
     } catch(e) { done(); }
   });
+  try {   // written by the monthly backup routine
+    db.doc('meta/backup').onSnapshot((s) => { backupInfo = s && s.exists ? s.data() : null; renderBackupInfo(); }, () => {});
+  } catch(e) {}
+}
+
+function renderBackupInfo() {
+  const el = document.getElementById('backupInfo');
+  if (!el) return;
+  if (backupInfo && backupInfo.at) {
+    const d = new Date(backupInfo.at);
+    el.textContent = 'Último respaldo automático en GitHub: ' + d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  } else el.textContent = 'Todavía no hay un respaldo automático en GitHub.';
 }
 
 function enterViewerMode() {
@@ -29,40 +41,50 @@ function enterViewerMode() {
   renderSyncStatus();
 }
 
+// Returns true when the snapshot is confirmed by the server (a cached first snapshot may be incomplete, so it
+// is merged but never triggers an upload nor ends the startup wait).
 function onMonthsSnapshot(snap) {
-  const rm = {};
-  remoteStamp = {};
+  const cached = !!(snap.metadata && snap.metadata.fromCache) && !firstDelivered;
+  const rm = {}, rdel = {};
+  remoteSig = {}; remoteTomb = {};
   for (const d of snap.docs) {
     const data = d.data();
-    if (!data || !Array.isArray(data.items)) continue;
+    if (!data) continue;
     const copy = JSON.parse(JSON.stringify(data));
+    if (copy.deleted) { rdel[d.id] = copy.deleted; remoteTomb[d.id] = copy.deleted; continue; }
+    if (!Array.isArray(copy.items)) continue;
     rm[d.id] = copy;
-    remoteStamp[d.id] = copy.updatedAt || 0;
+    remoteSig[d.id] = monthSig(copy);
   }
   if (firstDelivered) {
     for (const ch of snap.docChanges()) {
-      if (ch.type === 'removed' && allMonths[ch.doc.id] && !(ch.doc.id in rm)) delete allMonths[ch.doc.id];
+      if (ch.type === 'removed' && allMonths[ch.doc.id] && !(ch.doc.id in rm) && !(ch.doc.id in rdel)) delete allMonths[ch.doc.id];
     }
   }
-  const r = mergeRemote({ months: rm, deleted: {} });
+  const r = mergeRemote({ months: rm, deleted: rdel });
   if (r.changed) { backupLocal(); afterMerge(); }
-  firstDelivered = true;
-  if (r.localAhead && !viewerReadOnly) { markDirty(); setTimeout(schedulePush, 0); }
+  if (!cached) {
+    firstDelivered = true;
+    if (r.localAhead && !viewerReadOnly) { markDirty(); setTimeout(schedulePush, 0); }
+  }
   renderSyncStatus();
+  return !cached;
 }
 
+// Uploads every month whose content differs from what the database has. A deleted month is stored as a
+// small marker (`deleted`) instead of removing the document, so another device cannot bring it back.
 async function pushArtifact() {
   if (!dbNs || viewerReadOnly) return;
   for (const [k, m] of Object.entries(allMonths)) {
-    const stamp = m.updatedAt || 0;
-    if (k in remoteStamp && stamp <= remoteStamp[k]) continue;
+    const sig = monthSig(m);
+    if (k in remoteSig && remoteSig[k] === sig) continue;
     await dbNs.doc('months/' + k).set(JSON.parse(JSON.stringify(m)));
-    remoteStamp[k] = stamp;
+    remoteSig[k] = sig; delete remoteTomb[k];
   }
-  for (const k of Object.keys(remoteStamp)) {
-    if (allMonths[k]) continue;
-    await dbNs.doc('months/' + k).delete();
-    delete remoteStamp[k];
+  for (const [k, ts] of Object.entries(deletedMonths)) {
+    if (allMonths[k] || (remoteTomb[k] || 0) >= ts) continue;
+    await dbNs.doc('months/' + k).set({ key: k, deleted: ts, items: [], pinaItems: [], updatedAt: ts });
+    remoteTomb[k] = ts; delete remoteSig[k];
   }
 }
 
@@ -159,6 +181,39 @@ function renderSyncStatus(msg, cls) {
   if (chip) { chip.textContent = chipTxt; chip.className = 'sync-chip ' + chipCls; chip.title = text; }
   const input = document.getElementById('ghTokenInput');
   if (input && token && !input.value) input.value = token;
+  renderBackups();
+}
+
+// ---------- Local backups ----------
+function renderBackups() {
+  const ul = document.getElementById('backupList'), sum = document.getElementById('backupSummary');
+  if (!ul) return;
+  const list = listBackups();
+  if (sum) sum.textContent = `Copias de seguridad en este dispositivo (${list.length})`;
+  if (!list.length) { ul.innerHTML = '<li>Todavía no hay copias. Se guardan solas antes de unir cambios, importar o borrar un mes.</li>'; return; }
+  ul.innerHTML = list.map((b, i) => {
+    let n = 0; try { n = Object.keys(JSON.parse(b.data)).length; } catch(e) {}
+    const d = new Date(b.at);
+    return `<li><span>${d.toLocaleDateString('es-AR')} ${d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} · ${n} ${n === 1 ? 'mes' : 'meses'}</span>` +
+           (viewerReadOnly ? '' : `<button class="btn btn-sm" onclick="restoreBackup(${i})">Restaurar</button>`) + `</li>`;
+  }).join('');
+}
+
+// Restoring merges the copy over the current data (months only present now are kept) and stamps the restored
+// months as just edited, so they also win on the next sync.
+async function restoreBackup(i) {
+  const b = listBackups()[i];
+  if (!b) return;
+  if (!(await askConfirm('Los meses de esa copia reemplazan a los actuales. Antes se guarda una copia de lo que hay ahora.', 'Restaurar', 'Cancelar', '¿Restaurar esta copia?'))) return;
+  let data; try { data = JSON.parse(b.data); } catch(e) { showNotif('⚠ La copia está dañada'); return; }
+  backupLocal(true);
+  resetEditing();
+  const now = Date.now();
+  for (const [k, m] of Object.entries(data)) { m.updatedAt = now; delete m.auto; allMonths[k] = m; delete deletedMonths[k]; }
+  normalizeAll(); saveAll(); markDirty(); schedulePush();
+  currentKey = allMonths[todayKey()] ? todayKey() : latestKey();
+  renderAll(); renderBackups();
+  showNotif('✓ Copia restaurada');
 }
 
 function toBase64(str)   { return btoa(unescape(encodeURIComponent(str))); }
@@ -191,7 +246,9 @@ async function ghFetchRemote() {
   return { payload, sha: file.sha };
 }
 
-// Per-month merge: the newest edit wins; months only on one side are kept; deletions are honored.
+// Merges the remote copy ({months, deleted}) into the local data. Months deleted on either side stay deleted
+// unless edited afterwards; a month the app created by itself (`auto`) always yields to a real copy; real
+// copies of the same month are merged item by item (see mergeMonth).
 function mergeRemote(remote) {
   const rm   = (remote && remote.months) || remote || {};
   const rdel = (remote && remote.deleted) || {};
@@ -203,9 +260,17 @@ function mergeRemote(remote) {
     const ru = r.updatedAt || 0, lu = l ? (l.updatedAt || 0) : 0;
     const del = deletedMonths[k] || 0;
     if (del && del > ru && del > lu) { if (l) { delete allMonths[k]; changed = true; } continue; }
-    if (!l) { allMonths[k] = r; changed = true; }
-    else if (ru > lu) { allMonths[k] = r; changed = true; }
-    else if (lu > ru) localAhead = true;
+    if (!l || l.auto) { allMonths[k] = r; changed = true; continue; }
+    if (r.auto) { localAhead = true; continue; }
+    if (monthSig(l) === monthSig(r)) { if (ru > lu) l.updatedAt = ru; continue; }
+    const merged = mergeMonth(l, r);
+    const sig = monthSig(merged);
+    if (sig !== monthSig(l)) { allMonths[k] = merged; changed = true; }
+    if (sig !== monthSig(r)) localAhead = true;
+  }
+  for (const [k, ts] of Object.entries(deletedMonths)) {
+    const l = allMonths[k];
+    if (l && ts > (l.updatedAt || 0)) { delete allMonths[k]; changed = true; }
   }
   for (const k of Object.keys(allMonths)) if (!(k in rm)) localAhead = true;
   for (const [k, ts] of Object.entries(deletedMonths)) if (ts > (rdel[k] || 0)) localAhead = true;
