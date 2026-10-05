@@ -1,0 +1,11 @@
+{
+  "name": "casa-pipis-tests",
+  "private": true,
+  "description": "Pruebas de navegador (Playwright) para Casa Pipi's. No afectan a la app publicada.",
+  "scripts": { "test": "node run.js" },
+  "devDependencies": {
+    "html2canvas": "1.4.1",
+    "jspdf": "2.5.1",
+    "playwright": "^1.56.0"
+  }
+}

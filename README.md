@@ -3,7 +3,7 @@
 Seguimiento mensual de los gastos de la casa (Mati y Pina). App de una sola página, sin build:
 `index.html` + `data/history.json` (el historial), publicada con GitHub Pages.
 
-**v1.7** — el mismo `index.html` funciona en GitHub Pages y como página de claude.ai; instalable en el celular, se sincroniza sola.
+**v1.8** — el mismo `index.html` funciona en GitHub Pages y como página de claude.ai; instalable en el celular, se sincroniza sola.
 
 ## Cómo funciona
 
@@ -31,20 +31,17 @@ Si el token vence, la app lo avisa en la sección de sincronización; se genera 
 
 | Archivo | Para qué |
 | --- | --- |
-| `index.html` | toda la app (HTML + CSS + JS) |
+| `index.html` | la estructura de la página |
+| `css/app.css` | estilos |
+| `js/core.js` | constantes, estado, formatos, lectura de montos, copias locales |
+| `js/model.js` | meses, gastos, pares de Gastos Pina, arrastre de cuotas, unión de cambios |
+| `js/reports.js` | gráfico de evolución, imagen/PDF/JPG, CSV/JSON, importar |
+| `js/summary.js` | resumen del año |
+| `js/claude.js` | funciones de Claude (mensaje, preguntas, leer una foto) |
+| `js/sync.js` | GitHub, base de claude.ai, copias de seguridad |
+| `js/tables.js` | pantalla: tablas, edición, navegación |
+| `js/app.js` | tema y arranque |
 | `data/history.json` | historial de meses |
 | `sw.js`, `manifest.webmanifest`, `icons/` | instalación en el celular y uso sin conexión |
-
-## Versión en claude.ai
-
-El mismo `index.html` detecta dónde corre. En claude.ai guarda en una base privada (un documento por mes) y no usa
-token. Allí, además, hay gráfico de evolución, variación contra el mes anterior, "Redactar mensaje para Pina" y
-preguntas sobre el historial con Claude, y se exporta a PDF y JPG.
-
-Para regenerar esa versión después de cambiar `index.html`:
-
-```
-python3 tools/build_artifact.py index.html artifact.html
-```
-
-El repo funciona como espejo de lectura: desde la página se descarga el historial (`.json`) y se sube a `data/history.json`.
+| `tools/build_artifact.py` | arma la versión de claude.ai (un solo archivo) |
+| `tests/` | pruebas de navegador (ver `tests/README.md`) |
