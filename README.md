@@ -3,7 +3,7 @@
 Seguimiento mensual de los gastos de la casa (Mati y Pina). App de una sola página, sin build:
 `index.html` + `data/history.json` (el historial), publicada con GitHub Pages.
 
-**v1.8** — el mismo `index.html` funciona en GitHub Pages y como página de claude.ai; instalable en el celular, se sincroniza sola.
+**v2.0** — el mismo `index.html` funciona en GitHub Pages y como página de claude.ai; instalable en el celular, se sincroniza sola.
 
 ## Cómo funciona
 
