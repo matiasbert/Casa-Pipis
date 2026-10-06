@@ -11,8 +11,9 @@ async function initClaude() {
   try { lim = claudeSample ? await claudeSample.limits() : null; } catch(e) { lim = null; }
   const row = document.getElementById('photoRow');
   if (row) row.hidden = !(lim && lim.images);
+  imageLimits = lim && lim.images ? lim.images : null;
   const inp = document.getElementById('photoInput');
-  if (inp && lim && lim.images && lim.images.mediaTypes) inp.accept = lim.images.mediaTypes.join(',');
+  if (inp && imageLimits && imageLimits.mediaTypes) inp.accept = imageLimits.mediaTypes.concat(window.pdfjsLib ? ['application/pdf', '.pdf'] : []).join(',');
 }
 
 function claudeErrorText(e) {
@@ -100,6 +101,9 @@ document.addEventListener('keydown', (e) => {
 
 // ---------- Photo of a card statement or a bill -> proposed amounts (nothing is saved until confirmed) ----------
 let proposalRows = [];
+let imageLimits = null;
+let pendingPdf = null;
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 function knownConcepts(month) {
   const list = [];
@@ -108,17 +112,80 @@ function knownConcepts(month) {
   return list;
 }
 
+const isPdfFile = (f) => f && (f.type === 'application/pdf' || /\.pdf$/i.test(f.name || ''));
+
+// Card statements usually come as PDF (often protected with a password): each page is drawn on a canvas and the
+// pages go to Claude as images, since Claude receives images, not PDFs.
+async function pdfToImages(file, password) {
+  if (!window.pdfjsLib) throw new Error('pdfjs');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+  const doc = await pdfjsLib.getDocument({ data: await file.arrayBuffer(), password: password || undefined }).promise;
+  const n = Math.min(doc.numPages, Math.min((imageLimits && imageLimits.maxCount) || 4, 4));
+  const out = [];
+  for (let i = 1; i <= n; i++) {
+    const page = await doc.getPage(i);
+    let vp = page.getViewport({ scale: 1.6 });
+    const k = Math.min(1, 1600 / Math.max(vp.width, vp.height));
+    if (k < 1) vp = page.getViewport({ scale: 1.6 * k });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.ceil(vp.width); canvas.height = Math.ceil(vp.height);
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+    out.push(await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85)));
+  }
+  return out;
+}
+
 async function readPhoto(input) {
   const file = input.files && input.files[0];
   input.value = '';
   if (!file || !claudeSample) return;
   const month = getMonth();
-  const box = document.getElementById('proposal');
   if (!month || isReadonly()) { showNotif('Este mes está en solo lectura'); return; }
+  await analyzeAttachment(file, '');
+}
+
+async function analyzeAttachment(file, password) {
+  const box = document.getElementById('proposal');
+  box.hidden = false;
+  let images = file;
+  if (isPdfFile(file)) {
+    box.innerHTML = '<div class="card-sub" style="margin:0">Abriendo el PDF…</div>';
+    try { images = await pdfToImages(file, password); }
+    catch (e) {
+      if (e && e.name === 'PasswordException') { askPdfPassword(file, password ? 'La clave no es correcta. ' : ''); return; }
+      box.innerHTML = '<div class="card-sub" style="margin:0">No pude abrir ese PDF. Probá sacándole una captura de pantalla y adjuntá la imagen.</div>';
+      return;
+    }
+  }
+  await analyzeImages(images);
+}
+
+function askPdfPassword(file, note) {
+  pendingPdf = file;
+  const box = document.getElementById('proposal');
+  box.hidden = false;
+  box.innerHTML = `<h4>El PDF tiene clave</h4>
+    <div class="card-sub" style="margin:0 0 8px">${note}Suele ser tu DNI. Se usa solo para abrir el archivo en tu navegador y no se guarda.</div>
+    <div class="ask-row" style="margin-top:0"><input type="password" id="pdfPass" autocomplete="off" aria-label="Clave del PDF">
+    <button class="btn btn-primary" onclick="retryPdf()">Abrir</button><button class="btn" onclick="closeProposal()">Cancelar</button></div>`;
+  const el = document.getElementById('pdfPass');
+  el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); retryPdf(); } });
+  el.focus();
+}
+function retryPdf() {
+  const pw = document.getElementById('pdfPass')?.value || '';
+  if (!pendingPdf) return;
+  analyzeAttachment(pendingPdf, pw);
+}
+
+async function analyzeImages(images) {
+  const month = getMonth();
+  const box = document.getElementById('proposal');
   box.hidden = false;
   box.innerHTML = '<div class="card-sub" style="margin:0">Leyendo la imagen…</div>';
   const names = [...new Set(knownConcepts(month).map(c => c.name))];
-  const prompt = 'Sos un asistente que lee la foto de un resumen de tarjeta de crédito o de una factura de servicios de Argentina. '
+  const prompt = 'Sos un asistente que lee la foto o las páginas de un resumen de tarjeta de crédito o de una factura de servicios de Argentina. '
+    + 'Si hay varias imágenes son páginas consecutivas del mismo documento (puede que falten las últimas). '
     + 'Respondé solo con un JSON con esta forma exacta: {"tipo":"tarjeta"|"servicio"|"otro","emisor":"texto","propuestas":[{"destino":"concepto conocido o nuevo","concepto":"nombre corto","moneda":"ARS"|"USD","monto":123456.78,"nota":"texto corto o vacío"}]}. '
     + 'Conceptos conocidos de este mes: ' + JSON.stringify(names) + '. '
     + 'Reglas: si es un resumen de tarjeta (Visa o Mastercard) devolvé una propuesta con el total a pagar en pesos (ARS) y otra con el total en dólares (USD) si existe; el destino es Visa o Mastercard; '
@@ -126,7 +193,7 @@ async function readPhoto(input) {
     + 'Si es la factura de un servicio devolvé el importe total a pagar y como destino el concepto conocido que corresponda (por ejemplo Edesur, Metrogas, Telecentro, Expensas, Alquiler) o "nuevo" si ninguno coincide. '
     + 'Los montos son números sin símbolos ni separadores de miles, con punto decimal. No inventes datos: si no podés leer un importe, no lo incluyas.';
   try {
-    const data = await claudeSample.json(prompt, { images: file });
+    const data = await claudeSample.json(prompt, { images });
     showProposal(data);
   } catch(e) {
     box.innerHTML = `<div class="card-sub" style="margin:0">${escHtml(claudeErrorText(e))}</div>`;
