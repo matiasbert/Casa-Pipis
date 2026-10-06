@@ -238,6 +238,72 @@ module.exports = async function run(browser, base) {
     }
   }
 
+  section('Idea 2c) Revisar el resumen línea por línea');
+  {
+    const L1 = (f, c, m, mo, q, tipo) => ({ fecha: f, comercio: c, moneda: mo, monto: m, cuota: q, tipo });
+    const statement = (totARS) => ({ tipo: 'tarjeta', emisor: 'Visa', totales: { ARS: totARS, USD: 20 }, propuestas: [], lineas: [
+      L1('02/10', 'SUPERMERCADO COTO', 50000, 'ARS', '', 'compra'), L1('02/10', 'SUPERMERCADO COTO', 50000, 'ARS', '', 'compra'),
+      L1('05/10', 'TIENDAFUEGO', 15000, 'ARS', '02/03', 'cuota'), L1('06/10', 'FARMACIA', 12000, 'ARS', '', 'compra'),
+      L1('', 'INTERESES FINANCIACION', 4000, 'ARS', '', 'interes'), L1('28/09', 'PAGO RECIBIDO', 30000, 'ARS', '', 'pago'),
+      L1('07/10', 'CLAUDE.AI', 20, 'USD', '', 'compra')] });
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+    const { ctx, page, errors } = await L.openArtifact(browser, base, { seed: L.FIXTURE.months, extra: `window.__sampleJson = ${JSON.stringify(statement(101000))};` });
+    await waitMonth(page); await page.waitForFunction(() => !document.getElementById('photoRow').hidden);
+    const attach = async () => { await page.setInputFiles('#photoInput', { name: 'resumen.png', mimeType: 'image/png', buffer: png }); await page.waitForSelector('#reviewOverlay.open', { timeout: 10000 }); };
+    const visaOf = (cur) => page.evaluate((c) => { const i = allMonths['2026-10'].pinaItems.find(x => x.name === 'Visa' && x.currency === c); return { amount: i.amount, detail: (i.detail || []).length }; }, cur);
+
+    await attach();
+    assert.strictEqual(await page.locator('.rv-row').count(), 7); pass('el diálogo lista las 7 líneas del resumen');
+    assert.strictEqual(await page.locator('#rvDest').inputValue(), 'p:' + await page.evaluate(() => pinaPairs(getMonth()).find(p => p.ars.name === 'Visa').pairId)); pass('destino preseleccionado: Visa');
+    const checked = await page.locator('.rv-row input[id^=rvOn]').evaluateAll(els => els.map(e => e.checked));
+    assert.deepStrictEqual(checked, [true, false, true, true, false, false, true]); pass('compras marcadas; duplicado, interés y pago sin marcar');
+    const tags = await page.locator('.rv-row .rv-tag').allInnerTexts();
+    assert.deepStrictEqual(tags, ['Posible duplicado', 'Interés', 'Pago o bonificación']); pass('cada línea dudosa dice por qué: ' + tags.join(' / '));
+    let sum = await page.locator('#rvSum').innerText();
+    assert.ok(sum.includes('$77.000') && sum.includes('$101.000') && /coinciden/.test(sum)); pass('marcado $77.000 de $101.000 del resumen, y las líneas leídas coinciden con el total');
+    await page.locator('#rvOn3').uncheck();
+    assert.ok((await page.locator('#rvSum').innerText()).includes('$65.000')); pass('al desmarcar FARMACIA el total baja a $65.000 en vivo');
+    await page.locator('#rvOn3').check();
+    assert.ok(await page.locator('#rvTrack2').isChecked()); pass('la cuota 2/3 ofrece seguirla en noviembre (3/3), ya tildada');
+    await page.click('#rvApply');
+    await page.waitForFunction(() => !document.getElementById('reviewOverlay').classList.contains('open'));
+    assert.deepStrictEqual(await visaOf('ARS'), { amount: 77000, detail: 3 }); assert.deepStrictEqual(await visaOf('USD'), { amount: 20, detail: 1 }); pass('Visa: $77.000 y USD 20, con el detalle de las líneas');
+    assert.ok(/Detalle \(3/.test(await page.locator('#pinaExpenseTbody tr').first().locator('summary').first().innerText())); pass('la fila de Visa tiene "Detalle (3 · $77.000)" desplegable');
+    const nov = await page.evaluate(() => { const m = allMonths['2026-11']; const it = m && m.pinaItems.find(i => i.name === 'TIENDAFUEGO' && i.currency === 'ARS'); return it ? { amount: it.amount, inst: it.installments, auto: !!m.auto } : null; });
+    assert.deepStrictEqual(nov, { amount: 15000, inst: { current: 3, total: 3 }, auto: false }); pass('noviembre ya tiene TIENDAFUEGO $15.000, cuota 3/3');
+    await page.click('#toastBtn');
+    assert.deepStrictEqual(await visaOf('ARS'), { amount: 0, detail: 0 });
+    assert.ok(!(await page.evaluate(() => '2026-11' in allMonths))); pass('Deshacer vuelve Visa a cero y borra el noviembre que se creó');
+
+    await attach(); await page.click('#rvApply');
+    await page.waitForFunction(() => !document.getElementById('reviewOverlay').classList.contains('open'));
+    assert.strictEqual((await visaOf('ARS')).amount, 77000);
+    await attach();
+    const tags2 = await page.locator('.rv-row .rv-tag').allInnerTexts();
+    assert.ok(tags2.filter(x => x === 'Ya cargado este mes').length >= 4); pass('al cargar el mismo resumen otra vez, lo ya cargado viene sin marcar ("Ya cargado este mes")');
+    assert.ok(await page.locator('input[name=rvMode][value=add]').isChecked()); pass('y el modo por defecto es sumar a lo que ya tiene');
+    await page.keyboard.press('Escape');
+    assert.ok(!(await page.locator('#reviewOverlay.open').count())); pass('Esc cierra el diálogo sin cargar nada');
+    assert.strictEqual((await visaOf('ARS')).amount, 77000);
+
+    await page.click('#nextMonthBtn');
+    await page.waitForFunction(() => document.getElementById('monthLabel').textContent === 'Noviembre 2026');
+    await page.evaluate((s) => { window.__sampleJson = s; }, { tipo: 'tarjeta', emisor: 'Visa', totales: { ARS: 15000 + 8000, USD: null }, propuestas: [], lineas: [
+      L1('04/11', 'TIENDAFUEGO', 15000, 'ARS', '03/03', 'cuota'), L1('09/11', 'KIOSCO', 8000, 'ARS', '', 'compra')] });
+    await attach();
+    const novTags = await page.evaluate(() => review.lines.map(l => l.flag));
+    assert.deepStrictEqual(novTags, ['Ya la sigo como cuota', '']); pass('en noviembre, la cuota 3/3 del resumen sale como "Ya la sigo como cuota" y sin marcar');
+    await page.keyboard.press('Escape');
+    all.push(...errors); await ctx.close();
+
+    const w = await L.openArtifact(browser, base, { seed: L.FIXTURE.months, extra: `window.__sampleJson = ${JSON.stringify(statement(999999))};` });
+    await waitMonth(w.page); await w.page.waitForFunction(() => !document.getElementById('photoRow').hidden);
+    await w.page.setInputFiles('#photoInput', { name: 'r.png', mimeType: 'image/png', buffer: png });
+    await w.page.waitForSelector('#reviewOverlay.open');
+    assert.ok(/puede faltar o sobrar/.test(await w.page.locator('#rvSum').innerText())); pass('si las líneas no suman el total del resumen, avisa que puede faltar o sobrar una');
+    all.push(...w.errors); await w.ctx.close();
+  }
+
   section('Idea 3) Último respaldo automático en GitHub');
   {
     const at = new Date('2026-10-01T09:00:00').getTime();

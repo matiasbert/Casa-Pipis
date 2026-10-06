@@ -186,14 +186,18 @@ async function analyzeImages(images) {
   const names = [...new Set(knownConcepts(month).map(c => c.name))];
   const prompt = 'Sos un asistente que lee la foto o las páginas de un resumen de tarjeta de crédito o de una factura de servicios de Argentina. '
     + 'Si hay varias imágenes son páginas consecutivas del mismo documento (puede que falten las últimas). '
-    + 'Respondé solo con un JSON con esta forma exacta: {"tipo":"tarjeta"|"servicio"|"otro","emisor":"texto","propuestas":[{"destino":"concepto conocido o nuevo","concepto":"nombre corto","moneda":"ARS"|"USD","monto":123456.78,"nota":"texto corto o vacío"}]}. '
+    + 'Respondé solo con un JSON con esta forma exacta: {"tipo":"tarjeta"|"servicio"|"otro","emisor":"texto","totales":{"ARS":número o null,"USD":número o null},'
+    + '"lineas":[{"fecha":"DD/MM","comercio":"texto","moneda":"ARS"|"USD","monto":123.45,"cuota":"02/03" o "","tipo":"compra"|"cuota"|"impuesto"|"interes"|"pago"|"otro"}],'
+    + '"propuestas":[{"destino":"concepto conocido o nuevo","concepto":"nombre corto","moneda":"ARS"|"USD","monto":123456.78,"nota":"texto corto o vacío"}]}. '
     + 'Conceptos conocidos de este mes: ' + JSON.stringify(names) + '. '
-    + 'Reglas: si es un resumen de tarjeta (Visa o Mastercard) devolvé una propuesta con el total a pagar en pesos (ARS) y otra con el total en dólares (USD) si existe; el destino es Visa o Mastercard; '
-    + 'en "nota" listá hasta 4 compras en cuotas con el formato COMERCIO 02/03, separadas por "; ". '
-    + 'Si es la factura de un servicio devolvé el importe total a pagar y como destino el concepto conocido que corresponda (por ejemplo Edesur, Metrogas, Telecentro, Expensas, Alquiler) o "nuevo" si ninguno coincide. '
+    + 'Reglas para un resumen de tarjeta (Visa, Mastercard u otra): "lineas" debe tener TODAS las líneas del período, una por cada consumo, cuota, impuesto o sello, interés, pago y bonificación o crédito (los pagos del resumen anterior van con tipo "pago"); '
+    + 'cada línea con su comercio tal como figura, la moneda de la línea, el monto como número positivo y la cuota con el formato 02/03 solo si es una compra en cuotas; '
+    + '"totales" son los totales a pagar que imprime el resumen en cada moneda; "propuestas" queda vacío. '
+    + 'Reglas para la factura de un servicio: "lineas" queda vacío y "propuestas" lleva una sola propuesta con el importe total a pagar y como destino el concepto conocido que corresponda (por ejemplo Edesur, Metrogas, Telecentro, Expensas, Alquiler) o "nuevo" si ninguno coincide. '
     + 'Los montos son números sin símbolos ni separadores de miles, con punto decimal. No inventes datos: si no podés leer un importe, no lo incluyas.';
   try {
     const data = await claudeSample.json(prompt, { images });
+    if (data && Array.isArray(data.lineas) && data.lineas.length && openReview(data)) { closeProposal(); return; }
     showProposal(data);
   } catch(e) {
     box.innerHTML = `<div class="card-sub" style="margin:0">${escHtml(claudeErrorText(e))}</div>`;

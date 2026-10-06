@@ -3,7 +3,7 @@
 Seguimiento mensual de los gastos de la casa (Mati y Pina). App de una sola página, sin build:
 `index.html` + `data/history.json` (el historial), publicada con GitHub Pages.
 
-**v1.8** — el mismo `index.html` funciona en GitHub Pages y como página de claude.ai; instalable en el celular, se sincroniza sola.
+**v2.0** — el mismo `index.html` funciona en GitHub Pages y como página de claude.ai; instalable en el celular, se sincroniza sola.
 
 ## Cómo funciona
 
@@ -38,6 +38,7 @@ Si el token vence, la app lo avisa en la sección de sincronización; se genera 
 | `js/reports.js` | gráfico de evolución, imagen/PDF/JPG, CSV/JSON, importar |
 | `js/summary.js` | resumen del año |
 | `js/claude.js` | funciones de Claude (mensaje, preguntas, leer una foto o un PDF) |
+| `js/review.js` | diálogo para revisar un resumen de tarjeta línea por línea |
 | `js/sync.js` | GitHub, base de claude.ai, copias de seguridad |
 | `js/tables.js` | pantalla: tablas, edición, navegación |
 | `js/app.js` | tema y arranque |

@@ -198,11 +198,23 @@ function renderPinaTable(month, readonly) {
   }
 }
 
+// Lines of a card statement that were loaded into this concept (see js/review.js).
+function detailHtml(item, fmt) {
+  const d = item.detail;
+  if (!Array.isArray(d) || !d.length) return "";
+  const sum = d.reduce((a, x) => a + (parseFloat(x.m) || 0), 0);
+  const rows = d.map(x => {
+    const cuota = x.q ? ` <span class="installment-badge">c.${escHtml(x.q)}</span>` : "";
+    return `<li><span>${escHtml([x.f, x.c].filter(Boolean).join(" · "))}${cuota}</span><b>${fmt(parseFloat(x.m) || 0)}</b></li>`;
+  }).join("");
+  return `<details class="pina-detail"><summary>Detalle (${d.length} · ${fmt(sum)})</summary><ul>${rows}</ul></details>`;
+}
+
 function pinaCell(item, badgeClass, badgeText, fmt) {
   const amt = parseFloat(item.amount) || 0;
   const inst = item.installments ? `<span class="installment-badge">c.${item.installments.current}/${item.installments.total}</span>` : "";
   const notes = item.notes ? `<div class="item-notes">${escHtml(item.notes)}</div>` : "";
-  return `<span class="${badgeClass}">${badgeText}</span> <span class="${amt ? "" : "zero-amt"}">${fmt(amt)}</span>${inst}${notes}`;
+  return `<span class="${badgeClass}">${badgeText}</span> <span class="${amt ? "" : "zero-amt"}">${fmt(amt)}</span>${inst}${notes}${detailHtml(item, fmt)}`;
 }
 
 function buildPinaPairedRow(arsItem, usdItem, readonly) {

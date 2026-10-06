@@ -77,6 +77,30 @@ function normalizeAll() {
 // A month created by the app (not by the user) is flagged `auto` and carries no edit time: any real copy of
 // that month (on GitHub or in the database) always wins over it, so a slow or offline device can never
 // overwrite data with an empty month. The first edit (commit) clears the flag.
+// Creates a month on purpose (real, not `auto`) with the usual carry-over; returns the existing one if it is there.
+function ensureMonthRecord(key) {
+  if (allMonths[key]) return allMonths[key];
+  const m = createMonthRecord(key);
+  applyCarryOver(m);
+  delete m.auto;
+  allMonths[key] = m;
+  delete deletedMonths[key];
+  return m;
+}
+
+// Adds a Gastos Pina concept (ARS + USD pair) to a month; `o` = { name, currency, amount, installments, notes }.
+function addPinaPair(month, o) {
+  const pairId = uid(), now = Date.now();
+  const mk = (cur) => {
+    const mine = o.currency === cur;
+    return { id: uid(), pairId, name: o.name, currency: cur, amount: mine ? (o.amount || 0) : 0, notes: mine ? (o.notes || '') : '',
+             installments: mine ? (o.installments || null) : null, isRecurring: false, ts: now };
+  };
+  const ars = mk('ARS'), usd = mk('USD');
+  month.pinaItems.push(ars, usd);
+  return { pairId, ars, usd };
+}
+
 function createMonthRecord(key) {
   const m = { key, matiSplit: 75, pinaSplit: 25, locked: false, updatedAt: 0, auto: true,
               items: RECURRING_TEMPLATES.map(newItemFromTemplate),

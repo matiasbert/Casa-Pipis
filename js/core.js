@@ -73,6 +73,7 @@ function fmtUSD(n) {
   return 'USD ' + n.toLocaleString('es-AR', { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });
 }
 function fmtAmount(n, currency) { return currency === 'USD' ? fmtUSD(n) : fmtARS(n); }
+const deepClone = (x) => JSON.parse(JSON.stringify(x));
 function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 
 // Reads an amount typed the Argentine way: "655.520" (thousands), "655520", "1.234,56", "12,5", "$ 1.000".
