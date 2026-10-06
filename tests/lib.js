@@ -109,7 +109,7 @@ const claudeMock = `(() => {
     if (window.__sampleReply) { const t = typeof window.__sampleReply === 'function' ? window.__sampleReply(input, opts) : window.__sampleReply; return t; }
     const t = 'RESPUESTA-MOCK'; opts && opts.onText && opts.onText({ text: t, delta: t }); return { text: t, truncated: false };
   };
-  sample.json = async (input, opts) => { window.__asked.push({ input, opts: opts ? Object.keys(opts) : [], json: true }); return clone(window.__sampleJson || {}); };
+  sample.json = async (input, opts) => { window.__asked.push({ input, opts: opts ? Object.keys(opts) : [], json: true, images: opts && opts.images ? (Array.isArray(opts.images) ? opts.images.map(b => b.type + ':' + b.size) : [opts.images.type + ':' + opts.images.size]) : [] }); return clone(window.__sampleJson || {}); };
   sample.limits = async () => ({ maxPromptBytes: 262144, images: window.__noImages ? undefined : { maxCount: 4, maxInputBytes: 20e6, mediaTypes: ['image/jpeg', 'image/png'] } });
   const caps = { db, user: { can: async () => !window.__readOnly, isOwner: async () => !window.__readOnly },
                  downloads: { save: async ({ filename, data }) => { window.__saved.push({ filename, size: data.size || data.length, type: data.type }); return { status: 'saved' }; } }, sample };
@@ -146,8 +146,11 @@ async function stubExternal(ctx) {
   const h2c = libSource('html2canvas', 'dist/html2canvas.min.js'), pdf = libSource('jspdf', 'dist/jspdf.umd.min.js');
   await ctx.route('**/html2canvas*', r => h2c ? r.fulfill({ contentType: 'application/javascript', body: h2c }) : r.abort());
   await ctx.route('**/jspdf*', r => pdf ? r.fulfill({ contentType: 'application/javascript', body: pdf }) : r.abort());
+  const pdfMain = libSource('pdfjs-dist', 'build/pdf.min.js'), pdfWorker = libSource('pdfjs-dist', 'build/pdf.worker.min.js');
+  await ctx.route('**/pdf.js/**/pdf.min.js', r => pdfMain ? r.fulfill({ contentType: 'application/javascript', body: pdfMain }) : r.abort());
+  await ctx.route('**/pdf.js/**/pdf.worker.min.js', r => pdfWorker ? r.fulfill({ contentType: 'application/javascript', body: pdfWorker }) : r.abort());
   await ctx.route('https://fonts.googleapis.com/**', r => r.fulfill({ contentType: 'text/css', body: '' }));
-  return { hasPdfLibs: !!(h2c && pdf) };
+  return { hasPdfLibs: !!(h2c && pdf), hasPdfJs: !!(pdfMain && pdfWorker) };
 }
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));

@@ -11,6 +11,7 @@
 <title>Casa Pipi's</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -177,9 +178,9 @@
       <a class="btn btn-sm btn-wa" id="draftWa" target="_blank" rel="noopener">💬 Abrir en WhatsApp</a>
     </div>
     <div class="photo-row" id="photoRow" hidden>
-      <label class="btn" for="photoInput">📷 Leer un resumen o una factura desde una foto</label>
-      <input type="file" id="photoInput" accept="image/*" hidden onchange="readPhoto(this)">
-      <div class="card-sub" style="margin:6px 0 0">La imagen se envía a Claude con tu cuenta. Nada se carga hasta que lo confirmes.</div>
+      <label class="btn" for="photoInput">📎 Adjuntar resumen o factura (foto o PDF)</label>
+      <input type="file" id="photoInput" accept="image/*,application/pdf,.pdf" hidden onchange="readPhoto(this)">
+      <div class="card-sub" style="margin:6px 0 0">La imagen o las primeras páginas del PDF se envían a Claude con tu cuenta. Nada se carga hasta que lo confirmes.</div>
     </div>
     <div class="proposal" id="proposal" hidden></div>
     <div class="ask-row">

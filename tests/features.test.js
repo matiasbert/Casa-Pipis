@@ -206,6 +206,38 @@ module.exports = async function run(browser, base) {
     all.push(...noImg.errors); await noImg.ctx.close();
   }
 
+  section('Idea 2b) Adjuntar un PDF (con o sin clave)');
+  {
+    const pdfLib = (() => { try { return require('jspdf').jsPDF; } catch (e) { return null; } })();
+    const reply = { tipo: 'tarjeta', emisor: 'Mastercard', propuestas: [{ destino: 'Mastercard', concepto: 'Mastercard', moneda: 'ARS', monto: 98765.4, nota: '' }] };
+    const probe = await L.openArtifact(browser, base, { seed: L.FIXTURE.months });
+    const hasPdfJs = (await L.stubExternal(probe.ctx)).hasPdfJs; await probe.ctx.close();
+    if (!pdfLib || !hasPdfJs) console.log('  - PDF omitido (faltan jspdf o pdfjs-dist: corré npm install en tests/)');
+    else {
+      const mkPdf = (pages, opts) => { const d = new pdfLib(opts); for (let i = 0; i < pages; i++) { if (i) d.addPage(); d.text('Resumen de cuenta pagina ' + (i + 1) + ' Total a pagar $ 98.765,40', 20, 30); } return Buffer.from(d.output('arraybuffer')); };
+      const { ctx, page, errors } = await L.openArtifact(browser, base, { seed: L.FIXTURE.months, extra: `window.__sampleJson = ${JSON.stringify(reply)};` });
+      await waitMonth(page); await page.waitForFunction(() => !document.getElementById('photoRow').hidden);
+      assert.ok((await page.locator('#photoInput').getAttribute('accept') || '').includes('pdf')); pass('el selector acepta PDF');
+      await page.setInputFiles('#photoInput', { name: 'resumen.pdf', mimeType: 'application/pdf', buffer: mkPdf(6) });
+      await page.waitForSelector('#proposal .prop-row', { timeout: 30000 });
+      let asked = await page.evaluate(() => window.__asked.filter(a => a.json).pop());
+      assert.ok(asked.images.length === 4 && asked.images.every(x => x.startsWith('image/jpeg:'))); pass('un PDF de 6 páginas viaja a Claude como 4 imágenes JPEG');
+      assert.ok((await page.locator('#propDest0').inputValue()).startsWith('p:')); pass('Mastercard propuesta en Gastos Pina');
+      await page.click('button:has-text("Descartar")');
+
+      await page.setInputFiles('#photoInput', { name: 'resumen-clave.pdf', mimeType: 'application/pdf', buffer: mkPdf(2, { encryption: { userPassword: '12345678', ownerPassword: 'dueno', userPermissions: ['print'] } }) });
+      await page.waitForSelector('#pdfPass', { timeout: 30000 }); pass('un PDF con clave pide la clave');
+      await page.fill('#pdfPass', '0000'); await page.press('#pdfPass', 'Enter');
+      await page.waitForFunction(() => /no es correcta/.test(document.getElementById('proposal').textContent), null, { timeout: 30000 }); pass('con clave incorrecta lo avisa y vuelve a pedirla');
+      await page.fill('#pdfPass', '12345678'); await page.press('#pdfPass', 'Enter');
+      await page.waitForSelector('#proposal .prop-row', { timeout: 30000 });
+      asked = await page.evaluate(() => window.__asked.filter(a => a.json).pop());
+      assert.strictEqual(asked.images.length, 2); pass('con la clave correcta se leen las 2 páginas');
+      assert.ok(!(await page.evaluate(() => JSON.stringify(window.__asked).includes('12345678')))); pass('la clave no viaja a Claude');
+      all.push(...errors); await ctx.close();
+    }
+  }
+
   section('Idea 3) Último respaldo automático en GitHub');
   {
     const at = new Date('2026-10-01T09:00:00').getTime();
