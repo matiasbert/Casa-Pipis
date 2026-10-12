@@ -16,7 +16,7 @@ module.exports = async function run(browser, base) {
 
   section('Unit 1) Montos escritos en formato argentino');
   const cases = { '655.520': 655520, '655520': 655520, '1.234,56': 1234.56, '12,5': 12.5, '$ 1.000': 1000, '0,5': 0.5, '1.234.567': 1234567,
-                  '655,52': 655.52, '12.5': 12.5, '1.500': 1500, '10.000,5': 10000.5, 'USD 1.200': 1200, '': 0, 'abc': 0 };
+                  '655,52': 655.52, '12.5': 12.5, '1.500': 1500, '10.000,5': 10000.5, 'USD 1.200': 1200, '': 0, 'abc': 0, '-15.000': -15000, '−500': -500, '(1.000)': -1000, '$ -2.500,50': -2500.5, '-0': 0 };
   for (const [input, want] of Object.entries(cases)) {
     const got = await page.evaluate((x) => parseAmount(x), input);
     assert.strictEqual(got, want, `parseAmount(${JSON.stringify(input)}) = ${got}, esperado ${want}`);
@@ -27,6 +27,8 @@ module.exports = async function run(browser, base) {
   assert.strictEqual(await page.evaluate(() => fmtUSD(19.99)), 'USD 19,99');
   assert.strictEqual(await page.evaluate(() => fmtUSD(20)), 'USD 20');
   assert.strictEqual(await page.evaluate(() => fmtUSD(1234.5)), 'USD 1.234,50'); pass('USD 19,99 / USD 20 / USD 1.234,50');
+  const negs = await page.evaluate(() => [fmtARS(-15000), fmtARS(-0.2), fmtUSD(-20), fmtUSD(-19.99), fmtUSD(0)]);
+  assert.deepStrictEqual(negs, ['-$15.000', '$0', '-USD 20', '-USD 19,99', 'USD 0']); pass('negativos: -$15.000 / -USD 20 / -USD 19,99');
 
   section('Unit 3) Unión de dos copias de un mes, gasto por gasto');
   const it = (id, amount, ts, extra = {}) => ({ id, name: id, currency: 'ARS', amount, notes: '', installments: null, isRecurring: false, ts, ...extra });

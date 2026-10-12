@@ -32,7 +32,7 @@ function renderTrend() {
   const step = (W - L - R) / data.length;
   const bw = Math.min(52, step * 0.6);
   const y0 = H - B;
-  const hOf = (v) => (H - T - B) * v / max;
+  const hOf = (v) => (H - T - B) * Math.max(0, v) / max;
   const mono = 'IBM Plex Mono, ui-monospace, monospace';
   let g = '';
   [0, max / 2, max].forEach(t => {
@@ -61,7 +61,7 @@ function renderTrend() {
   document.getElementById('trendSub').textContent = last.usd > 0.001
     ? `Pesos por mes. Los ${fmtUSD(last.usd)} de Pina en dólares de este mes no entran en el gráfico.`
     : 'Pesos por mes: lo que paga cada uno';
-  const rows = data.map(d => `<tr><td>${escHtml(keyToLabel(d.key))}</td><td>${fmtARS(d.pina)}</td><td>${fmtARS(d.mati)}</td><td>${fmtARS(d.total)}</td><td>${d.usd > 0.001 ? fmtUSD(d.usd) : '—'}</td></tr>`).join('');
+  const rows = data.map(d => `<tr><td>${escHtml(keyToLabel(d.key))}</td><td>${moneyHtml(d.pina, 'ARS')}</td><td>${moneyHtml(d.mati, 'ARS')}</td><td>${moneyHtml(d.total, 'ARS')}</td><td>${Math.abs(d.usd) > 0.001 ? moneyHtml(d.usd, 'USD') : '—'}</td></tr>`).join('');
   document.getElementById('trendTable').innerHTML = `<thead><tr><th>Mes</th><th>Pina</th><th>Mati</th><th>Total</th><th>USD Pina</th></tr></thead><tbody>${rows}</tbody>`;
 }
 function bindTrend() {
@@ -197,7 +197,7 @@ function buildImageSnapshot() {
     return `<span style="${snapBadge(it.currency)}">${it.currency}</span> <b style="font-variant-numeric:tabular-nums">${fmt(amt)}</b>${cuota}${notesHtml}`;
   };
   for (const p of pinaPairs(month)) {
-    if (!(parseFloat(p.ars.amount) > 0) && !(parseFloat(p.usd.amount) > 0)) continue;
+    if (!(parseFloat(p.ars.amount)) && !(parseFloat(p.usd.amount))) continue;
     pinaRowsHtml += `<tr>
       <td>${escHtml(p.ars.name)}</td>
       <td colspan="3">${snapCell(p.ars, fmtARS)}</td>
@@ -207,8 +207,8 @@ function buildImageSnapshot() {
   const combinedARS = t.pinaARS + t.pinaPersonalARS;
   const combinedUSD = t.pinaUSD + t.pinaPersonalUSD;
   const pinaParts = [];
-  if (combinedARS > 0.001) pinaParts.push(fmtARS(combinedARS));
-  if (combinedUSD > 0.001) pinaParts.push(fmtUSD(combinedUSD));
+  if (Math.abs(combinedARS) > 0.001) pinaParts.push(fmtARS(combinedARS));
+  if (Math.abs(combinedUSD) > 0.001) pinaParts.push(fmtUSD(combinedUSD));
   snap.innerHTML = `
     <div class="snap-header">
       <div class="snap-title">🏠 Casa Pipi's</div>
@@ -242,6 +242,9 @@ function buildImageSnapshot() {
       <div class="snap-pina-lbl">Gastos Pina — ${keyToLabel(month.key)}</div>
       <div class="snap-pina-val">${pinaParts.join(' + ') || '$0'}</div>
     </div>`;
+  snap.querySelectorAll('td, b, .val, .snap-pina-val').forEach(el => {
+    if (!el.children.length && /^-\s*(\$|USD)/.test(el.textContent.trim())) el.style.color = '#9f1239';
+  });
 }
 
 async function saveImage() {
@@ -348,3 +351,14 @@ async function _applyImportedMonths(imported, replaceAll) {
   renderAll();
   showNotif(`✓ ${importedKeys.length} ${importedKeys.length===1?'mes importado':'meses importados'}`);
 }
+
+// ---------- Export popup ----------
+function openExport() { document.getElementById('exportOverlay').classList.add('open'); }
+function closeExport() { document.getElementById('exportOverlay').classList.remove('open'); }
+// Runs the chosen export and closes the popup (the click that started it is the user gesture the browser needs).
+function exportDo(fn) { fn(); closeExport(); }
+document.getElementById('exportOverlay').addEventListener('click', function (e) { if (e.target === this) closeExport(); });
+document.addEventListener('keydown', (e) => {
+  const ov = document.getElementById('exportOverlay');
+  if (e.key === 'Escape' && ov && ov.classList.contains('open')) closeExport();
+});
