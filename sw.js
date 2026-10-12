@@ -1,7 +1,7 @@
 // Casa Pipi's service worker: lets the app open offline and be installed on the phone.
 // Network first (so a new version shows up right away), cache as fallback.
 // GitHub API calls and data/history.json are never cached: they must always be fresh.
-const CACHE = 'casapipis-v2.0';
+const CACHE = 'casapipis-v2.1';
 const SHELL = ['./', 'index.html', 'css/app.css', 'js/core.js', 'js/model.js', 'js/reports.js', 'js/summary.js', 'js/claude.js', 'js/review.js', 'js/sync.js',
                'js/tables.js', 'js/app.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 

@@ -38,7 +38,7 @@ module.exports = async function run(browser, base) {
   await page.click('#pinaExpenseTbody button:has-text("Guardar")');
   await page.waitForFunction(() => window.__store['2026-10'].pinaItems.some(i => i.name === 'Terapia' && i.currency === 'USD' && i.amount === 10));
   pass('gasto de Pina guardado');
-  await page.click('button:has-text("Historial")');
+  await page.click('button:text-is("📋 Historial")');
   await page.locator('#monthList li', { hasText: 'Junio 2026' }).locator('button:has-text("Borrar")').click();
   assert.ok(await page.locator('#confirmOverlay.open').isVisible()); pass('confirmación propia (no confirm())');
   await page.click('#confirmOk');
@@ -55,18 +55,19 @@ module.exports = async function run(browser, base) {
   section('claude.ai E) Exportes por el permiso de descarga');
   await page.click('button:has-text("Descargar historial para el repo")');
   await page.waitForFunction(() => window.__saved.some(s => s.filename.endsWith('.json'))); pass('JSON');
-  await page.click('button:has-text("Exportar a Excel")');
+  await page.click('#exportBtn'); await page.click('button:has-text("Exportar a Excel")');
   await page.waitForFunction(() => window.__saved.some(s => s.filename.endsWith('.csv'))); pass('CSV');
   if (libs.hasPdfLibs) {
-    await page.click('button:has-text("Guardar imagen")');
+    await page.click('#exportBtn'); await page.click('button:has-text("Guardar imagen")');
     await page.waitForFunction(() => window.__saved.some(s => s.filename.endsWith('.jpg')), null, { timeout: 30000 }); pass('JPG real');
-    await page.click('button:has-text("Descargar PDF")');
+    await page.click('#exportBtn'); await page.click('button:has-text("Descargar PDF")');
     await page.waitForFunction(() => window.__saved.some(s => s.filename.endsWith('.pdf')), null, { timeout: 30000 }); pass('PDF real');
   } else console.log('  - JPG/PDF omitidos (faltan html2canvas/jspdf: corré npm install en tests/)');
   assert.ok((await page.locator('#waLink').getAttribute('href')).startsWith('https://wa.me/?text=')); pass('WhatsApp como link');
 
   section('claude.ai F) Claude, gráfico y tema oscuro');
   assert.ok(await page.locator('#claudeCard').isVisible()); pass('tarjeta de Claude visible');
+  await page.click('#claudeCard > summary');
   await page.click('#draftBtn'); await page.waitForFunction(() => document.getElementById('draftOut').value === 'RESPUESTA-MOCK');
   assert.ok((await page.evaluate(() => window.__asked[0].input)).includes('GASTOS')); pass('el mensaje para Pina lleva el resumen del mes');
   await page.fill('#askInput', '¿Cuánto subió el alquiler?'); await page.click('#askBtn');
@@ -75,6 +76,7 @@ module.exports = async function run(browser, base) {
   assert.ok(asked.includes('"mes":"2026-10"') && asked.includes('PREGUNTA: ¿Cuánto subió el alquiler?')); pass('la pregunta viaja con el historial');
   assert.ok((await page.locator('#trendSvg rect').count()) >= 8); pass('gráfico dibujado');
   assert.strictEqual(await page.locator('#trendTable tbody tr').count(), 5); pass('tabla del gráfico (5 meses)');
+  await page.click('#trendCard > summary');
   await page.locator('#trendSvg rect[data-i="3"]').hover(); assert.ok(await page.locator('#trendTip.show').isVisible()); pass('tooltip');
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
   assert.ok(await page.evaluate(() => document.body.classList.contains('dark'))); pass('sigue el tema oscuro de la plataforma');

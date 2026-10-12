@@ -11,6 +11,8 @@ async function initClaude() {
   try { lim = claudeSample ? await claudeSample.limits() : null; } catch(e) { lim = null; }
   const row = document.getElementById('photoRow');
   if (row) row.hidden = !(lim && lim.images);
+  const sb = document.getElementById('stmtBtn');
+  if (sb) sb.hidden = !(lim && lim.images);
   imageLimits = lim && lim.images ? lim.images : null;
   const inp = document.getElementById('photoInput');
   if (inp && imageLimits && imageLimits.mediaTypes) inp.accept = imageLimits.mediaTypes.concat(window.pdfjsLib ? ['application/pdf', '.pdf'] : []).join(',');
@@ -147,6 +149,8 @@ async function readPhoto(input) {
 async function analyzeAttachment(file, password) {
   const box = document.getElementById('proposal');
   box.hidden = false;
+  const card = document.getElementById('claudeCard');
+  if (card) card.open = true;                 // the progress and any simple proposal show inside this card
   let images = file;
   if (isPdfFile(file)) {
     box.innerHTML = '<div class="card-sub" style="margin:0">Abriendo el PDF…</div>';

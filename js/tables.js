@@ -97,10 +97,10 @@ function buildViewRow(item, month, readonly) {
   tr.innerHTML = `
     <td>${escHtml(item.name)}${installBadge}${notesHtml}</td>
     <td data-label="Moneda"><span class="badge-${item.currency.toLowerCase()}">${item.currency}</span></td>
-    <td class="amount" data-label="Monto">${fmtAmount(parseFloat(item.amount)||0, item.currency)}${deltaBadge(item)}</td>
+    <td class="amount${negCls(parseFloat(item.amount) || 0)}" data-label="Monto">${fmtAmount(parseFloat(item.amount)||0, item.currency)}${deltaBadge(item)}</td>
     <td data-label="Split">${splitLabel}</td>
-    <td class="share" data-label="Mati">${fmtAmount(mati, item.currency)}</td>
-    <td class="share" data-label="Pina">${fmtAmount(pina, item.currency)}</td>
+    <td class="share${negCls(mati)}" data-label="Mati">${fmtAmount(mati, item.currency)}</td>
+    <td class="share${negCls(pina)}" data-label="Pina">${fmtAmount(pina, item.currency)}</td>
     <td><div class="actions-cell">${!readonly
       ? `<button class="btn btn-sm" onclick="startEdit('${item.id}')">✏️ Editar</button>` +
         (item.isRecurring ? `<span class="fixed-tag" title="Concepto fijo: no se puede eliminar">🔒 fijo</span>`
@@ -214,7 +214,7 @@ function pinaCell(item, badgeClass, badgeText, fmt) {
   const amt = parseFloat(item.amount) || 0;
   const inst = item.installments ? `<span class="installment-badge">c.${item.installments.current}/${item.installments.total}</span>` : "";
   const notes = item.notes ? `<div class="item-notes">${escHtml(item.notes)}</div>` : "";
-  return `<span class="${badgeClass}">${badgeText}</span> <span class="${amt ? "" : "zero-amt"}">${fmt(amt)}</span>${inst}${notes}${detailHtml(item, fmt)}`;
+  return `<span class="${badgeClass}">${badgeText}</span> <span class="${amt ? (amt < 0 ? "neg" : "") : "zero-amt"}">${fmt(amt)}</span>${inst}${notes}${detailHtml(item, fmt)}`;
 }
 
 function buildPinaPairedRow(arsItem, usdItem, readonly) {
@@ -376,12 +376,13 @@ function addNewPinaItem() {
 function previewAmount(inputId, hintId) {
   const el = document.getElementById(inputId), hint = document.getElementById(hintId);
   if (!el || !hint) return;
-  if (!el.value.trim()) { hint.textContent = ''; return; }
+  if (!el.value.trim()) { hint.textContent = ''; hint.classList.remove('neg'); return; }
   const n = parseAmount(el.value);
   const sel = document.getElementById('eCurrency');
   const usd = /USD$/.test(inputId) || (inputId === 'eAmount' && sel && sel.value === 'USD');
   const frac = Math.abs(n - Math.round(n)) > 0.004;
-  hint.textContent = '= ' + (usd ? 'USD ' : '$') + n.toLocaleString('es-AR', { minimumFractionDigits: frac ? 2 : 0, maximumFractionDigits: 2 });
+  hint.textContent = '= ' + (n < 0 ? '-' : '') + (usd ? 'USD ' : '$') + Math.abs(n).toLocaleString('es-AR', { minimumFractionDigits: frac ? 2 : 0, maximumFractionDigits: 2 });
+  hint.classList.toggle('neg', n < 0);
 }
 
 function toggleInstallUI() {
@@ -418,26 +419,31 @@ function updateSplitHint() {
   else                              { hint.textContent = '✓ 100%';            hint.className = 'split-sum-hint'; }
 }
 
+function setMoney(id, text, negative) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.classList.toggle('neg', !!negative);
+}
 function renderTotals(month) {
   const t = calcTotals(month);
-  document.getElementById('totalARS').textContent = fmtARS(t.totalARS);
-  document.getElementById('matiARS').textContent  = fmtARS(t.matiARS);
-  document.getElementById('pinaARS').textContent  = fmtARS(t.pinaARS);
-  document.getElementById('totalUSD').textContent = fmtUSD(t.totalUSD);
-  document.getElementById('matiUSD').textContent  = fmtUSD(t.matiUSD);
-  document.getElementById('pinaUSD').textContent  = fmtUSD(t.pinaUSD);
+  setMoney('totalARS', fmtARS(t.totalARS), t.totalARS < 0);
+  setMoney('matiARS',  fmtARS(t.matiARS),  t.matiARS < 0);
+  setMoney('pinaARS',  fmtARS(t.pinaARS),  t.pinaARS < 0);
+  setMoney('totalUSD', fmtUSD(t.totalUSD), t.totalUSD < 0);
+  setMoney('matiUSD',  fmtUSD(t.matiUSD),  t.matiUSD < 0);
+  setMoney('pinaUSD',  fmtUSD(t.pinaUSD),  t.pinaUSD < 0);
   document.getElementById('pinaOwesLabel').textContent = `Gastos Pina — ${keyToLabel(currentKey)}`;
   const combinedARS = t.pinaARS + t.pinaPersonalARS;
   const combinedUSD = t.pinaUSD + t.pinaPersonalUSD;
-  const parts = [];
-  if (combinedARS > 0.001) parts.push(fmtARS(combinedARS));
-  if (combinedUSD > 0.001) parts.push(fmtUSD(combinedUSD));
-  document.getElementById('pinaOwes').textContent = parts.length ? parts.join(' + ') : '$0';
+  const parts = [], signs = [];
+  if (Math.abs(combinedARS) > 0.001) { parts.push(fmtARS(combinedARS)); signs.push(combinedARS); }
+  if (Math.abs(combinedUSD) > 0.001) { parts.push(fmtUSD(combinedUSD)); signs.push(combinedUSD); }
+  setMoney('pinaOwes', parts.length ? parts.join(' + ') : '$0', signs.length > 0 && signs.every(v => v < 0));
   const detail = document.getElementById('pinaPersonalDetail');
   if (detail) {
     const personalParts = [];
-    if (t.pinaPersonalARS > 0.001) personalParts.push(fmtARS(t.pinaPersonalARS));
-    if (t.pinaPersonalUSD > 0.001) personalParts.push(fmtUSD(t.pinaPersonalUSD));
+    if (Math.abs(t.pinaPersonalARS) > 0.001) personalParts.push(fmtARS(t.pinaPersonalARS));
+    if (Math.abs(t.pinaPersonalUSD) > 0.001) personalParts.push(fmtUSD(t.pinaPersonalUSD));
     detail.textContent = personalParts.length ? `Propios Pina: ${personalParts.join(' + ')}` : '';
   }
 }

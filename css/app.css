@@ -13,6 +13,7 @@
   --danger-light: #fee2e2;
   --row-alt: #faf9f7;
   --warn: #b45309;
+  --neg: #9f1239;
   --c-pina: #0d9488;
   --c-mati: #c2410c;
   --font-ui: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -35,6 +36,7 @@
     --danger-light: #7f1d1d;
     --row-alt: #162032;
     --warn: #fbbf24;
+  --neg: #fb7185;
     --shadow: 0 2px 8px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.4);
     --shadow-lg: 0 4px 16px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.5);
     color-scheme: dark;
@@ -53,6 +55,7 @@
   --danger-light: #7f1d1d;
   --row-alt: #162032;
   --warn: #fbbf24;
+  --neg: #fb7185;
   --shadow: 0 2px 8px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.4);
   --shadow-lg: 0 4px 16px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.5);
   color-scheme: dark;
@@ -456,6 +459,20 @@ body.dark .rv-ok { color:var(--accent); }
 .pina-detail li b { font-family:var(--font-num); font-weight:500; color:var(--text); }
 @media (max-width:640px) { .review-modal { width:100%; max-height:100vh; height:100vh; border-radius:0; } .rv-actions { width:100%; } .rv-actions .btn { flex:1; justify-content:center; } }
 
+/* NEGATIVE VALUES, COLLAPSIBLE CARDS, EXPORT POPUP */
+.neg, td.amount.neg, td.share.neg, .totals-row .value.neg, .pina-owes-amount.neg, .kpi-value.neg { color:var(--neg) !important; }
+.totals-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:16px; }
+.totals-head .totals-title { margin-bottom:0; }
+details.collapsible > summary { list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:24px; }
+details.collapsible > summary::-webkit-details-marker { display:none; }
+details.collapsible > summary::after { content:"▾"; color:var(--text-muted); font-size:14px; }
+details.collapsible[open] > summary::after { content:"▴"; }
+details.collapsible > summary .card-title { margin:0; }
+details.collapsible[open] > summary { margin-bottom:12px; }
+details.collapsible > summary:focus-visible { outline:2px solid var(--accent); outline-offset:4px; border-radius:4px; }
+.export-modal { max-width:520px; }
+.export-modal .export-title { margin-bottom:8px; }
+.table-header .btn { margin-left:auto; }
 /* TOAST (with undo) */
 .toast {
   position:fixed; bottom:20px; left:50%; transform:translateX(-50%);

@@ -288,7 +288,7 @@ function buildTextSummary() {
   }
   lines.push('', `TOTAL PESOS: ${fmtARS(t.totalARS)} | Pina: ${fmtARS(t.pinaARS)}`);
   lines.push(`TOTAL USD: ${fmtUSD(t.totalUSD)} | Pina: ${fmtUSD(t.pinaUSD)}`);
-  const pinaPersonalItems = (month.pinaItems || []).filter(i => parseFloat(i.amount) > 0);
+  const pinaPersonalItems = (month.pinaItems || []).filter(i => Math.abs(parseFloat(i.amount) || 0) > 0);
   if (pinaPersonalItems.length) {
     lines.push('', 'GASTOS PROPIOS PINA:');
     for (const item of pinaPersonalItems) {
@@ -302,8 +302,8 @@ function buildTextSummary() {
   const combinedARS = t.pinaARS + t.pinaPersonalARS;
   const combinedUSD = t.pinaUSD + t.pinaPersonalUSD;
   const combinedParts = [];
-  if (combinedARS > 0.001) combinedParts.push(fmtARS(combinedARS));
-  if (combinedUSD > 0.001) combinedParts.push(fmtUSD(combinedUSD));
+  if (Math.abs(combinedARS) > 0.001) combinedParts.push(fmtARS(combinedARS));
+  if (Math.abs(combinedUSD) > 0.001) combinedParts.push(fmtUSD(combinedUSD));
   lines.push(`Gastos Pina ${keyToLabel(month.key)}: ${combinedParts.join(' + ') || '$0'}`);
   return lines.join('\n');
 }

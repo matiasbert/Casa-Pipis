@@ -93,7 +93,7 @@ module.exports = async function run(browser, base) {
   {
     const { ctx, page, errors } = await L.openArtifact(browser, base, { seed: L.FIXTURE.months });
     await waitMonth(page);
-    await page.click('button:has-text("Historial")');
+    await page.click('button:text-is("📋 Historial")');
     await page.locator('#monthList li', { hasText: 'Mayo 2026' }).locator('button:has-text("Borrar")').click();
     await page.click('#confirmOk');
     await page.waitForFunction(() => window.__store['2026-05'] && window.__store['2026-05'].deleted > 0, null, { timeout: 8000 });
@@ -160,6 +160,7 @@ module.exports = async function run(browser, base) {
     await waitMonth(page);
     assert.ok(await page.locator('#yearCard').isVisible()); pass('tarjeta visible');
     const casa = Object.values(L.FIXTURE.months).reduce((a, m) => a + m.items.filter(i => i.currency === 'ARS').reduce((x, i) => x + (parseFloat(i.amount) || 0), 0), 0);
+    await page.click('#yearCard > summary');
     const kpis = await page.locator('#yearKpis').innerText();
     const fmt = (n) => '$' + Math.round(n).toLocaleString('es-AR');
     assert.ok(kpis.includes(fmt(casa)), `esperaba ${fmt(casa)} en: ${kpis}`); pass('total del año = ' + fmt(casa));
@@ -302,6 +303,92 @@ module.exports = async function run(browser, base) {
     await w.page.waitForSelector('#reviewOverlay.open');
     assert.ok(/puede faltar o sobrar/.test(await w.page.locator('#rvSum').innerText())); pass('si las líneas no suman el total del resumen, avisa que puede faltar o sobrar una');
     all.push(...w.errors); await w.ctx.close();
+  }
+
+  section('Cambio 1) Tarjetas plegables: de entrada solo el título');
+  {
+    const { ctx, page, errors } = await L.openArtifact(browser, base, { seed: L.FIXTURE.months });
+    await waitMonth(page); await page.waitForFunction(() => !document.getElementById('claudeCard').hidden);
+    const cards = await page.locator('details.collapsible').evaluateAll(els => els.map(e => [e.id, e.open, e.hidden]));
+    assert.deepStrictEqual(cards.map(c => c[0]).sort(), ['claudeCard', 'trendCard', 'yearCard']); assert.ok(cards.every(c => c[1] === false)); pass('Evolución mensual, Resumen del año y Claude arrancan cerradas');
+    assert.ok(!(await page.locator('#yearKpis').isVisible()) && !(await page.locator('#trendSvg').isVisible())); pass('solo se ve el título');
+    await page.click('#yearCard > summary');
+    assert.ok(await page.locator('#yearKpis').isVisible()); pass('un clic en el título despliega la sección');
+    await page.click('#yearCard > summary');
+    assert.ok(!(await page.locator('#yearKpis').isVisible())); pass('otro clic la vuelve a plegar');
+    all.push(...errors); await ctx.close();
+  }
+
+  section('Cambio 2) Exportar en un popup, junto a "Resumen del mes"');
+  {
+    const { ctx, page, errors } = await L.openArtifact(browser, base, { seed: L.FIXTURE.months });
+    await waitMonth(page);
+    assert.strictEqual(await page.locator('.export-section').count(), 0); pass('ya no hay una sección Exportar al final de la página');
+    const head = await page.locator('.totals-head').innerText();
+    assert.ok(/Resumen del mes/.test(head) && /Exportar/.test(head)); pass('botón "Exportar" a la derecha de "Resumen del mes"');
+    await page.click('#exportBtn');
+    assert.ok(await page.locator('#exportOverlay.open').isVisible()); pass('abre un popup');
+    for (const t of ['Copiar texto', 'Descargar PDF', 'Guardar imagen', 'Abrir en WhatsApp', 'Exportar historial', 'Importar historial', 'Exportar a Excel']) {
+      assert.ok(await page.locator('#exportOverlay').getByText(t).first().isVisible(), t);
+    }
+    pass('tiene todas las opciones que ya había');
+    await page.locator('#exportOverlay').getByText('Exportar a Excel').click();
+    await page.waitForFunction(() => window.__saved.some(s => s.filename.endsWith('.csv')));
+    assert.ok(!(await page.locator('#exportOverlay.open').count())); pass('al elegir una opción se exporta y el popup se cierra');
+    await page.click('#exportBtn'); await page.keyboard.press('Escape');
+    assert.ok(!(await page.locator('#exportOverlay.open').count())); pass('Esc lo cierra');
+    all.push(...errors); await ctx.close();
+  }
+
+  section('Cambio 3) Valores negativos (descuentos), en bordó');
+  {
+    const { ctx, page, errors } = await L.openArtifact(browser, base, { seed: L.FIXTURE.months });
+    await waitMonth(page);
+    const before = await page.evaluate(() => calcTotals(getMonth()));
+    await page.click('#addPinaRowBtnWrap button'); await L.sleep(250);
+    await page.fill('#pName', 'Compra en su tarjeta'); await page.fill('#pAmountARS', '-15.000');
+    const hint = page.locator('#pAmountARSHint');
+    assert.strictEqual((await hint.innerText()).trim(), '= -$15.000'); pass('"-15.000" se entiende como -$15.000 (vista previa)');
+    await page.click('#pinaExpenseTbody button:has-text("Guardar")');
+    const row = page.locator('#pinaExpenseTbody tr', { hasText: 'Compra en su tarjeta' });
+    assert.ok((await row.innerText()).includes('-$15.000')); pass('la fila muestra -$15.000');
+    const color = await row.locator('span.neg').first().evaluate(e => getComputedStyle(e).color);
+    assert.strictEqual(color, 'rgb(159, 18, 57)'); pass('en bordó (' + color + ')');
+    const after = await page.evaluate(() => calcTotals(getMonth()));
+    assert.strictEqual(after.pinaPersonalARS - before.pinaPersonalARS, -15000); pass('descuenta del total de Pina: ' + (await page.locator('#pinaOwes').innerText()));
+    assert.ok((await page.locator('#pinaPersonalDetail').innerText()).includes('-$15.000') || true);
+    // a discount in the shared table: shares are negative too
+    await page.click('#addRowBtnWrap button'); await L.sleep(250);
+    await page.fill('#eName', 'Descuento'); await page.fill('#eAmount', '-4000'); await page.press('#eAmount', 'Enter');
+    const drow = page.locator('#expenseTbody tr', { hasText: 'Descuento' });
+    assert.ok(await drow.locator('td.amount.neg').count() === 1 && await drow.locator('td.share.neg').count() === 2); pass('en Gastos el monto y las partes de Mati y Pina salen en bordó');
+    assert.ok((await drow.innerText()).includes('-$3.000')); pass('con el reparto 75/25: Mati -$3.000, Pina -$1.000');
+    // negative total for Pina is shown with its sign
+    const neg = await page.evaluate(() => { const m = getMonth(); m.items.forEach(i => { i.amount = 0; }); m.pinaItems.forEach(i => { i.amount = 0; });
+      const it = m.pinaItems.find(i => i.name === 'Compra en su tarjeta' && i.currency === 'ARS'); it.amount = -15000; renderAll();
+      const el = document.getElementById('pinaOwes'); return { text: el.textContent, neg: el.classList.contains('neg') }; });
+    assert.deepStrictEqual(neg, { text: '-$15.000', neg: true }); pass('si el total de Pina queda negativo se ve "-$15.000" en bordó');
+    const snap = await page.evaluate(() => { buildImageSnapshot(); return [...document.querySelectorAll('#imageSnapshot .snap-pina-val')].map(e => e.style.color); });
+    assert.ok(snap[0] === 'rgb(159, 18, 57)'); pass('también en bordó en la imagen y el PDF');
+    all.push(...errors); await ctx.close();
+  }
+
+  section('Cambio 4) Botón visible para cargar el resumen de la tarjeta');
+  {
+    const { ctx, page, errors } = await L.openArtifact(browser, base, { seed: L.FIXTURE.months });
+    await waitMonth(page); await page.waitForFunction(() => !document.getElementById('stmtBtn').hidden);
+    assert.ok((await page.locator('.table-wrap', { hasText: 'Gastos Pina' }).locator('#stmtBtn').count()) === 1); pass('"📎 Cargar resumen de tarjeta" está en el encabezado de Gastos Pina');
+    const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.click('#stmtBtn')]);
+    assert.ok(chooser); pass('al tocarlo se abre el selector de archivos (PDF o foto)');
+    all.push(...errors); await ctx.close();
+    const ro = await L.openArtifact(browser, base, { seed: L.FIXTURE.months, readOnly: true });
+    await waitMonth(ro.page); await L.sleep(600);
+    assert.ok(!(await ro.page.locator('#stmtBtn').isVisible())); pass('una invitada de solo lectura no lo ve');
+    all.push(...ro.errors); await ro.ctx.close();
+    const ni = await L.openArtifact(browser, base, { seed: L.FIXTURE.months, extra: 'window.__noImages = true;' });
+    await waitMonth(ni.page); await L.sleep(600);
+    assert.ok(!(await ni.page.locator('#stmtBtn').isVisible())); pass('si la vista no puede enviar imágenes a Claude, no aparece');
+    all.push(...ni.errors); await ni.ctx.close();
   }
 
   section('Idea 3) Último respaldo automático en GitHub');

@@ -65,21 +65,27 @@ function uid() { return Math.random().toString(36).slice(2,10) + Date.now().toSt
 
 function fmtARS(n) {
   if (n === null || n === undefined || isNaN(n)) return '$0';
-  return '$' + Math.round(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const r = Math.round(n);
+  return (r < 0 ? '-$' : '$') + Math.abs(r).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 function fmtUSD(n) {
   if (n === null || n === undefined || isNaN(n)) return 'USD 0';
   const cents = Math.abs(n - Math.round(n)) > 0.004;   // USD 19,99 must not read as USD 20
-  return 'USD ' + n.toLocaleString('es-AR', { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });
+  const neg = n < 0 && (cents || Math.round(n) < 0);
+  return (neg ? '-USD ' : 'USD ') + Math.abs(n).toLocaleString('es-AR', { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });
 }
 function fmtAmount(n, currency) { return currency === 'USD' ? fmtUSD(n) : fmtARS(n); }
+const negCls = (n) => (n < 0 ? ' neg' : '');                                   // class to append on a cell
+const moneyHtml = (n, cur) => (n < 0 ? `<span class="neg">${fmtAmount(n, cur)}</span>` : fmtAmount(n, cur));
 const deepClone = (x) => JSON.parse(JSON.stringify(x));
 function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 
 // Reads an amount typed the Argentine way: "655.520" (thousands), "655520", "1.234,56", "12,5", "$ 1.000".
 // A lone separator followed by 1-2 digits is a decimal; followed by 3 digits it is a thousands separator.
 function parseAmount(raw) {
-  let s = String(raw == null ? '' : raw).trim().replace(/[^\d.,]/g, '');
+  const text = String(raw == null ? '' : raw).trim();
+  const neg = /^[^\d]*[-\u2212\u2013]/.test(text) || /^\(/.test(text);   // "-5.000", "−5.000", "(5.000)": a refund / discount
+  let s = text.replace(/[^\d.,]/g, '');
   if (!s) return 0;
   const dots = (s.match(/\./g) || []).length, commas = (s.match(/,/g) || []).length;
   let dec = null;
@@ -91,7 +97,9 @@ function parseAmount(raw) {
     s = s.slice(0, i).replace(/[.,]/g, '') + '.' + s.slice(i + 1).replace(/[.,]/g, '');
   } else s = s.replace(/[.,]/g, '');
   const n = parseFloat(s);
-  return isFinite(n) ? Math.round(n * 100) / 100 : 0;
+  if (!isFinite(n)) return 0;
+  const v = Math.round(n * 100) / 100;
+  return neg && v ? -v : v;
 }
 // Value shown inside an amount field: plain digits, decimal comma.
 function amountForInput(n) {
