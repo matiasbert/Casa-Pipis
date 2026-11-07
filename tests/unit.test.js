@@ -59,6 +59,11 @@ module.exports = async function run(browser, base) {
   assert.strictEqual(ids[0], ids[1]); pass('dos dispositivos crean los mismos ids (la unión no duplica)');
   assert.ok(await page.evaluate(() => createMonthRecord('2031-01').auto === true && createMonthRecord('2031-01').updatedAt === 0)); pass('mes automático: marca auto y sin fecha de edición');
 
+  section('Unit 4b) Reparto según los ingresos');
+  const sp = await page.evaluate(() => [incomeSplit({ incomeMati: 2000000, incomePina: 1000000 }), incomeSplit({ incomeMati: 3, incomePina: 1 }), incomeSplit({ incomeMati: 100, incomePina: 0 }), incomeSplit({}), incomeSplit({ incomeMati: 1500000, incomePina: 1500000 })]);
+  assert.deepStrictEqual(sp, [{ mati: 66.7, pina: 33.3 }, { mati: 75, pina: 25 }, null, null, { mati: 50, pina: 50 }]); pass('cada uno es su parte de la suma de los ingresos; sin los dos datos no calcula');
+  assert.strictEqual(await page.evaluate(() => fmtPct(66.7) + '|' + fmtPct(50)), '66,7|50'); pass('porcentajes con coma decimal');
+
   section('Unit 5) Meses borrados');
   const del = await page.evaluate(() => {
     allMonths['2029-01'] = { key: '2029-01', matiSplit: 75, pinaSplit: 25, updatedAt: 5, items: [], pinaItems: [] };

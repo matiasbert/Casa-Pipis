@@ -83,7 +83,7 @@ function bindTrend() {
 function renderPrintHeader(month) {
   document.getElementById('printHeader').innerHTML =
     `<h2 style="margin-bottom:4px">Casa Pipi's — ${keyToLabel(month.key)}</h2>
-     <p style="color:#666;font-size:13px">Split global: Mati ${month.matiSplit}% / Pina ${month.pinaSplit}%</p>`;
+     <p style="color:#666;font-size:13px">Split global: Mati ${fmtPct(month.matiSplit)}% / Pina ${fmtPct(month.pinaSplit)}%</p>`;
   const ptbody = document.getElementById('printTbody');
   ptbody.innerHTML = '';
   for (const item of month.items) {
@@ -94,7 +94,7 @@ function renderPrintHeader(month) {
     tr.innerHTML = `
       <td>${escHtml(item.name + cuota)}</td><td>${item.currency}</td>
       <td>${fmtAmount(amt, item.currency)}</td>
-      <td>${item.splitOverride ? `${matiPct}%/${pinaPct}%` : 'Global'}</td>
+      <td>${item.splitOverride ? `${fmtPct(matiPct)}%/${fmtPct(pinaPct)}%` : 'Global'}</td>
       <td>${fmtAmount(mati, item.currency)}</td><td>${fmtAmount(pina, item.currency)}</td>`;
     ptbody.appendChild(tr);
   }
@@ -170,7 +170,7 @@ function buildImageSnapshot() {
     const amt = parseFloat(item.amount) || 0;
     if (!amt) continue;
     const { mati, pina, matiPct, pinaPct } = calcShares(item, month);
-    const splitTxt = item.splitOverride ? `${matiPct}%/${pinaPct}%` : 'Global';
+    const splitTxt = item.splitOverride ? `${fmtPct(matiPct)}%/${fmtPct(pinaPct)}%` : 'Global';
     const cuota = item.installments ? ` <small style="background:#fef3c7;color:#92400e;border-radius:3px;padding:1px 4px;font-size:10px">c.${item.installments.current}/${item.installments.total}</small>` : '';
     const notesHtml = item.notes ? `<div style="font-size:11px;color:#6b7280;font-style:italic;margin-top:1px">${escHtml(item.notes)}</div>` : '';
     const badge = item.currency === 'USD'
@@ -212,7 +212,7 @@ function buildImageSnapshot() {
   snap.innerHTML = `
     <div class="snap-header">
       <div class="snap-title">🏠 Casa Pipi's</div>
-      <div class="snap-sub">${keyToLabel(month.key)} &nbsp;·&nbsp; Split global: Mati ${month.matiSplit}% / Pina ${month.pinaSplit}%</div>
+      <div class="snap-sub">${keyToLabel(month.key)} &nbsp;·&nbsp; Split global: Mati ${fmtPct(month.matiSplit)}% / Pina ${fmtPct(month.pinaSplit)}%</div>
     </div>
     <table class="snap-table">
       <thead><tr><th>Concepto</th><th>Moneda</th><th>Monto</th><th>Split</th><th>Mati</th><th>Pina</th></tr></thead>

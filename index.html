@@ -71,7 +71,7 @@
   <div class="header-top">
     <div>
       <div class="app-title">🏠 Casa Pipi's</div>
-      <div class="app-subtitle">Gastos de casita · v2.1</div>
+      <div class="app-subtitle">Gastos de casita · v2.2</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <span class="sync-chip" id="syncChip">☁ —</span>
@@ -80,16 +80,26 @@
   </div>
   <div class="header-meta">
     <div class="meta-field">
+      <label for="incomeMatiInput">Ingreso mensual:</label>
+      <div class="split-inputs">
+        <span style="font-size:12px;color:var(--text-muted)">Mati $</span>
+        <input type="text" id="incomeMatiInput" class="meta-input money" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Ingreso mensual de Mati">
+        <span style="font-size:12px;color:var(--text-muted)">Pina $</span>
+        <input type="text" id="incomePinaInput" class="meta-input money" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Ingreso mensual de Pina">
+      </div>
+    </div>
+    <div class="meta-field">
       <label>Split global:</label>
       <div class="split-inputs">
         <span style="font-size:12px;color:var(--text-muted)">Mati</span>
-        <input type="number" id="matiSplitInput" class="meta-input" value="75" min="0" max="100" step="1">
+        <input type="number" id="matiSplitInput" class="meta-input" value="75" min="0" max="100" step="0.1">
         <span class="split-sep">%</span>
         <span style="font-size:12px;color:var(--text-muted)">Pina</span>
-        <input type="number" id="pinaSplitInput" class="meta-input" value="25" min="0" max="100" step="1">
+        <input type="number" id="pinaSplitInput" class="meta-input" value="25" min="0" max="100" step="0.1">
         <span class="split-sep">%</span>
       </div>
     </div>
+    <div class="split-hint" id="splitHint"></div>
   </div>
 </header>
 
