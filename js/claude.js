@@ -36,6 +36,7 @@ function historyForClaude() {
     return {
       mes: k,
       reparto_global_mati_pina: `${m.matiSplit}/${m.pinaSplit}`,
+      ...(m.incomeMati && m.incomePina ? { ingresos: { mati: m.incomeMati, pina: m.incomePina } } : {}),
       gastos: m.items.filter(i => parseFloat(i.amount) > 0).map(i => {
         const o = { concepto: i.name, moneda: i.currency, monto: parseFloat(i.amount) };
         if (i.splitOverride) o.reparto = `${i.splitOverride.mati}/${i.splitOverride.pina}`;

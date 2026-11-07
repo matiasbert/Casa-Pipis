@@ -3,7 +3,7 @@
 Seguimiento mensual de los gastos de la casa (Mati y Pina). App de una sola página, sin build:
 `index.html` + `data/history.json` (el historial), publicada con GitHub Pages.
 
-**v2.1** — el mismo `index.html` funciona en GitHub Pages y como página de claude.ai; instalable en el celular, se sincroniza sola.
+**v2.2** — el mismo `index.html` funciona en GitHub Pages y como página de claude.ai; instalable en el celular, se sincroniza sola.
 
 ## Cómo funciona
 
@@ -14,6 +14,7 @@ Seguimiento mensual de los gastos de la casa (Mati y Pina). App de una sola pág
   no pisa datos más nuevos.
 - Al abrir la app crea los meses que falten (también los del medio) arrastrando el Alquiler y
   contando bien las cuotas.
+- Cada mes tiene los **ingresos de Mati y de Pina**: con los dos cargados, el reparto global sale de la parte de cada uno sobre la suma (se puede ajustar a mano y volver al cálculo). El mes siguiente hereda ingresos y reparto.
 - Los meses anteriores quedan en solo lectura; el botón **Editar este mes** los habilita.
 - Borrar un gasto se puede deshacer (aviso abajo con "Deshacer").
 

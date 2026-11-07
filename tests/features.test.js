@@ -391,6 +391,46 @@ module.exports = async function run(browser, base) {
     all.push(...ni.errors); await ni.ctx.close();
   }
 
+  section('Cambio 5) Ingresos de Mati y Pina → reparto global');
+  {
+    const { ctx, page, errors } = await L.openArtifact(browser, base, { seed: L.FIXTURE.months });
+    await waitMonth(page);
+    assert.ok(await page.locator('#incomeMatiInput').isVisible() && await page.locator('#incomePinaInput').isVisible()); pass('hay dos campos de ingreso mensual (Mati y Pina)');
+    assert.ok(/Cargá los dos ingresos/.test(await page.locator('#splitHint').innerText())); pass('sin ingresos avisa que hace falta cargar los dos');
+    await page.fill('#incomeMatiInput', '2.000.000'); await page.press('#incomeMatiInput', 'Tab');
+    assert.strictEqual(await page.locator('#matiSplitInput').inputValue(), '75'); pass('con un solo ingreso el reparto no cambia');
+    await page.fill('#incomePinaInput', '1.000.000'); await page.press('#incomePinaInput', 'Tab');
+    assert.strictEqual(await page.locator('#matiSplitInput').inputValue(), '66.7');
+    assert.strictEqual(await page.locator('#pinaSplitInput').inputValue(), '33.3'); pass('2.000.000 y 1.000.000 → Mati 66,7% / Pina 33,3%');
+    assert.ok(/calculado con los ingresos/.test(await page.locator('#splitHint').innerText())); pass('el aviso dice que sale de los ingresos');
+    assert.strictEqual(await page.locator('#incomeMatiInput').inputValue(), '2.000.000'); pass('el ingreso se muestra con puntos de miles');
+    const alq = await page.locator('#expenseTbody tr', { hasText: 'Alquiler' }).innerText();
+    assert.ok(alq.includes('66,7% / 33,3%') && alq.includes('$437.') ); pass('Gastos usa el nuevo reparto: ' + alq.replace(/\s+/g, ' ').slice(0, 80));
+    await page.waitForFunction(() => window.__store['2026-10'].incomeMati === 2000000 && window.__store['2026-10'].incomePina === 1000000, null, { timeout: 8000 }); pass('queda guardado en la base');
+
+    await page.fill('#matiSplitInput', '70'); await page.press('#matiSplitInput', 'Tab');
+    assert.strictEqual(await page.locator('#pinaSplitInput').inputValue(), '30'); pass('se puede ajustar el reparto a mano (70/30)');
+    const hint = await page.locator('#splitHint').innerText();
+    assert.ok(/Ajustado a mano/.test(hint) && /66,7%/.test(hint)); pass('avisa "Ajustado a mano" y cuál sería según los ingresos');
+    await page.click('#splitHint button:has-text("Usar el de los ingresos")');
+    assert.strictEqual(await page.locator('#matiSplitInput').inputValue(), '66.7'); pass('un botón vuelve al reparto de los ingresos');
+    await page.fill('#incomePinaInput', '2.000.000'); await page.press('#incomePinaInput', 'Tab');
+    assert.strictEqual(await page.locator('#matiSplitInput').inputValue(), '50'); pass('cambiar un ingreso recalcula (2M y 2M → 50/50)');
+
+    await page.click('button:has-text("+ Nuevo mes")');
+    await page.waitForFunction(() => document.getElementById('monthLabel').textContent === 'Noviembre 2026');
+    assert.strictEqual(await page.locator('#incomeMatiInput').inputValue(), '2.000.000');
+    assert.strictEqual(await page.locator('#matiSplitInput').inputValue(), '50'); pass('el mes siguiente hereda los ingresos y el reparto');
+    await page.click('#prevMonthBtn'); await page.click('#prevMonthBtn');
+    assert.ok(await page.locator('#incomeMatiInput').isDisabled() && await page.locator('#matiSplitInput').isDisabled()); pass('en un mes pasado (solo lectura) los campos están bloqueados');
+    all.push(...errors); await ctx.close();
+
+    const ro = await L.openArtifact(browser, base, { seed: L.FIXTURE.months, readOnly: true });
+    await waitMonth(ro.page);
+    assert.ok(await ro.page.locator('#incomeMatiInput').isDisabled()); pass('una invitada de solo lectura no puede editarlos');
+    all.push(...ro.errors); await ro.ctx.close();
+  }
+
   section('Idea 3) Último respaldo automático en GitHub');
   {
     const at = new Date('2026-10-01T09:00:00').getTime();

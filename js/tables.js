@@ -11,6 +11,7 @@ function renderAll() {
 
   document.getElementById('matiSplitInput').value = month.matiSplit;
   document.getElementById('pinaSplitInput').value = month.pinaSplit;
+  renderIncome(month, isReadonly());
   document.getElementById('monthLabel').textContent = keyToLabel(currentKey);
 
   const badge = document.getElementById('readonlyBadge');
@@ -37,6 +38,8 @@ function renderAll() {
   document.getElementById('nextMonthBtn').disabled = idx >= keys.length - 1;
   document.getElementById('matiSplitInput').disabled = readonly;
   document.getElementById('pinaSplitInput').disabled = readonly;
+  document.getElementById('incomeMatiInput').disabled = readonly;
+  document.getElementById('incomePinaInput').disabled = readonly;
   document.getElementById('addRowBtnWrap').style.display = readonly ? 'none' : '';
   document.getElementById('addPinaRowBtnWrap').style.display = readonly ? 'none' : '';
 
@@ -86,8 +89,8 @@ function buildViewRow(item, month, readonly) {
   const { mati, pina, matiPct, pinaPct } = calcShares(item, month);
   const hasOverride = !!item.splitOverride;
   const splitLabel = hasOverride
-    ? `<span class="split-override-label">${matiPct}% / ${pinaPct}%</span>`
-    : `<span class="split-label">Global (${matiPct}% / ${pinaPct}%)</span>`;
+    ? `<span class="split-override-label">${fmtPct(matiPct)}% / ${fmtPct(pinaPct)}%</span>`
+    : `<span class="split-label">Global (${fmtPct(matiPct)}% / ${fmtPct(pinaPct)}%)</span>`;
   const installBadge = item.installments
     ? `<span class="installment-badge">cuota ${item.installments.current}/${item.installments.total}</span>` : '';
   const notesHtml = item.notes
@@ -132,14 +135,14 @@ function buildEditRow(item, month) {
       <div class="split-edit-row">
         <div class="split-edit-inputs">
           <span style="font-size:12px;color:var(--text-muted)">Mati</span>
-          <input type="number" id="eMati" value="${matiVal}" min="0" max="100" step="1" oninput="syncSplitInputs('mati')">
+          <input type="number" id="eMati" value="${matiVal}" min="0" max="100" step="0.1" oninput="syncSplitInputs('mati')">
           <span style="font-size:12px">%</span>
           <span style="font-size:12px;color:var(--text-muted)">Pina</span>
-          <input type="number" id="ePina" value="${pinaVal}" min="0" max="100" step="1" oninput="syncSplitInputs('pina')">
+          <input type="number" id="ePina" value="${pinaVal}" min="0" max="100" step="0.1" oninput="syncSplitInputs('pina')">
           <span style="font-size:12px">%</span>
           <span class="split-sum-hint" id="splitSumHint"></span>
         </div>
-        <button class="btn btn-sm" onclick="resetToGlobalSplit()" title="Usar el split global del mes">↺ Global (${month.matiSplit}%/${month.pinaSplit}%)</button>
+        <button class="btn btn-sm" onclick="resetToGlobalSplit()" title="Usar el split global del mes">↺ Global (${fmtPct(month.matiSplit)}%/${fmtPct(month.pinaSplit)}%)</button>
       </div>
       <div class="install-row">
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text)">
@@ -404,8 +407,8 @@ function syncSplitInputs(changed) {
   const pinaEl = document.getElementById('ePina');
   let m = parseFloat(matiEl.value) || 0;
   let p = parseFloat(pinaEl.value) || 0;
-  if (changed === 'mati') { m = clamp(m,0,100); pinaEl.value = Math.max(0, 100-m); }
-  else                    { p = clamp(p,0,100); matiEl.value = Math.max(0, 100-p); }
+  if (changed === 'mati') { m = clamp(m,0,100); pinaEl.value = Math.max(0, round1(100-m)); }
+  else                    { p = clamp(p,0,100); matiEl.value = Math.max(0, round1(100-p)); }
   updateSplitHint();
 }
 
@@ -488,7 +491,7 @@ function saveEdit(id) {
 
   if (Math.abs(m + p - 100) > 0.01) { showNotif('⚠ El split debe sumar 100%'); return; }
 
-  const splitOverride = (m === month.matiSplit && p === month.pinaSplit) ? null : { mati: m, pina: p };
+  const splitOverride = (Math.abs(m - month.matiSplit) < 0.05 && Math.abs(p - month.pinaSplit) < 0.05) ? null : { mati: m, pina: p };
   const installments  = instChk?.checked
     ? { current: Math.max(1, instCur), total: Math.max(instCur, instTot) }
     : null;
@@ -599,22 +602,56 @@ function unlockMonth() {
   showNotif('✏️ Edición habilitada para ' + keyToLabel(currentKey));
 }
 
+// Typing a split by hand overrides the one calculated from the incomes (the hint offers to go back to it).
 document.getElementById('matiSplitInput').addEventListener('change', function() {
   const month = getMonth();
   if (!month || isReadonly()) return;
-  let m = clamp(parseFloat(this.value)||0, 0, 100);
-  month.matiSplit = m; month.pinaSplit = 100 - m;
-  document.getElementById('pinaSplitInput').value = month.pinaSplit;
+  month.matiSplit = round1(clamp(parseFloat(this.value) || 0, 0, 100));
+  month.pinaSplit = round1(100 - month.matiSplit);
+  month.splitMode = 'manual';
   commit(); renderAll();
 });
 document.getElementById('pinaSplitInput').addEventListener('change', function() {
   const month = getMonth();
   if (!month || isReadonly()) return;
-  let p = clamp(parseFloat(this.value)||0, 0, 100);
-  month.pinaSplit = p; month.matiSplit = 100 - p;
-  document.getElementById('matiSplitInput').value = month.matiSplit;
+  month.pinaSplit = round1(clamp(parseFloat(this.value) || 0, 0, 100));
+  month.matiSplit = round1(100 - month.pinaSplit);
+  month.splitMode = 'manual';
   commit(); renderAll();
 });
+
+// Monthly incomes: once both are set, the global split is each one's share of the combined income.
+function onIncomeChange() {
+  const month = getMonth();
+  if (!month || isReadonly()) return;
+  month.incomeMati = Math.max(0, parseAmount(document.getElementById('incomeMatiInput').value));
+  month.incomePina = Math.max(0, parseAmount(document.getElementById('incomePinaInput').value));
+  const s = incomeSplit(month);
+  if (s) { month.matiSplit = s.mati; month.pinaSplit = s.pina; month.splitMode = 'auto'; }
+  commit(); renderAll();
+}
+function useIncomeSplit() {
+  const month = getMonth(), s = month && incomeSplit(month);
+  if (!s || isReadonly()) return;
+  month.matiSplit = s.mati; month.pinaSplit = s.pina; month.splitMode = 'auto';
+  commit(); renderAll();
+}
+document.getElementById('incomeMatiInput').addEventListener('change', onIncomeChange);
+document.getElementById('incomePinaInput').addEventListener('change', onIncomeChange);
+const fmtIncome = (n) => (n > 0 ? n.toLocaleString('es-AR', { maximumFractionDigits: 2 }) : '');
+
+function renderIncome(month, readonly) {
+  const mi = document.getElementById('incomeMatiInput'), pi = document.getElementById('incomePinaInput');
+  if (document.activeElement !== mi) mi.value = fmtIncome(parseFloat(month.incomeMati) || 0);
+  if (document.activeElement !== pi) pi.value = fmtIncome(parseFloat(month.incomePina) || 0);
+  const hint = document.getElementById('splitHint'), s = incomeSplit(month);
+  if (!s) { hint.innerHTML = 'Cargá los dos ingresos y el reparto se calcula solo.'; return; }
+  const same = Math.abs(s.mati - month.matiSplit) < 0.05 && Math.abs(s.pina - month.pinaSplit) < 0.05;
+  hint.innerHTML = same
+    ? `<span class="ok">✓ Reparto calculado con los ingresos: Mati ${fmtPct(s.mati)}% / Pina ${fmtPct(s.pina)}%.</span>`
+    : `<span>Ajustado a mano. Según los ingresos sería Mati ${fmtPct(s.mati)}% / Pina ${fmtPct(s.pina)}%.</span>` + (readonly ? '' : ' <button class="btn btn-sm" onclick="useIncomeSplit()">Usar el de los ingresos</button>');
+}
+
 document.getElementById('prevMonthBtn').addEventListener('click', () => navigateMonth(-1));
 document.getElementById('nextMonthBtn').addEventListener('click', () => navigateMonth(1));
 

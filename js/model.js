@@ -134,6 +134,9 @@ function applyCarryOver(newMonth) {
   const gap = Math.max(1, monthDiff(prev.key, newMonth.key));
   newMonth.matiSplit = prev.matiSplit;
   newMonth.pinaSplit = prev.pinaSplit;
+  if (prev.incomeMati) newMonth.incomeMati = prev.incomeMati;
+  if (prev.incomePina) newMonth.incomePina = prev.incomePina;
+  if (prev.splitMode) newMonth.splitMode = prev.splitMode;
   const newAlq = newMonth.items.find(i => i.name === 'Alquiler');
   if (newAlq) {
     for (let i = prevKeys.length - 1; i >= 0; i--) {
@@ -207,7 +210,7 @@ function canon(v) {
 // Content signature (ignores the edit time and the auto flag): equal signature = same data.
 function monthSig(m) {
   const byId = (a, b) => (String(a.id) < String(b.id) ? -1 : 1);
-  return JSON.stringify(canon({ k: m.key, ms: m.matiSplit, ps: m.pinaSplit, l: !!m.locked,
+  return JSON.stringify(canon({ k: m.key, ms: m.matiSplit, ps: m.pinaSplit, l: !!m.locked, im: m.incomeMati || 0, ip: m.incomePina || 0, sm: m.splitMode || '',
     i: [...(m.items || [])].sort(byId), p: [...(m.pinaItems || [])].sort(byId), r: m.removed || {} }));
 }
 // Merges two copies of one month item by item. Month-level fields come from the copy edited last; each
@@ -248,6 +251,14 @@ function isReadonly() {
   if (!m || viewerReadOnly) return true;
   if (m.locked) return true;
   return currentKey < todayKey() && !unlockedKeys.has(currentKey);
+}
+
+// Global split derived from the two monthly incomes: each one's share of the combined income (null until both are set).
+function incomeSplit(month) {
+  const a = parseFloat(month.incomeMati) || 0, b = parseFloat(month.incomePina) || 0;
+  if (!(a > 0) || !(b > 0)) return null;
+  const mati = Math.round(a / (a + b) * 1000) / 10;
+  return { mati, pina: round1(100 - mati) };
 }
 
 function calcShares(item, month) {

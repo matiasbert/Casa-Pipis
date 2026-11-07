@@ -75,6 +75,8 @@ function fmtUSD(n) {
   return (neg ? '-USD ' : 'USD ') + Math.abs(n).toLocaleString('es-AR', { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });
 }
 function fmtAmount(n, currency) { return currency === 'USD' ? fmtUSD(n) : fmtARS(n); }
+const round1 = (n) => Math.round(n * 10) / 10;
+const fmtPct = (p) => String(round1(p)).replace('.', ',');                    // 62.5 -> "62,5"
 const negCls = (n) => (n < 0 ? ' neg' : '');                                   // class to append on a cell
 const moneyHtml = (n, cur) => (n < 0 ? `<span class="neg">${fmtAmount(n, cur)}</span>` : fmtAmount(n, cur));
 const deepClone = (x) => JSON.parse(JSON.stringify(x));
