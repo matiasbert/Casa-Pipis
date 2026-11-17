@@ -466,7 +466,9 @@ const BASES = {
     sampleFile: 'export (22).csv',
     publicUrl: 'https://aps2.senasa.gov.ar/vademecum/app/publico/formulados',
     // Endpoint observado en la pestaña Red del navegador al usar el vademécum público (GET, JSON).
-    apiUrl: 'https://aps2.senasa.gov.ar/adt_api/api/productosAgroquimicosFormulados/search/publicSearchProductosFormuladosDTO?page=0&size=20000&sort=numeroInscripcion%2Cdesc',
+    // Pedido idéntico al que hace el botón "Exportar" (observado en DevTools, 17/11/2026). La herramienta
+    // pide primero un "size" mayor para cubrir altas nuevas y, si el servidor no lo acepta, vuelve a 7551 y pagina.
+    apiUrl: 'https://aps2.senasa.gov.ar/adt_api/api/productosAgroquimicosFormulados/search/publicSearchProductosFormuladosDTO?page=0&size=7551&sort=numeroInscripcion%2Cdesc',
     titleField: 'marca',
     fields: [
       { key: 'registro', label: 'N° registro', aliases: REG_ALIASES },
@@ -1227,8 +1229,13 @@ async function removeDataset(b) {
 
 /* ============================== Fuente: API pública de SENASA ============================== */
 const Remote = {
-  url(b) { const v = LS.get('url.' + b, null); return v === null ? (BASES[b].apiUrl || '') : v; },
-  setUrl(b, u) { LS.set('url.' + b, String(u || '').trim()); },
+  url(b) { const v = LS.get('url.' + b, null); return (v === null || v === this.OLD_DEFAULTS[b]) ? (BASES[b].apiUrl || '') : v; },
+  setUrl(b, u) {   // solo se guarda si difiere de la predeterminada (así una mejora futura del valor por defecto se aplica sola)
+    u = String(u || '').trim();
+    if (u === (BASES[b].apiUrl || '') || u === this.OLD_DEFAULTS[b]) { try { localStorage.removeItem('sve.url.' + b); } catch { /* */ } }
+    else LS.set('url.' + b, u);
+  },
+  OLD_DEFAULTS: { F: 'https://aps2.senasa.gov.ar/adt_api/api/productosAgroquimicosFormulados/search/publicSearchProductosFormuladosDTO?page=0&size=20000&sort=numeroInscripcion%2Cdesc' },
   status: {},
   async fetchJSON(url, auth) {
     const headers = { Accept: 'application/json, text/plain, */*' };
