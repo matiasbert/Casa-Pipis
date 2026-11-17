@@ -225,6 +225,8 @@ mark{background:#ffe58a;color:inherit;border-radius:2px;padding:0 1px}
 .dropzone{border:2px dashed #b9c5d3;border-radius:var(--r);background:#fbfcfe;padding:26px;text-align:center;color:var(--muted);cursor:pointer}
 .dropzone:hover{border-color:var(--accent);color:var(--accent2);background:var(--accent-soft)}
 .dropzone b{color:var(--ink)}
+.bm-link{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:2px dashed var(--accent);border-radius:9px;background:var(--accent-soft);color:var(--accent2);font-weight:700;text-decoration:none;cursor:grab;white-space:nowrap}
+.bridge-panel{border:2px solid #9fd5ca;margin-bottom:12px}
 .watchbox{display:flex;align-items:center;gap:12px;background:var(--F-soft);border:1px solid #cddcfb;border-radius:10px;padding:10px 12px;margin:8px 0}
 .pulse{width:12px;height:12px;border-radius:50%;background:var(--F);flex:none;animation:pulse 1.3s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(37,99,235,.5)}70%{box-shadow:0 0 0 10px rgba(37,99,235,0)}100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
@@ -1179,6 +1181,8 @@ async function commitDataset(ds) {
 }
 async function ingest(payloads, opts = {}) {
   const ok = [], bad = [];
+  payloads = payloads.flatMap(expandBundle);   // archivo .json del marcador con varias bases → un payload por base
+  if (!payloads.length) return { ok, bad };
   busy(true, 'Procesando…');
   try {
     for (const p of payloads) {
@@ -1242,7 +1246,7 @@ const Remote = {
     if (auth) headers.Authorization = 'Bearer';   // la página pública envía "Authorization: Bearer" vacío
     let resp;
     try { resp = await fetch(url, { cache: 'no-store', credentials: 'omit', headers }); }
-    catch { throw new UserError('El navegador no pudo leer la respuesta: SENASA no autoriza (CORS) a esta página local a leer sus datos, o no hay conexión. Usá “Abrir JSON” o la importación asistida.'); }
+    catch { throw new UserError('El navegador no pudo leer la respuesta: SENASA no autoriza (CORS) a esta página local a leer sus datos, o no hay conexión. Usá el marcador “SENASA → Explorer” (puente, en Fuentes y actualización), que no tiene esta restricción.'); }
     if ((resp.status === 401 || resp.status === 403) && !auth) return this.fetchJSON(url, true);
     if (!resp.ok) throw new UserError(`SENASA respondió HTTP ${resp.status}.`);
     const text = await resp.text();
@@ -1353,7 +1357,8 @@ const Folder = {
     if (this.cache.has(key)) return this.cache.get(key);
     let base = null;
     try {
-      if (/\.(xlsx|json|html?)$/i.test(f.name)) base = (await parseTable(await f.arrayBuffer())).base;
+      if (/\.json$/i.test(f.name)) { const buf = await f.arrayBuffer(); base = isBundle(buf) ? 'bundle' : (await parseTable(buf)).base; }
+      else if (/\.(xlsx|html?)$/i.test(f.name)) base = (await parseTable(await f.arrayBuffer())).base;
       else {
         let u8 = new Uint8Array(await f.slice(0, 65536).arrayBuffer());
         if (f.size > 65536) { const nl = u8.lastIndexOf(10); if (nl > 0) u8 = u8.subarray(0, nl); }
@@ -1389,8 +1394,8 @@ const Folder = {
         this.done.add(id);
         const base = await this.baseOf(f);
         if (!base) continue;
-        const res = await ingest([await payloadFromFile(f, { type: 'folder', label: `Importación asistida (carpeta “${this.name}”)`, url: BASES[base].publicUrl })]);
-        if (res.ok.length) this.got[base] = { name: f.name, at: Date.now() };
+        const res = await ingest([await payloadFromFile(f, { type: 'folder', label: `Importación asistida (carpeta “${this.name}”)`, url: BASES[base] ? BASES[base].publicUrl : '' })]);
+        for (const o of res.ok) this.got[o.base] = { name: f.name, at: Date.now() };
       }
       if (BASE_IDS.every(b => this.got[b])) this.stopWatch('Listo: se importaron las 3 bases desde las descargas.');
     } catch (e) { console.error(e); this.stopWatch('Se interrumpió la espera de descargas: ' + e.message); }
@@ -1404,28 +1409,183 @@ const Folder = {
     busy(true, `Buscando exportaciones en “${this.name}”…`);
     try { for (const f of (await this.files(0)).slice(0, 80)) { if (BASE_IDS.every(b => best[b])) break; const b = await this.baseOf(f); if (b && !best[b]) best[b] = f; } }
     finally { busy(false); }
-    const found = BASE_IDS.filter(b => best[b]);
+    const found = [...BASE_IDS.filter(b => best[b]), ...(best.bundle ? ['bundle'] : [])];
     if (!found.length) return toast(`No se encontraron exportaciones de SENASA reconocibles en “${this.name}”.`, 'warn', 9000);
     const rows = found.map(b => {
       const f = best[b], cur = DATA[b];
+      if (b === 'bundle') return { b, f, same: false, older: false };
       const same = cur && cur.meta.fileName === f.name && cur.meta.fileSize === f.size && cur.meta.fileLastModified === f.lastModified;
       const older = cur && !same && cur.meta.loadedAt && f.lastModified < (cur.meta.fileLastModified || cur.meta.loadedAt);
       return { b, f, same, older };
     });
     showModal('Exportaciones encontradas en la carpeta', `<p class="small muted">Archivo más reciente reconocido para cada base en “${esc(this.name)}”.</p>
       <table class="mini"><thead><tr><th></th><th>Base</th><th>Archivo</th><th>Fecha del archivo</th><th>Estado</th></tr></thead><tbody>
-      ${rows.map(x => `<tr><td><input type="checkbox" class="scan-ck" data-base="${x.b}"${x.same ? '' : ' checked'}></td><td><span class="dot ${x.b}"></span> ${esc(BASES[x.b].label)}</td><td>${esc(x.f.name)} <span class="muted">(${fmtBytes(x.f.size)})</span></td><td>${fmtDateTime(x.f.lastModified)}</td><td>${x.same ? '<span class="pill info">ya cargado</span>' : x.older ? '<span class="pill warn">más antiguo que el cargado</span>' : DATA[x.b] ? '<span class="pill ok">más nuevo</span>' : '<span class="pill ok">no cargada aún</span>'}</td></tr>`).join('')}
+      ${rows.map(x => `<tr><td><input type="checkbox" class="scan-ck" data-base="${x.b}"${x.same ? '' : ' checked'}></td><td>${x.b === 'bundle' ? 'Paquete del marcador (varias bases)' : `<span class="dot ${x.b}"></span> ${esc(BASES[x.b].label)}`}</td><td>${esc(x.f.name)} <span class="muted">(${fmtBytes(x.f.size)})</span></td><td>${fmtDateTime(x.f.lastModified)}</td><td>${x.b === 'bundle' ? '<span class="pill info">marcador</span>' : x.same ? '<span class="pill info">ya cargado</span>' : x.older ? '<span class="pill warn">más antiguo que el cargado</span>' : DATA[x.b] ? '<span class="pill ok">más nuevo</span>' : '<span class="pill ok">no cargada aún</span>'}</td></tr>`).join('')}
       </tbody></table>`, [
       { label: 'Cancelar', onClick: closeModal },
       { label: 'Importar seleccionados', primary: true, onClick: async () => {
         const sel = $$('.scan-ck').filter(c => c.checked).map(c => c.dataset.base); closeModal();
         if (!sel.length) return;
-        const payloads = []; for (const b of sel) payloads.push(await payloadFromFile(best[b], { type: 'folder', label: `Importación asistida (carpeta “${this.name}”)`, url: BASES[b].publicUrl }));
+        const payloads = []; for (const b of sel) payloads.push(await payloadFromFile(best[b], { type: 'folder', label: `Importación asistida (carpeta “${this.name}”)`, url: BASES[b] ? BASES[b].publicUrl : '' }));
         await ingest(payloads);
       } },
     ]);
   },
 };
+
+/* ============================== Fuente: marcador puente desde SENASA ==============================
+   El navegador bloquea (CORS) que esta página local lea la API de SENASA, pero una página del propio
+   sitio (aps2.senasa.gov.ar) sí puede. El marcador "SENASA → Explorer" se ejecuta en la pestaña de
+   SENASA: pide a esta herramienta (window.opener) qué URLs bajar, solo acepta URLs del mismo sitio,
+   descarga el JSON completo y lo devuelve por postMessage. Si la pestaña no fue abierta desde la
+   herramienta, descarga un archivo .json ("paquete") que se carga como cualquier otro archivo.
+   La herramienta solo acepta mensajes cuyo origen sea exactamente SENASA_ORIGIN. */
+const SENASA_ORIGIN = 'https://aps2.senasa.gov.ar';
+/* Código que corre DENTRO de la pestaña de SENASA (se serializa en el marcador; sin comentarios de línea). */
+function senasaBridge(DEF) {
+  (async function () {
+    var O = location.origin, op = window.opener, jobs = null;
+    var box = document.createElement('div');
+    box.style.cssText = 'position:fixed;z-index:2147483647;top:12px;right:12px;max-width:380px;background:#0d6b5f;color:#fff;padding:12px 16px;border-radius:10px;font:14px/1.4 Segoe UI,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.3)';
+    (document.body || document.documentElement).appendChild(box);
+    var say = function (t) { box.textContent = 'SENASA → Explorer: ' + t; };
+    say('conectando…');
+    if (op) {
+      try {
+        jobs = await new Promise(function (res) {
+          var t = setTimeout(function () { res(null); }, 2500);
+          window.addEventListener('message', function (e) { if (e.source === op && e.data && Array.isArray(e.data.sveJobs)) { clearTimeout(t); res(e.data.sveJobs); } });
+          op.postMessage({ sveHello: 1 }, '*');
+        });
+      } catch (e) { jobs = null; }
+    }
+    var viaOp = !!jobs;
+    if (!jobs) jobs = DEF;
+    jobs = jobs.filter(function (j) { return j && typeof j.u === 'string' && j.u.indexOf(O + '/') === 0; });
+    if (!jobs.length) { say('no hay direcciones de datos para este sitio. Usá el marcador estando en una página de aps2.senasa.gov.ar.'); return; }
+    var get = async function (u, auth) {
+      var h = { Accept: 'application/json' }; if (auth) h.Authorization = 'Bearer';
+      var r = await fetch(u, { headers: h, credentials: 'same-origin', cache: 'no-store' });
+      if ((r.status === 401 || r.status === 403) && !auth) return get(u, true);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    };
+    var pick = function (d) {
+      if (Array.isArray(d)) return [d, null];
+      if (!d || typeof d !== 'object') return [[], null];
+      var t = typeof d.totalElements === 'number' ? d.totalElements : (d.page && typeof d.page.totalElements === 'number') ? d.page.totalElements : (typeof d.total === 'number' ? d.total : null);
+      if (Array.isArray(d.content)) return [d.content, t];
+      if (d._embedded) { var a = Object.values(d._embedded).filter(Array.isArray).sort(function (x, y) { return y.length - x.length; })[0]; if (a) return [a, t]; }
+      var ks = ['data', 'items', 'results', 'rows', 'records', 'result', 'list'];
+      for (var i = 0; i < ks.length; i++) if (Array.isArray(d[ks[i]])) return [d[ks[i]], t];
+      return [[], t];
+    };
+    var all = async function (j) {
+      var u = new URL(j.u), out = [], tot = null;
+      if (!u.searchParams.has('page') && !u.searchParams.has('size')) { var p = pick(await get(u.href)); return { records: p[0], total: p[1] }; }
+      var p0 = +(u.searchParams.get('page') || 0), s0 = +(u.searchParams.get('size') || 0);
+      u.searchParams.set('size', String(Math.max(s0, 20000)));
+      for (var i = 0; i < 1000; i++) {
+        u.searchParams.set('page', String(p0 + i));
+        var d;
+        try { d = await get(u.href); } catch (e) { if (i === 0 && s0 && s0 < 20000) { u.searchParams.set('size', String(s0)); d = await get(u.href); } else throw e; }
+        var r = pick(d); if (tot === null && r[1] !== null) tot = r[1];
+        for (var k = 0; k < r[0].length; k++) out.push(r[0][k]);
+        say((j.n || j.b) + ': ' + out.length + (tot ? ' de ' + tot : '') + ' registros…');
+        if (!r[0].length || tot === null || out.length >= tot) break;
+      }
+      return { records: out, total: tot };
+    };
+    var res = {};
+    for (var i = 0; i < jobs.length; i++) {
+      var j = jobs[i];
+      try { var x = await all(j); x.url = j.u; res[j.b] = x; } catch (e) { res[j.b] = { url: j.u, error: String((e && e.message) || e) }; }
+    }
+    var sum = jobs.map(function (j) { var v = res[j.b]; return (j.n || j.b) + ': ' + (v.error ? 'error ' + v.error : v.records.length + ' registros'); }).join(' · ');
+    if (viaOp && !op.closed) {
+      op.postMessage({ sveData: res, at: Date.now() }, '*');
+      say('✓ datos enviados al Explorer (' + sum + '). Podés cerrar esta pestaña.');
+    } else {
+      var blob = new Blob([JSON.stringify({ sveBundle: 1, origin: O, at: Date.now(), bases: res })], { type: 'application/json' });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'senasa-explorer_' + new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '') + '.json';
+      document.body.appendChild(a); a.click();
+      say('✓ se descargó un archivo con los datos (' + sum + '). Cargalo en el Explorer: arrastralo o usá la importación desde Descargas.');
+    }
+  })().catch(function (e) { alert('SENASA → Explorer: ' + ((e && e.message) || e)); });
+}
+const isBundle = buf => /^\s*\{\s*"sveBundle"/.test(new TextDecoder().decode(new Uint8Array(buf, 0, Math.min(64, buf.byteLength))));
+function expandBundle(p) {
+  try {
+    if (!p.buffer || !isBundle(p.buffer)) return [p];
+    const data = JSON.parse(new TextDecoder().decode(p.buffer));
+    const { payloads, errs } = Bridge.payloadsFrom(data.bases, `Marcador puente desde SENASA (archivo “${p.name}”)`, data.at);
+    errs.forEach(m => toast('✗ ' + m, 'err', 12000));
+    return payloads;
+  } catch { return [p]; }
+}
+const Bridge = {
+  waiting: false, last: LS.get('bridgeLast', null),
+  jobsFor(origin) { return BASE_IDS.map(b => ({ b, n: BASES[b].label, u: Remote.url(b) })).filter(j => j.u && j.u.indexOf(origin + '/') === 0); },
+  code() { return '(' + senasaBridge.toString().replace(/\n\s*/g, ' ') + ')(' + JSON.stringify(this.jobsFor(SENASA_ORIGIN)) + ');void 0;'; },
+  href() { return 'javascript:' + encodeURIComponent(this.code()); },
+  open() {
+    saveUrlInputs();
+    if (!this.jobsFor(SENASA_ORIGIN).length) { toast('No hay URLs de API de SENASA configuradas.', 'warn'); return; }
+    const w = window.open(BASES.F.publicUrl, 'sve_senasa');   // sin "noopener": el marcador necesita window.opener
+    if (!w) toast('El navegador bloqueó la ventana nueva. Permití ventanas emergentes para esta página, o abrí SENASA a mano (el marcador descargará un archivo).', 'warn', 10000);
+    this.waiting = true; renderBridge();
+    toast('En la pestaña de SENASA tocá el favorito “SENASA → Explorer”. Los datos llegan solos.', 'info', 9000);
+  },
+  payloadsFrom(bases, label, at) {
+    const payloads = [], errs = [];
+    for (const [b, v] of Object.entries(bases || {})) {
+      if (!BASES[b] || !v || typeof v !== 'object') continue;
+      if (v.error) { errs.push(`${BASES[b].label}: SENASA respondió con error (${String(v.error).slice(0, 120)}).`); continue; }
+      if (!Array.isArray(v.records) || !v.records.length) { errs.push(`${BASES[b].label}: la respuesta no trajo registros.`); continue; }
+      const warnings = (typeof v.total === 'number' && v.records.length < v.total) ? [`SENASA informó ${fmtInt(v.total)} registros pero llegaron ${fmtInt(v.records.length)}.`] : [];
+      const buffer = new TextEncoder().encode(JSON.stringify(v.records)).buffer;
+      const when = typeof at === 'number' ? at : Date.now();
+      payloads.push({ name: `SENASA (marcador) · ${BASES[b].label.toLowerCase()} · ${fmtDateTime(when)}`, size: buffer.byteLength, lastModified: when, buffer, expect: b, warnings,
+        origin: { type: 'bridge', label, url: (typeof v.url === 'string' && v.url.indexOf(SENASA_ORIGIN + '/') === 0) ? v.url : '' } });
+    }
+    return { payloads, errs };
+  },
+  async onMessage(e) {
+    if (e.origin !== SENASA_ORIGIN) return;                       // solo se aceptan mensajes del sitio de SENASA
+    const d = e.data; if (!d || typeof d !== 'object') return;
+    if (d.sveHello) { try { e.source.postMessage({ sveJobs: this.jobsFor(e.origin) }, e.origin); } catch { /* pestaña cerrada */ } return; }
+    if (!d.sveData || typeof d.sveData !== 'object') return;
+    this.waiting = false;
+    const { payloads, errs } = this.payloadsFrom(d.sveData, 'Marcador puente desde el sitio de SENASA (datos de la API pública)', d.at);
+    errs.forEach(m => toast('✗ ' + m, 'err', 12000));
+    if (payloads.length) {
+      const res = await ingest(payloads, { rejectHTML: true });
+      if (res.ok.length) { this.last = { at: Date.now(), bases: res.ok.map(o => o.base) }; LS.set('bridgeLast', this.last); }
+    }
+    renderBridge();
+  },
+};
+function bridgeStatusHTML() {
+  if (Bridge.waiting) return `<div class="watchbox"><div class="pulse"></div><div class="grow"><b>Esperando los datos del marcador…</b><div class="small">En la pestaña de SENASA tocá el favorito “SENASA → Explorer”.</div></div><button class="btn sm" data-action="bridge-cancel">Cancelar</button></div>`;
+  if (Bridge.last) return `<div class="okbox">Última actualización con el marcador: ${fmtDateTime(Bridge.last.at)} · ${Bridge.last.bases.map(b => esc(BASES[b].label)).join(', ')}</div>`;
+  return '';
+}
+function renderBridge() { const box = $('#bridgeBox'); if (box) box.innerHTML = bridgeStatusHTML(); }
+function bridgePanelHTML() {
+  const jobs = Bridge.jobsFor(SENASA_ORIGIN);
+  return `<div class="panel bridge-panel"><h4>Puente desde SENASA (marcador) <span class="pill ok">recomendado · automático</span></h4>
+    <p class="small">El navegador bloquea (CORS) que esta página, abierta desde tu equipo, lea la API de SENASA. <b>Las páginas del propio sitio de SENASA sí pueden.</b> Este marcador hace el pedido desde la pestaña de SENASA y le pasa los datos a la herramienta. No instala nada y lee los mismos datos públicos que usa “Exportar”.</p>
+    <ol class="steps">
+      <li><b>Una sola vez:</b> arrastrá este botón a la barra de favoritos → <a class="bm-link" href="${esc(Bridge.href())}" data-action="bm-info" title="Arrastralo a la barra de favoritos">SENASA → Explorer</a> <button class="linkbtn sm" data-action="bm-copy">copiar código</button>
+        <div class="hint">¿No ves la barra de favoritos? Ctrl+Shift+B. En celular o tablet: guardá cualquier página como favorito, editalo, poné de nombre “SENASA Explorer” y pegá el código copiado en lugar de la URL.</div></li>
+      <li><button class="btn sm primary" data-action="bridge-open">Abrir SENASA y esperar los datos</button></li>
+      <li>En la pestaña de SENASA que se abre, tocá el favorito <b>SENASA → Explorer</b> (en el celular: escribí “SENASA Explorer” en la barra de direcciones y elegí el favorito). Los datos llegan y se importan solos.</li>
+    </ol>
+    <div id="bridgeBox">${bridgeStatusHTML()}</div>
+    <p class="hint">Trae las bases con URL de API configurada (ahora: ${jobs.length ? jobs.map(j => esc(j.n)).join(', ') : 'ninguna'}). Si después agregás las de Activos o Fertilizantes, el marcador las toma solo cuando abrís SENASA desde este botón; si abriste SENASA por tu cuenta, el marcador descarga un archivo .json que se carga arrastrándolo o con la importación desde Descargas (en ese caso conviene volver a arrastrar el marcador para que incluya las URLs nuevas).</p>
+  </div>`;
+}
 
 /* ============================== Render: encabezado y pestañas ============================== */
 function renderHeader() {
@@ -1618,7 +1778,7 @@ function welcomeHTML() {
     <p class="lead">Combiná Formulados, Sustancias activas y Fertilizantes: buscá, filtrá, cruzá y compará. Todo se procesa en este navegador; nada se envía a ningún servidor.</p>
     <div class="w-grid">
       <div class="w-card"><div class="w-n">1</div><h3>Cargar archivos exportados</h3><p>Arrastrá a esta ventana los CSV (o XLSX/JSON) descargados con “Exportar” en SENASA. Se reconoce solo a qué base pertenece cada uno; podés cargar una, dos o las tres.</p><button class="btn primary" data-action="load-files">Elegir archivos…</button><p class="hint">Ej.: export (22).csv → Formulados · export (23).csv → Activos · export (24).csv → Fertilizantes</p></div>
-      <div class="w-card"><div class="w-n">2</div><h3>Importar desde SENASA</h3><p>Descarga directa desde la API pública que usa el propio vademécum (Formulados ya configurado), o importación asistida: tocás “Exportar” en SENASA y la herramienta toma el archivo de tu carpeta de descargas.</p><button class="btn primary" data-action="remote-all">Actualizar desde SENASA</button> <button class="btn" data-action="tab" data-view="sources">Opciones…</button></div>
+      <div class="w-card"><div class="w-n">2</div><h3>Importar desde SENASA</h3><p>Con el marcador “SENASA → Explorer” (se agrega una sola vez a favoritos) la herramienta trae los datos de la API pública del propio vademécum: abrís SENASA, tocás el favorito y se importan solos. Formulados ya está configurado.</p><button class="btn primary" data-action="tab" data-view="sources">Configurar el marcador…</button> <button class="btn" data-action="bridge-open">Actualizar desde SENASA</button></div>
     </div>
     <div class="w-links">${BASE_IDS.map(b => `<a href="${esc(BASES[b].publicUrl)}" target="_blank" rel="noopener"><span class="dot ${b}"></span>${esc(BASES[b].long)} ↗</a>`).join('')}</div>
     <p class="disclaimer-big">⚠ <b>Aviso:</b> herramienta personal y no oficial. Los datos provienen de las exportaciones públicas de SENASA y pueden estar desactualizados o contener errores de origen o de conversión. <b>No reemplaza la verificación en SENASA</b> ni la lectura del registro y del marbete oficiales. Las relaciones entre bases se calculan por coincidencia de texto: las marcadas como “posibles” no están confirmadas.</p>
@@ -1922,7 +2082,7 @@ function srcCard(b) {
   const B = BASES[b], ds = DATA[b];
   if (!ds) return `<div class="src-card off c-${b}"><div class="sc-h"><span class="dot ${b}"></span><b>${esc(B.long)}</b><span class="sc-n muted">sin cargar</span></div>
     <p class="small muted">Cargá la exportación de <a href="${esc(B.publicUrl)}" target="_blank" rel="noopener">${esc(B.label)} en SENASA ↗</a> (p. ej. “${esc(B.sampleFile)}”) o actualizá desde la API.</p>
-    <div class="sc-actions"><button class="btn sm primary" data-action="load-files" data-base="${b}">Cargar archivo…</button>${Remote.url(b) ? `<button class="btn sm" data-action="remote-fetch" data-base="${b}">Actualizar desde SENASA</button>` : ''}</div></div>`;
+    <div class="sc-actions"><button class="btn sm primary" data-action="load-files" data-base="${b}">Cargar archivo…</button>${Bridge.jobsFor(SENASA_ORIGIN).some(j => j.b === b) ? `<button class="btn sm" data-action="bridge-open" title="Usa el marcador SENASA → Explorer">Actualizar desde SENASA</button>` : ''}</div></div>`;
   const m = ds.meta, d = m.diff;
   return `<div class="src-card c-${b}"><div class="sc-h"><span class="dot ${b}"></span><b>${esc(B.long)}</b><span class="sc-n">${fmtInt(ds.rows.length)} registros</span></div>
     <dl class="sc-dl">
@@ -1935,7 +2095,7 @@ function srcCard(b) {
       ${d ? `<dt>Cambios</dt><dd>vs. “${esc(d.prevFile)}” (${fmtDateTime(d.prevLoadedAt)}, ${fmtInt(d.prevCount)} reg.): <b>+${fmtInt(d.addedKeys.length)}</b> nuevos${d.addedKeys.length ? ` <button class="linkbtn sm" data-action="goto" data-view="${b}" data-facet="novedad" data-keys='["new"]'>ver</button>` : ''} · <b>−${fmtInt(d.removedCount)}</b> ya no figuran${d.removedCount ? ` <button class="linkbtn sm" data-action="show-removed" data-base="${b}">ver</button>` : ''}</dd>` : ''}
     </dl>
     ${m.warnings.length ? `<div class="warnbox">${m.warnings.map(w => `<div>⚠ ${esc(w)}</div>`).join('')}</div>` : ''}
-    <div class="sc-actions"><button class="btn sm" data-action="load-files" data-base="${b}">Reemplazar archivo…</button>${Remote.url(b) ? `<button class="btn sm" data-action="remote-fetch" data-base="${b}">Actualizar desde SENASA</button>` : ''}<a class="btn sm ghost" href="${esc(B.publicUrl)}" target="_blank" rel="noopener">Abrir en SENASA ↗</a><button class="btn sm ghost danger" data-action="remove-dataset" data-base="${b}">Quitar</button></div></div>`;
+    <div class="sc-actions"><button class="btn sm" data-action="load-files" data-base="${b}">Reemplazar archivo…</button>${Bridge.jobsFor(SENASA_ORIGIN).some(j => j.b === b) ? `<button class="btn sm" data-action="bridge-open" title="Usa el marcador SENASA → Explorer">Actualizar desde SENASA</button>` : ''}<a class="btn sm ghost" href="${esc(B.publicUrl)}" target="_blank" rel="noopener">Abrir en SENASA ↗</a><button class="btn sm ghost danger" data-action="remove-dataset" data-base="${b}">Quitar</button></div></div>`;
 }
 function watchHTML() {
   if (!Folder.supported) return `<div class="warnbox">Este navegador no permite que la página lea una carpeta local (File System Access API). En Microsoft Edge o Google Chrome actualizados funciona. Mientras tanto, usá la opción 1 con los archivos descargados.</div>`;
@@ -1967,9 +2127,10 @@ function renderSources() {
     <div class="dropzone" data-action="load-files"><b>Arrastrá acá los archivos o hacé clic para elegirlos</b><br><span class="small">CSV de SENASA (también XLSX, JSON o tabla HTML). Se detecta automáticamente a qué base corresponde cada uno.</span></div>
 
     <h3>Opción 2 · Importar desde los vademécum de SENASA</h3>
+    ${bridgePanelHTML()}
     <div class="opt-grid">
-      <div class="panel"><h4>Descarga directa desde la API pública <span class="pill info">automática</span></h4>
-        <p class="small">El vademécum público obtiene sus datos de una API JSON (<code>…/adt_api/api/…</code>); el botón “Exportar” de SENASA arma el archivo a partir de esa respuesta. La herramienta puede pedir esos mismos datos completos (paginando si hace falta). No se hace scraping de páginas.</p>
+      <div class="panel"><h4>URLs de la API · descarga directa <span class="pill warn">directa: suele bloquearla CORS</span></h4>
+        <p class="small">El vademécum público obtiene sus datos de una API JSON (<code>…/adt_api/api/…</code>); el botón “Exportar” de SENASA arma el archivo a partir de esa respuesta. Estas URLs las usa el marcador de arriba. “Actualizar” intenta además la descarga directa desde esta página, que funciona solo si SENASA lo permite (CORS). No se hace scraping de páginas.</p>
         ${BASE_IDS.map(apiRow).join('')}
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary sm" data-action="remote-all">Actualizar todas las configuradas</button></div>
         <details style="margin-top:12px"><summary class="small"><b>Cómo obtener la URL de Activos o Fertilizantes</b></summary><ol class="small">
@@ -2105,6 +2266,10 @@ function onClick(e) {
       break;
     }
     case 'show-removed': showRemoved(d.base); break;
+    case 'bridge-open': Bridge.open(); break;
+    case 'bridge-cancel': Bridge.waiting = false; renderBridge(); break;
+    case 'bm-info': e.preventDefault(); toast('Este botón no se usa con clic: arrastralo a la barra de favoritos (o usá “copiar código”).', 'info', 7000); break;
+    case 'bm-copy': copyText(Bridge.href(), 'Código del marcador copiado. Pegalo como URL de un favorito llamado “SENASA Explorer”.'); break;
     case 'clear-storage':
       if (confirm('¿Borrar las bases guardadas en este navegador? (las cargadas ahora siguen visibles hasta cerrar la página)')) DB.clearDatasets().then(() => { toast('Datos guardados borrados.', 'ok'); renderSources(); }).catch(err => toast(err.message, 'err'));
       break;
@@ -2163,6 +2328,7 @@ async function init() {
     if (remember()) for (const ds of (await DB.allDatasets()) || []) if (ds && BASES[ds.base] && Array.isArray(ds.rows)) { DATA[ds.base] = ds; restored.push(ds.base); }
   } catch (e) { console.warn('IndexedDB no disponible', e); toast('El navegador no permite guardar datos para esta página: las bases no se recordarán entre usos.', 'warn', 9000); }
   await Folder.restore();
+  window.addEventListener('message', e => { Bridge.onMessage(e).catch(err => console.error(err)); });
   rebuildAll(); render();
   if (restored.length) toast(`Bases restauradas de este navegador: ${restored.map(b => `${BASES[b].label} (cargada ${fmtDateTime(DATA[b].meta.loadedAt)})`).join(' · ')}`, 'ok', 7000);
 }
